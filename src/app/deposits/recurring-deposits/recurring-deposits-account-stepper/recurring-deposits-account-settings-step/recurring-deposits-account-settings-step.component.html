@@ -191,6 +191,18 @@
         <mat-label>{{"labels.inputs.Tax Group" | translate }}</mat-label>
         <input type="text" matInput formControlName="taxGroupId">
       </mat-form-field>
+
+      <mat-form-field fxFlex="48%" *ngIf="recurringDepositAccountSettingsForm.controls.withHoldTaxPostingTypeId">
+        <mat-label>{{"labels.inputs.Withhold Tax Posting Type" | translate }}</mat-label>
+        <mat-select formControlName="withHoldTaxPostingTypeId" required>
+          <mat-option *ngFor="let withHoldTaxPostingType of withHoldTaxPostingTypeData" [value]="withHoldTaxPostingType.id">
+            {{ withHoldTaxPostingType.value | translateKey:'catalogs' }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          {{"labels.inputs.Withhold Tax Posting Type" | translate }} {{ "labels.commons.is" | translate}} <strong>{{ "labels.commons.required" | translate}}</strong>
+        </mat-error>
+      </mat-form-field>
     </ng-container>
 
     <h3 fxFlex="98%" class="mat-h3">{{"labels.heading.Interest Transfer" | translate }}</h3>

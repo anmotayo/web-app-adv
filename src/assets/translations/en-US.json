@@ -711,7 +711,9 @@
             "Withdraw Deposit": "Withdraw Deposit",
             "Re-Invest Maturity Amount": "Re-Invest Maturity Amount",
             "Re-Invest Principal Only": "Re-Invest Principal Only",
-            "Transfer to Savings": "Transfer to Savings"
+            "Transfer to Savings": "Transfer to Savings",
+            "Maturity": "Maturity",
+            "No Compounding - Simple Interest": "No Compounding - Simple Interest"
         },
         "commons": {
             "50 characters long": "50 characters long",
@@ -2346,6 +2348,7 @@
             "Withdrawn On Date": "Withdrawn On Date",
             "Withdrwals till Date": "Withdrawals till Date",
             "Withhold Tax is Applicable": "Withhold Tax is Applicable",
+            "Withhold Tax Posting Type": "Withhold Tax Posting Type",
             "Within Bank": "Within Bank",
             "Working Days": "Working Days",
             "Workflow Jobs": "Workflow Jobs",

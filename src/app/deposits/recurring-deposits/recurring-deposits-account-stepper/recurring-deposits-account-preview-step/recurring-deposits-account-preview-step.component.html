@@ -125,6 +125,19 @@
       fxFlex="60%">{{ (recurringDepositsAccountProductTemplate.maxDepositTerm ? recurringDepositsAccountProductTemplate.maxDepositTerm: '')}} {{(this.recurringDepositsAccountProductTemplate.maxDepositTermType ? this.recurringDepositsAccountProductTemplate.maxDepositTermType.value: '') | translateKey:'catalogs'}}</span>
   </div>
 
+  <ng-container *ngIf="recurringDepositsAccountProductTemplate.withHoldTax">
+    <div fxFlexFill>
+      <span fxFlex="40%">{{"labels.inputs.Withhold Tax is Applicable" | translate }}:</span>
+      <span fxFlex="60%">{{ recurringDepositAccountData.withHoldTax | yesNo}}</span>
+    </div>
+
+    <div fxFlexFill>
+      <span fxFlex="40%">{{"labels.inputs.Withhold Tax Posting Type" | translate }}:</span>
+      <span fxFlex="60%">{{ recurringDepositAccountData.withHoldTaxPostingTypeId | find:recurringDepositsAccountProductTemplate.withHoldTaxPostingTypeOptions:'id':'value' | translateKey:'catalogs' }}</span>
+    </div>
+
+  </ng-container>
+
 
   <h3 class="mat-h3" fxFlexFill>{{"labels.inputs.Interest Rate Chart" | translate }}</h3>
 

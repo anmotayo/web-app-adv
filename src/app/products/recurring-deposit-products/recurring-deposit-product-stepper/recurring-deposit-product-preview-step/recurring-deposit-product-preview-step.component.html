@@ -111,10 +111,17 @@
     <span fxFlex="60%">{{ recurringDepositProduct.withHoldTax | yesNo }}</span>
   </div>
 
-  <div fxFlexFill *ngIf="recurringDepositProduct.withHoldTax">
-    <span fxFlex="40%">{{'labels.inputs.Tax Group' | translate}}:</span>
-    <span fxFlex="60%">{{ recurringDepositProduct.taxGroupId | find:recurringDepositProductsTemplate.taxGroupOptions:'id':'name' }}</span>
-  </div>
+  <ng-container *ngIf="recurringDepositProduct.withHoldTax">
+    <div fxFlexFill >
+      <span fxFlex="40%">{{'labels.inputs.Tax Group' | translate}}:</span>
+      <span fxFlex="60%">{{ recurringDepositProduct.taxGroupId | find:recurringDepositProductsTemplate.taxGroupOptions:'id':'name' }}</span>
+    </div>
+
+    <div fxFlexFill>
+      <span fxFlex="40%">{{"labels.inputs.Withhold Tax Posting Type" | translate }}:</span>
+      <span fxFlex="60%">{{ recurringDepositProduct.withHoldTaxPostingTypeId | find:recurringDepositProductsTemplate.withHoldTaxPostingTypeOptions:'id':'value' }}</span>
+    </div>
+  </ng-container>
 
   <div fxFlexFill fxLayout="row wrap" fxLayout.lt-md="column" *ngIf="recurringDepositProduct.charts.length !== 0">
 

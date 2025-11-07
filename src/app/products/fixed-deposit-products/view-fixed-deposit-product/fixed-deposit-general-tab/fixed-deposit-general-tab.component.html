@@ -137,10 +137,17 @@
           <span fxFlex="60%">{{ fixedDepositProductData.withHoldTax | yesNo }}</span>
         </div>
 
-        <div fxFlexFill *ngIf="fixedDepositProductData.withHoldTax">
-          <span fxFlex="40%">{{'labels.inputs.Withhold Tax group' | translate}}:</span>
-          <span fxFlex="60%">{{ fixedDepositProductData.taxGroup.name }}</span>
-        </div>
+        <ng-container *ngIf="fixedDepositProductData.withHoldTax">
+          <div fxFlexFill>
+            <span fxFlex="40%">{{'labels.inputs.Withhold Tax group' | translate}}:</span>
+            <span fxFlex="60%">{{ fixedDepositProductData.taxGroup.name }}</span>
+          </div>
+
+          <div fxFlexFill>
+            <span fxFlex="40%">{{'labels.inputs.Withhold Tax Posting Type' | translate}}:</span>
+            <span fxFlex="60%">{{ fixedDepositProductData.withHoldTaxPostingType.value }}</span>
+          </div>
+        </ng-container>
 
         <div *ngIf="fixedDepositProductData.activeChart" fxFlexFill fxLayout="row wrap" fxLayout.lt-md="column">
 

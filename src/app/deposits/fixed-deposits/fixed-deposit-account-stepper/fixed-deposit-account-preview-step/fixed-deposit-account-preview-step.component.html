@@ -126,10 +126,17 @@
     <span fxFlex="60%">{{ fixedDepositsAccountProductTemplate.preClosurePenalInterest + '% (' + (fixedDepositsAccountProductTemplate.preClosurePenalInterestOnType?.id) + ')' }}</span>
   </div>
 
-  <div fxFlexFill *ngIf="fixedDepositsAccountProductTemplate.withHoldTax">
-    <span fxFlex="40%">{{"labels.inputs.Withhold Tax is Applicable" | translate }}:</span>
-    <span fxFlex="60%">{{ fixedDepositAccountData.withHoldTax | yesNo }}</span>
-  </div>
+  <ng-container *ngIf="fixedDepositsAccountProductTemplate.withHoldTax">
+    <div fxFlexFill >
+      <span fxFlex="40%">{{"labels.inputs.Withhold Tax is Applicable" | translate }}:</span>
+      <span fxFlex="60%">{{ fixedDepositAccountData.withHoldTax | yesNo }}</span>
+    </div>
+
+    <div fxFlexFill>
+      <span fxFlex="40%">{{"labels.inputs.Withhold Tax Posting Type" | translate }}:</span>
+      <span fxFlex="60%">{{ fixedDepositAccountData.withHoldTaxPostingTypeId | find:fixedDepositsAccountProductTemplate.withHoldTaxPostingTypeOptions:'id':'value' | translateKey:'catalogs' }}</span>
+    </div>
+  </ng-container>
 
   <h3 class="mat-h3" fxFlexFill>{{"labels.heading.Interest Rate Chart" | translate }}</h3>
 

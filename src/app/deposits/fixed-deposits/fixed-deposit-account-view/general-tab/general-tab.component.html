@@ -40,6 +40,10 @@
             <td>{{"labels.inputs.Tax Group" | translate }}</td>
             <td>{{fixedDepositsAccountData.taxGroup.name}}</td>
           </tr>
+           <tr *ngIf="fixedDepositsAccountData.withHoldTax">
+            <td>{{"labels.inputs.Withhold Tax Posting Type" | translate }}</td>
+            <td>{{fixedDepositsAccountData.withHoldTaxPostingType.value}}</td>
+          </tr>
           <tr *ngIf="fixedDepositsAccountData.onAccountClosure">
             <td>{{"labels.inputs.Maturity Instructions" | translate }}</td>
             <td>{{fixedDepositsAccountData.onAccountClosure.value | translateKey:'catalogs'}}</td>

@@ -1,14 +1,18 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'mifosx-recurring-deposit-product-settings-step',
   templateUrl: './recurring-deposit-product-settings-step.component.html',
   styleUrls: ['./recurring-deposit-product-settings-step.component.scss']
 })
-export class RecurringDepositProductSettingsStepComponent implements OnInit {
+export class RecurringDepositProductSettingsStepComponent implements OnInit, OnDestroy {
 
   @Input() recurringDepositProductsTemplate: any;
+
+  private $destroy = new Subject<void>();
 
   recurringDepositProductSettingsForm: UntypedFormGroup;
 
@@ -16,6 +20,7 @@ export class RecurringDepositProductSettingsStepComponent implements OnInit {
   periodFrequencyTypeData: any;
   preClosurePenalInterestOnTypeData: any;
   taxGroupData: any;
+  withHoldTaxPostingTypeData: any;
 
   constructor(private formBuilder: UntypedFormBuilder) {
     this.createrecurringDepositProductSettingsForm();
@@ -27,6 +32,7 @@ export class RecurringDepositProductSettingsStepComponent implements OnInit {
     this.periodFrequencyTypeData = this.recurringDepositProductsTemplate.periodFrequencyTypeOptions.slice(0, -1);
     this.preClosurePenalInterestOnTypeData = this.recurringDepositProductsTemplate.preClosurePenalInterestOnTypeOptions;
     this.taxGroupData = this.recurringDepositProductsTemplate.taxGroupOptions;
+    this.withHoldTaxPostingTypeData = this.recurringDepositProductsTemplate.withHoldTaxPostingTypeOptions;
 
     if (!(this.recurringDepositProductsTemplate === undefined) && this.recurringDepositProductsTemplate.id) {
       this.recurringDepositProductSettingsForm.patchValue({
@@ -47,6 +53,11 @@ export class RecurringDepositProductSettingsStepComponent implements OnInit {
         'withHoldTax': this.recurringDepositProductsTemplate.withHoldTax
       });
     }
+  }
+
+  ngOnDestroy() {
+    this.$destroy.next();
+    this.$destroy.complete();
   }
 
   createrecurringDepositProductSettingsForm() {
@@ -71,11 +82,16 @@ export class RecurringDepositProductSettingsStepComponent implements OnInit {
 
   setConditionalControls() {
     this.recurringDepositProductSettingsForm.get('withHoldTax').valueChanges
+      .pipe(takeUntil(this.$destroy))
       .subscribe((withHoldTax: any) => {
         if (withHoldTax) {
           this.recurringDepositProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
+          this.recurringDepositProductSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
+          this.recurringDepositProductSettingsForm.get('taxGroupId').patchValue(this.recurringDepositProductsTemplate.taxGroup && this.recurringDepositProductsTemplate.taxGroup.id);
+          this.recurringDepositProductSettingsForm.get('withHoldTaxPostingTypeId').patchValue(this.recurringDepositProductsTemplate.withHoldTaxPostingType && this.recurringDepositProductsTemplate.withHoldTaxPostingType.id);
         } else {
           this.recurringDepositProductSettingsForm.removeControl('taxGroupId');
+          this.recurringDepositProductSettingsForm.removeControl('withHoldTaxPostingTypeId');
         }
       });
   }

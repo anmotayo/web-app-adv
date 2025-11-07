@@ -46,9 +46,13 @@
           <td> {{"labels.inputs.Balance Required for Interest Calculation" | translate }}</td>
           <td><span>{{recurringDepositsAccountData.minBalanceForInterestCalculation}}</span></td>
         </tr>
-        <tr *ngIf="recurringDepositsAccountData.witdHoldTax">
+        <tr *ngIf="recurringDepositsAccountData.withHoldTax">
           <td> {{"labels.inputs.Witdhold Tax Group" | translate }} </td>
           <td><span>{{recurringDepositsAccountData.taxGroup.name}}</span></td>
+        </tr>
+         <tr *ngIf="recurringDepositsAccountData.withHoldTax">
+          <td> {{"labels.inputs.Witdhold Tax Posting Type" | translate }} </td>
+          <td><span>{{recurringDepositsAccountData.withHoldTaxPostingType.value | translateKey:'catalogs'}}</span></td>
         </tr>
       </tbody>
     </table>

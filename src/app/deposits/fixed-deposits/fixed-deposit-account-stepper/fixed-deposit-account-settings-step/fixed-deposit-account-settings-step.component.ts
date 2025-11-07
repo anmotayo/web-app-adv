@@ -34,7 +34,9 @@ export class FixedDepositAccountSettingsStepComponent implements OnInit, OnChang
   /** Savings Accounts Data */
   savingsAccountsData: any;
 
-  maturityInstructionOptions: OptionData;
+  maturityInstructionOptions: OptionData[];
+
+  withHoldTaxPostingTypeData: OptionData[];
 
   /**
    * @param {FormBuilder} formBuilder Form Builder
@@ -48,6 +50,7 @@ export class FixedDepositAccountSettingsStepComponent implements OnInit, OnChang
 
   ngOnChanges() {
     if (this.fixedDepositsAccountProductTemplate) {
+      this.setOptions();
       this.fixedDepositAccountSettingsForm.patchValue({
         'minDepositTerm': this.fixedDepositsAccountProductTemplate.minDepositTerm,
         'minDepositTermTypeId': this.fixedDepositsAccountProductTemplate.minDepositTermType ? this.fixedDepositsAccountProductTemplate.minDepositTermType.id : '',
@@ -66,15 +69,17 @@ export class FixedDepositAccountSettingsStepComponent implements OnInit, OnChang
           if (value) {
             this.fixedDepositAccountSettingsForm.addControl('taxGroupId', new UntypedFormControl({ value: '', disabled: true }));
             this.fixedDepositAccountSettingsForm.get('taxGroupId').patchValue(this.fixedDepositsAccountProductTemplate.taxGroup && this.fixedDepositsAccountProductTemplate.taxGroup.name);
+            this.fixedDepositAccountSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
+            this.fixedDepositAccountSettingsForm.get('withHoldTaxPostingTypeId').patchValue(this.fixedDepositsAccountProductTemplate.withHoldTaxPostingType && this.fixedDepositsAccountProductTemplate.withHoldTaxPostingType.id);
           } else {
             this.fixedDepositAccountSettingsForm.removeControl('taxGroupId');
+            this.fixedDepositAccountSettingsForm.removeControl('withHoldTaxPostingTypeId');
           }
         });
         this.fixedDepositAccountSettingsForm.get('withHoldTax').patchValue(this.fixedDepositsAccountTemplate.withHoldTax);
       } else {
         this.fixedDepositAccountSettingsForm.removeControl('withHoldTax');
       }
-      this.setOptions();
     }
   }
 
@@ -141,6 +146,7 @@ export class FixedDepositAccountSettingsStepComponent implements OnInit, OnChang
     this.savingsAccountsData = this.fixedDepositsAccountProductTemplate.savingsAccounts;
     this.preClosurePenalInterestOnTypeData = this.fixedDepositsAccountProductTemplate.preClosurePenalInterestOnTypeOptions;
     this.maturityInstructionOptions = this.fixedDepositsAccountProductTemplate.maturityInstructionOptions;
+    this.withHoldTaxPostingTypeData = this.fixedDepositsAccountProductTemplate.withHoldTaxPostingTypeOptions;
   }
 
   /**

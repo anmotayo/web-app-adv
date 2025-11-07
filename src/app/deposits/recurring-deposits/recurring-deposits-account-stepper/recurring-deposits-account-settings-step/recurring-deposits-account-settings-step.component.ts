@@ -2,6 +2,7 @@
 import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
 import { SettingsService } from 'app/settings/settings.service';
+import { OptionData } from 'app/shared/models/option-data.model';
 
 /** Custom Services */
 
@@ -35,6 +36,8 @@ export class RecurringDepositsAccountSettingsStepComponent implements OnInit, On
   taxGroup: any;
   /** Savings Accounts Data */
   savingsAccountsData: any;
+
+  withHoldTaxPostingTypeData: OptionData[];
 
   /**
    * @param {FormBuilder} formBuilder Form Builder
@@ -77,8 +80,11 @@ export class RecurringDepositsAccountSettingsStepComponent implements OnInit, On
           if (value) {
             this.recurringDepositAccountSettingsForm.addControl('taxGroupId', new UntypedFormControl({ value: '', disabled: true }));
             this.recurringDepositAccountSettingsForm.get('taxGroupId').patchValue(recurringDepositsAccount.taxGroup && recurringDepositsAccount.taxGroup.name);
+            this.recurringDepositAccountSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
+            this.recurringDepositAccountSettingsForm.get('withHoldTaxPostingTypeId').patchValue(recurringDepositsAccount.withHoldTaxPostingType && recurringDepositsAccount.withHoldTaxPostingType.id);
           } else {
             this.recurringDepositAccountSettingsForm.removeControl('taxGroupId');
+            this.recurringDepositAccountSettingsForm.removeControl('withHoldTaxPostingTypeId');
           }
         });
         this.recurringDepositAccountSettingsForm.get('withHoldTax').patchValue(this.recurringDepositsAccountTemplate.withHoldTax);
@@ -140,6 +146,7 @@ export class RecurringDepositsAccountSettingsStepComponent implements OnInit, On
     this.periodFrequencyTypeData = recurringDepositsAccount.periodFrequencyTypeOptions;
     this.savingsAccountsData = recurringDepositsAccount.savingsAccounts;
     this.preClosurePenalInterestOnTypeData = recurringDepositsAccount.preClosurePenalInterestOnTypeOptions;
+    this.withHoldTaxPostingTypeData = recurringDepositsAccount.withHoldTaxPostingTypeOptions;
   }
 
   /**

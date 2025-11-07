@@ -114,17 +114,31 @@
       {{'labels.inputs.Is Withhold Tax Applicable' | translate}}
     </mat-checkbox>
 
-    <mat-form-field fxFlex="48%" *ngIf="recurringDepositProductSettingsForm.value.withHoldTax">
-      <mat-label>{{'labels.inputs.Tax Group' | translate}}</mat-label>
-      <mat-select formControlName="taxGroupId" required>
-        <mat-option *ngFor="let taxGroup of taxGroupData" [value]="taxGroup.id">
-          {{ taxGroup.name }}
-        </mat-option>
-      </mat-select>
-      <mat-error>
-        {{'labels.inputs.Tax Group' | translate}} {{'labels.commons.is' | translate}} <strong>{{'labels.commons.required' | translate}}</strong>
-      </mat-error>
-    </mat-form-field>
+    <ng-container *ngIf="recurringDepositProductSettingsForm.value.withHoldTax">
+      <mat-form-field fxFlex="48%">
+        <mat-label>{{'labels.inputs.Tax Group' | translate}}</mat-label>
+        <mat-select formControlName="taxGroupId" required>
+          <mat-option *ngFor="let taxGroup of taxGroupData" [value]="taxGroup.id">
+            {{ taxGroup.name }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          {{'labels.inputs.Tax Group' | translate}} {{'labels.commons.is' | translate}} <strong>{{'labels.commons.required' | translate}}</strong>
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field fxFlex="48%">
+        <mat-label>{{'labels.inputs.Withhold Tax Posting Type' | translate}}</mat-label>
+        <mat-select formControlName="withHoldTaxPostingTypeId"  matTooltip="The setting for withhold tax posting type" required>
+          <mat-option *ngFor="let withHoldTaxPostingType of withHoldTaxPostingTypeData" [value]="withHoldTaxPostingType.id">
+            {{ withHoldTaxPostingType.value }}
+          </mat-option>
+        </mat-select>
+        <mat-error>
+          {{'labels.inputs.Withhold Tax Posting Type' | translate}} {{'labels.commons.is' | translate}} <strong>{{'labels.commons.required' | translate}}</strong>
+        </mat-error>
+      </mat-form-field>
+    </ng-container>
 
   </div>
 

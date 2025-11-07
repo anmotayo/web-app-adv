@@ -1,15 +1,19 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { TooltipPosition } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'mifosx-fixed-deposit-product-settings-step',
   templateUrl: './fixed-deposit-product-settings-step.component.html',
   styleUrls: ['./fixed-deposit-product-settings-step.component.scss']
 })
-export class FixedDepositProductSettingsStepComponent implements OnInit {
+export class FixedDepositProductSettingsStepComponent implements OnInit, OnDestroy {
 
   @Input() fixedDepositProductsTemplate: any;
+
+  private $destroy = new Subject<void>()
 
   fixedDepositProductSettingsForm: UntypedFormGroup;
 
@@ -17,6 +21,7 @@ export class FixedDepositProductSettingsStepComponent implements OnInit {
   periodFrequencyTypeData: any;
   preClosurePenalInterestOnTypeData: any;
   taxGroupData: any;
+  withHoldTaxPostingTypeData: any;
 
   constructor(private formBuilder: UntypedFormBuilder) {
     this.createFixedDepositProductSettingsForm();
@@ -28,6 +33,7 @@ export class FixedDepositProductSettingsStepComponent implements OnInit {
     this.periodFrequencyTypeData = this.fixedDepositProductsTemplate.periodFrequencyTypeOptions.slice(0, -1);
     this.preClosurePenalInterestOnTypeData = this.fixedDepositProductsTemplate.preClosurePenalInterestOnTypeOptions;
     this.taxGroupData = this.fixedDepositProductsTemplate.taxGroupOptions;
+    this.withHoldTaxPostingTypeData = this.fixedDepositProductsTemplate.withHoldTaxPostingTypeOptions;
 
     if (!(this.fixedDepositProductsTemplate === undefined) && this.fixedDepositProductsTemplate.id) {
       this.fixedDepositProductSettingsForm.patchValue({
@@ -50,6 +56,11 @@ export class FixedDepositProductSettingsStepComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    this.$destroy.next();
+    this.$destroy.complete();
+  }
+
   createFixedDepositProductSettingsForm() {
     this.fixedDepositProductSettingsForm = this.formBuilder.group({
       'lockinPeriodFrequency': [''],
@@ -69,11 +80,16 @@ export class FixedDepositProductSettingsStepComponent implements OnInit {
 
   setConditionalControls() {
     this.fixedDepositProductSettingsForm.get('withHoldTax').valueChanges
+      .pipe(takeUntil(this.$destroy))
       .subscribe((withHoldTax: any) => {
         if (withHoldTax) {
           this.fixedDepositProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
+          this.fixedDepositProductSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
+          this.fixedDepositProductSettingsForm.get('taxGroupId').patchValue(this.fixedDepositProductsTemplate.taxGroup && this.fixedDepositProductsTemplate.taxGroup.id);
+          this.fixedDepositProductSettingsForm.get('withHoldTaxPostingTypeId').patchValue(this.fixedDepositProductsTemplate.withHoldTaxPostingType && this.fixedDepositProductsTemplate.withHoldTaxPostingType.id);
         } else {
           this.fixedDepositProductSettingsForm.removeControl('taxGroupId');
+          this.fixedDepositProductSettingsForm.removeControl('withHoldTaxPostingTypeId');
         }
       });
   }
