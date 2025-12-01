@@ -86,7 +86,13 @@
 
           <div fxFlexFill>
             <span fxFlex="40%">{{ json.key }}:</span>
-            <span fxFlex="60%">{{ json.value }}</span>
+            <ng-container *ngIf="isArray(json.value) || isObject(json.value); else primitiveValue">
+              <span fxFlex="60%">{{ json.value | json }}</span>
+            </ng-container>
+            
+            <ng-template #primitiveValue>
+              <span fxFlex="60%">{{ json.value }}</span>
+            </ng-template>
           </div>
 
         </ng-container>

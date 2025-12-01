@@ -93,4 +93,12 @@ export class ViewCheckerInboxComponent {
     });
   }
 
+  isArray(value: any): boolean {
+    return Array.isArray(value);
+  }
+
+  isObject(value: any): boolean {
+    return typeof value === 'object' && Object.prototype.toString.call(value) === '[object Object]';
+  }
+
 }
