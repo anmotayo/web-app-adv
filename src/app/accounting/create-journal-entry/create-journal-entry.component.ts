@@ -109,10 +109,26 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    * @returns {FormGroup} Affected gl entry form.
    */
   createAffectedGLEntryForm(): UntypedFormGroup {
-    return this.formBuilder.group({
+    const formGroup = this.formBuilder.group({
       'glAccountId': ['', Validators.required],
-      'amount': ['', Validators.required]
+      'amount': ['', Validators.required],
+      'glCode': [{value: '', disabled: true}],
+      'glName': [{value: '', disabled: true}],
     });
+
+    formGroup.get('glAccountId')?.valueChanges.subscribe(glAccountId => {
+      const glAccount = this.glAccountData.find((acc: any) => acc.id === glAccountId);
+      if (glAccount) {
+        formGroup.patchValue({
+          glCode: glAccount.glCode,
+          glName: glAccount.name
+        });
+      } else {
+        formGroup.patchValue({ glCode: '', glName: '' });
+      }
+    });
+
+    return formGroup;
   }
 
   /**
@@ -153,7 +169,7 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    * if successful redirects to view created transaction.
    */
   submit() {
-    const journalEntry = this.journalEntryForm.value;
+    const journalEntry = this.journalEntryForm.getRawValue();
     // TODO: Update once language and date settings are setup
     journalEntry.locale = this.settingsService.language.code;
     journalEntry.dateFormat = this.settingsService.dateFormat;
