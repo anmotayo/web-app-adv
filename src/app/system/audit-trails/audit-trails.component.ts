@@ -409,15 +409,12 @@ export class AuditTrailsComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Gets the date from the passed timestamp.
-   *
-   * TODO: Update once language and date settings are setup.
+   * Gets the date from the passed timestamp in API format (yyyy-MM-dd).
    *
    * @param {any} timestamp Timestamp from which date is to be extracted.
    */
   private getDate(timestamp: any) {
-    const dateFormat = this.settingsService.dateFormat;
-    return this.dateUtils.formatDate(timestamp, dateFormat);
+    return this.dateUtils.formatDate(timestamp, Dates.DEFAULT_DATEFORMAT);
   }
 
 }
