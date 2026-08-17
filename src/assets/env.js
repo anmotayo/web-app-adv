@@ -2,18 +2,18 @@
   window["env"] = window["env"] || {};
 
   // BackEnd Environment variables
-  window["env"]["fineractApiUrls"] = '';
-  window["env"]["fineractApiUrl"]  = '';
+  window["env"]["fineractApiUrls"] = 'https://localhost:8443,https://dev.mifos.io,http://localhost:8080';
+  window["env"]["fineractApiUrl"]  = 'http://localhost:8080';
 
   window["env"]["apiProvider"] = '';
   window["env"]["apiVersion"]  = '';
 
-  window["env"]["fineractPlatformTenantId"]  = '';
-  window["env"]["fineractPlatformTenantIds"]  = '';
+  window["env"]["fineractPlatformTenantId"]  = 'default';
+  window["env"]["fineractPlatformTenantIds"]  = 'default,advanclymfb';
 
   // Language Environment variables
-  window["env"]["defaultLanguage"] = '';
-  window["env"]["supportedLanguages"] = '';
+  window["env"]["defaultLanguage"] = 'en-US';
+  window["env"]["supportedLanguages"] = 'cs-CS,de-DE,en-US,es-MX,fr-FR,it-IT,ko-KO,lt-LT,lv-LV,ne-NE,pt-PT,sw-SW';
 
   window['env']['preloadClients'] = '';
 
