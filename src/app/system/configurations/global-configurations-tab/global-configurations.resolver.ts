@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { SystemService } from '../../system.service';
  * Configurations data resolver.
  */
 @Injectable()
-export class GlobalConfigurationsResolver implements Resolve<Object> {
-
-  /**
-   * @param {SystemService} systemService System service.
-   */
-  constructor(private systemService: SystemService) {}
+export class GlobalConfigurationsResolver {
+  private systemService = inject(SystemService);
 
   /**
    * Returns the configurations data.
@@ -26,5 +21,4 @@ export class GlobalConfigurationsResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.systemService.getConfigurations();
   }
-
 }

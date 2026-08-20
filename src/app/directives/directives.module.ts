@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 /** Custom Directives */
 import { HasPermissionDirective } from './has-permission/has-permission.directive';
 import { FormatAmountDirective } from './format-amount.directive';
+import { ValidateOnFocusDirective } from './validate-on-focus.directive';
 
 /**
  *  Directives Module
@@ -13,9 +14,15 @@ import { FormatAmountDirective } from './format-amount.directive';
  */
 @NgModule({
   imports: [
-    CommonModule
+    CommonModule,
+    HasPermissionDirective,
+    FormatAmountDirective,
+    ValidateOnFocusDirective
   ],
-  declarations: [HasPermissionDirective, FormatAmountDirective],
-  exports: [HasPermissionDirective, FormatAmountDirective]
+  exports: [
+    HasPermissionDirective,
+    FormatAmountDirective,
+    ValidateOnFocusDirective
+  ]
 })
-export class DirectivesModule { }
+export class DirectivesModule {}

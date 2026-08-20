@@ -1,14 +1,35 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-loans-account-datatable-step',
   templateUrl: './loans-account-datatable-step.component.html',
-  styleUrls: ['./loans-account-datatable-step.component.scss']
+  styleUrls: ['./loans-account-datatable-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class LoansAccountDatatableStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+
   /** Input Fields Data */
   @Input() datatableData: any;
   /** Create Input Form */
@@ -16,13 +37,14 @@ export class LoansAccountDatatableStepComponent implements OnInit {
 
   datatableInputs: any = [];
 
-  constructor(private formBuilder: UntypedFormBuilder,
-    private settingsService: SettingsService,
-    private dateUtils: Dates) { }
-
   ngOnInit(): void {
     this.datatableInputs = this.datatableData.columnHeaderData.filter((column: any) => {
-      return ((column.columnName !== 'id') && (column.columnName !== 'loan_id') && (column.columnName !== 'created_at') && (column.columnName !== 'updated_at'));
+      return (
+        column.columnName !== 'id' &&
+        column.columnName !== 'loan_id' &&
+        column.columnName !== 'created_at' &&
+        column.columnName !== 'updated_at'
+      );
     });
     const inputItems: any = {};
     this.datatableInputs.forEach((input: any) => {
@@ -72,13 +94,13 @@ export class LoansAccountDatatableStepComponent implements OnInit {
   }
 
   isColumnType(columnType: string, expectedType: string) {
-    return (columnType === expectedType);
+    return columnType === expectedType;
   }
 
   get payload(): any {
     const dateFormat = this.settingsService.dateFormat;
     const datatableDataValues = this.datatableForm.value;
-    const data = {
+    const data: { [key: string]: any } = {
       locale: this.settingsService.language.code
     };
     let existDate = false;
@@ -104,5 +126,4 @@ export class LoansAccountDatatableStepComponent implements OnInit {
     };
     return payload;
   }
-
 }

@@ -1,9 +1,27 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+
+/** Custom Services */
+import { SystemService } from '../system.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Manage Surveys component.
@@ -12,13 +30,40 @@ import { ActivatedRoute } from '@angular/router';
   selector: 'mifosx-manage-surveys',
   templateUrl: './manage-surveys.component.html',
   styleUrls: ['./manage-surveys.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ManageSurveysComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private systemService = inject(SystemService);
 
   /* Surveys data */
   surveysData: any;
   /* Columns to be displayed in manage surveys data table */
-  displayedColumns: string[] = ['key', 'name', 'description', 'countryCode', 'status', 'action'];
+  displayedColumns: string[] = [
+    'key',
+    'name',
+    'description',
+    'countryCode',
+    'status',
+    'action'
+  ];
   /* Data source for manage surveys data table */
   dataSource: MatTableDataSource<any>;
 
@@ -31,20 +76,20 @@ export class ManageSurveysComponent implements OnInit {
    * Retrieves the surveys data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
-    this.route.data.subscribe(( data: { surveys: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { surveys: any }) => {
       this.surveysData = data.surveys;
     });
   }
 
   /**
    * Returns whether an survey is active based on its duration
-   * @param {number} validFrom Date valid from
-   * @param {number} validTo Date valid to
+   * @param {string} validFrom Date valid from (yyyy-MM-dd)
+   * @param {string} validTo Date valid to (yyyy-MM-dd)
    */
-  isActive(validFrom: number, validTo: number) {
-    const curdate = new Date().getTime();
-    return (curdate > validFrom && curdate < validTo);
+  isActive(validFrom: string, validTo: string) {
+    const curdate = new Date().toISOString().split('T')[0];
+    return curdate >= validFrom && curdate <= validTo;
   }
 
   /**
@@ -54,9 +99,12 @@ export class ManageSurveysComponent implements OnInit {
     this.setSurveys();
     this.dataSource.sortingDataAccessor = (item, property) => {
       switch (property) {
-        case 'status': return this.isActive(item.validFrom, item.validTo);
-        case 'action': return this.isActive(item.validFrom, item.validTo);
-        default: return item[property];
+        case 'status':
+          return this.isActive(item.validFrom, item.validTo);
+        case 'action':
+          return this.isActive(item.validFrom, item.validTo);
+        default:
+          return item[property];
       }
     };
   }
@@ -78,4 +126,30 @@ export class ManageSurveysComponent implements OnInit {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
+  /**
+   * Activates a survey.
+   * @param {any} survey Survey to activate.
+   */
+  activate(survey: any) {
+    this.systemService.activateSurvey(survey.id).subscribe(() => {
+      const today = new Date().toISOString().split('T')[0];
+      // This mimics the server-side logic
+      survey.validFrom = today;
+      survey.validTo = today;
+    });
+  }
+
+  /**
+   * Deactivates a survey.
+   * @param {any} survey Survey to deactivate.
+   */
+  deactivate(survey: any) {
+    this.systemService.deactivateSurvey(survey.id).subscribe(() => {
+      const date = new Date();
+      date.setDate(date.getDate() - 1); // Set to yesterday
+      const yesterday = date.toISOString().split('T')[0];
+      // This mimics the server-side logic
+      survey.validTo = yesterday;
+    });
+  }
 }

@@ -1,9 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Templates component.
@@ -11,14 +25,36 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-templates',
   templateUrl: './templates.component.html',
-  styleUrls: ['./templates.component.scss']
+  styleUrls: ['./templates.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class TemplatesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** Templates data. */
   templatesData: any;
   /** Columns to be displayed in templates table. */
-  displayedColumns: string[] = ['entity', 'type', 'name'];
+  displayedColumns: string[] = [
+    'entity',
+    'type',
+    'name'
+  ];
   /** Data source for templates table. */
   dataSource: MatTableDataSource<any>;
 
@@ -31,8 +67,8 @@ export class TemplatesComponent implements OnInit {
    * Retrieves the templates data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
-    this.route.data.subscribe(( data: { templates: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { templates: any }) => {
       this.templatesData = data.templates;
     });
   }
@@ -60,5 +96,4 @@ export class TemplatesComponent implements OnInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
-
 }

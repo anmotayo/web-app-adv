@@ -1,21 +1,33 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../../accounting.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Create provisioning entry component.
  */
 @Component({
   selector: 'mifosx-create-provisioning-entry',
   templateUrl: './create-provisioning-entry.component.html',
-  styleUrls: ['./create-provisioning-entry.component.scss']
+  styleUrls: ['./create-provisioning-entry.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class CreateProvisioningEntryComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum provisioning date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -23,20 +35,6 @@ export class CreateProvisioningEntryComponent implements OnInit {
   maxDate = new Date();
   /** Provisioning entry form. */
   provisioningEntryForm: UntypedFormGroup;
-
-  /**
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {AccountingService} accountingService Accounting Service.
-   * @param {SettingsService} settingsService Settings Service.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {Router} router Router for navigation.
-   */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private accountingService: AccountingService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router) { }
 
   /**
    * Creates the provisioning entry form.
@@ -51,8 +49,11 @@ export class CreateProvisioningEntryComponent implements OnInit {
    */
   createProvisioningEntryForm() {
     this.provisioningEntryForm = this.formBuilder.group({
-      'date': ['', Validators.required],
-      'createjournalentries': [false]
+      date: [
+        '',
+        Validators.required
+      ],
+      createjournalentries: [false]
     });
   }
 
@@ -68,10 +69,14 @@ export class CreateProvisioningEntryComponent implements OnInit {
     if (provisioningEntry.date instanceof Date) {
       provisioningEntry.date = this.dateUtils.formatDate(provisioningEntry.date, this.settingsService.dateFormat);
     }
-    this.accountingService.createProvisioningEntry(provisioningEntry)
-      .subscribe((response: any) => {
-        this.router.navigate(['../view', response.resourceId], { relativeTo: this.route });
-      });
+    this.accountingService.createProvisioningEntry(provisioningEntry).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../view',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

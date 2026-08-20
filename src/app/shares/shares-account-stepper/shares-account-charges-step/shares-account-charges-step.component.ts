@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
 
@@ -11,6 +11,23 @@ import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.componen
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
 import { TranslateService } from '@ngx-translate/core';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { ChargesFilterPipe } from '../../../pipes/charges-filter.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Shares Account Charges Step
@@ -18,9 +35,29 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-shares-account-charges-step',
   templateUrl: './shares-account-charges-step.component.html',
-  styleUrls: ['./shares-account-charges-step.component.scss']
+  styleUrls: ['./shares-account-charges-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatStepperPrevious,
+    MatStepperNext,
+    ChargesFilterPipe
+  ]
 })
 export class SharesAccountChargesStepComponent implements OnInit, OnChanges {
+  private dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Shares Account Product Template */
   @Input() sharesAccountProductTemplate: any;
@@ -38,13 +75,13 @@ export class SharesAccountChargesStepComponent implements OnInit, OnChanges {
   /** For Edit Shares Account Form */
   isChargesPatched = false;
   /** Display columns for charges table */
-  displayedColumns: string[] = ['name', 'chargeCalculationType', 'amount', 'chargeTimeType', 'action'];
-
-  /**
-   * @param {MatDialog} dialog Mat Dialog
-   */
-  constructor(private dialog: MatDialog,
-      private translateService: TranslateService) { }
+  displayedColumns: string[] = [
+    'name',
+    'chargeCalculationType',
+    'amount',
+    'chargeTimeType',
+    'action'
+  ];
 
   ngOnInit() {
     this.currencyCode.valueChanges.subscribe(() => {
@@ -85,8 +122,8 @@ export class SharesAccountChargesStepComponent implements OnInit, OnChanges {
         label: this.translateService.instant('labels.inputs.Amount'),
         value: charge.amount || charge.amountOrPercentage,
         type: 'number',
-        required: false,
-      }),
+        required: false
+      })
     ];
     const data = {
       title: this.translateService.instant('labels.heading.Edit Charge'),
@@ -127,5 +164,4 @@ export class SharesAccountChargesStepComponent implements OnInit, OnChanges {
   get sharesAccountCharges() {
     return { charges: this.chargesDataSource };
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -15,29 +15,74 @@ import { CaptureImageDialogComponent } from './custom-dialogs/capture-image-dial
 
 /** Custom Services */
 import { ClientsService } from '../clients.service';
+import {
+  MatCard,
+  MatCardHeader,
+  MatCardTitleGroup,
+  MatCardMdImage,
+  MatCardTitle,
+  MatCardSubtitle,
+  MatCardContent
+} from '@angular/material/card';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { NgClass } from '@angular/common';
+import { EntityNameComponent } from '../../shared/entity-name/entity-name.component';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatIcon } from '@angular/material/icon';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { AccountNumberComponent } from '../../shared/account-number/account-number.component';
+import { ExternalIdentifierComponent } from '../../shared/external-identifier/external-identifier.component';
+import { MatTabNav, MatTabLink, MatTabNavPanel } from '@angular/material/tabs';
+import { StatusLookupPipe } from '../../pipes/status-lookup.pipe';
+import { DateFormatPipe } from '../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-clients-view',
   templateUrl: './clients-view.component.html',
-  styleUrls: ['./clients-view.component.scss']
+  styleUrls: ['./clients-view.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCardHeader,
+    MatCardTitleGroup,
+    MatCardMdImage,
+    MatTooltip,
+    MatCardTitle,
+    NgClass,
+    EntityNameComponent,
+    MatIconButton,
+    MatMenuTrigger,
+    MatIcon,
+    FaIconComponent,
+    MatCardSubtitle,
+    AccountNumberComponent,
+    ExternalIdentifierComponent,
+    MatMenu,
+    MatMenuItem,
+    MatTabNav,
+    MatTabLink,
+    RouterLinkActive,
+    MatTabNavPanel,
+    RouterOutlet,
+    StatusLookupPipe,
+    DateFormatPipe
+  ]
 })
 export class ClientsViewComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private clientsService = inject(ClientsService);
+  private _sanitizer = inject(DomSanitizer);
+  dialog = inject(MatDialog);
 
   clientViewData: any;
   clientDatatables: any;
   clientImage: any;
   clientTemplateData: any;
 
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private clientsService: ClientsService,
-              private _sanitizer: DomSanitizer,
-              public dialog: MatDialog) {
-    this.route.data.subscribe((data: {
-      clientViewData: any,
-      clientTemplateData: any,
-      clientDatatables: any
-    }) => {
+  constructor() {
+    this.route.data.subscribe((data: { clientViewData: any; clientTemplateData: any; clientDatatables: any }) => {
       this.clientViewData = data.clientViewData;
       this.clientDatatables = data.clientDatatables;
       this.clientTemplateData = data.clientTemplateData;
@@ -45,15 +90,25 @@ export class ClientsViewComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.clientsService.getClientProfileImage(this.clientViewData.id).subscribe(
-      (base64Image: any) => {
-        this.clientImage = this._sanitizer.bypassSecurityTrustResourceUrl(base64Image);
-      }, (error: any) => {}
-    );
+    this.clientsService.getClientProfileImage(this.clientViewData.id).subscribe({
+      next: (base64Image: any) => {
+        // If base64Image is null, client has no profile image
+        if (base64Image) {
+          this.clientImage = this._sanitizer.bypassSecurityTrustResourceUrl(base64Image);
+        } else {
+          this.clientImage = null;
+        }
+      },
+      error: (error: any) => {
+        // Handle any unexpected errors
+        console.error('Error loading client profile image:', error);
+        this.clientImage = null;
+      }
+    });
   }
 
   isActive(): boolean {
-    return (this.clientViewData.status.value === 'Active');
+    return this.clientViewData.status.value === 'Active';
   }
 
   /**
@@ -77,11 +132,10 @@ export class ClientsViewComponent implements OnInit {
       case 'Undo Rejection':
       case 'Add Charge':
       case 'Create Collateral':
-      case 'Create Self Service User':
       case 'Client Screen Reports':
         this.router.navigate([`actions/${name}`], { relativeTo: this.route });
         break;
-       case 'Unassign Staff':
+      case 'Unassign Staff':
         this.unassignStaff();
         break;
       case 'Delete':
@@ -106,12 +160,24 @@ export class ClientsViewComponent implements OnInit {
         this.deleteProfileImage();
         break;
       case 'Create Standing Instructions':
-        const createStandingInstructionsQueryParams: any = { officeId: this.clientViewData.officeId, accountType: 'fromsavings' };
-        this.router.navigate(['standing-instructions/create-standing-instructions'], { relativeTo: this.route, queryParams: createStandingInstructionsQueryParams });
+        const createStandingInstructionsQueryParams: any = {
+          officeId: this.clientViewData.officeId,
+          accountType: 'fromsavings'
+        };
+        this.router.navigate(['standing-instructions/create-standing-instructions'], {
+          relativeTo: this.route,
+          queryParams: createStandingInstructionsQueryParams
+        });
         break;
       case 'View Standing Instructions':
-        const viewStandingInstructionsQueryParams: any = { officeId: this.clientViewData.officeId, accountType: 'fromsavings' };
-        this.router.navigate(['standing-instructions/list-standing-instructions'], { relativeTo: this.route, queryParams: viewStandingInstructionsQueryParams });
+        const viewStandingInstructionsQueryParams: any = {
+          officeId: this.clientViewData.officeId,
+          accountType: 'fromsavings'
+        };
+        this.router.navigate(['standing-instructions/list-standing-instructions'], {
+          relativeTo: this.route,
+          queryParams: viewStandingInstructionsQueryParams
+        });
         break;
     }
   }
@@ -122,8 +188,7 @@ export class ClientsViewComponent implements OnInit {
    */
   reload() {
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/clients`, {skipLocationChange: true})
-      .then(() => this.router.navigate([url]));
+    this.router.navigateByUrl(`/clients`, { skipLocationChange: true }).then(() => this.router.navigate([url]));
   }
 
   /**
@@ -149,7 +214,8 @@ export class ClientsViewComponent implements OnInit {
     const unAssignStaffDialogRef = this.dialog.open(UnassignStaffDialogComponent);
     unAssignStaffDialogRef.afterClosed().subscribe((response: { confirm: any }) => {
       if (response.confirm) {
-        this.clientsService.executeClientCommand(this.clientViewData.id, 'unassignStaff', { staffId: this.clientViewData.staffId })
+        this.clientsService
+          .executeClientCommand(this.clientViewData.id, 'unassignStaff', { staffId: this.clientViewData.staffId })
           .subscribe(() => {
             this.reload();
           });
@@ -185,10 +251,9 @@ export class ClientsViewComponent implements OnInit {
     const uploadSignatureDialogRef = this.dialog.open(UploadSignatureDialogComponent);
     uploadSignatureDialogRef.afterClosed().subscribe((signature: File) => {
       if (signature) {
-        this.clientsService.uploadClientSignatureImage(this.clientViewData.id, signature)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.clientsService.uploadClientSignatureImage(this.clientViewData.id, signature).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -203,10 +268,9 @@ export class ClientsViewComponent implements OnInit {
       });
       deleteSignatureDialogRef.afterClosed().subscribe((response: any) => {
         if (response.delete) {
-          this.clientsService.deleteClientDocument(this.clientViewData.id, response.id)
-            .subscribe(() => {
-              this.reload();
-            });
+          this.clientsService.deleteClientDocument(this.clientViewData.id, response.id).subscribe(() => {
+            this.reload();
+          });
         } else if (response.upload) {
           this.uploadSignature();
         }
@@ -221,10 +285,9 @@ export class ClientsViewComponent implements OnInit {
     const captureImageDialogRef = this.dialog.open(CaptureImageDialogComponent);
     captureImageDialogRef.afterClosed().subscribe((imageURL: string) => {
       if (imageURL) {
-        this.clientsService.uploadCapturedClientProfileImage(this.clientViewData.id, imageURL)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.clientsService.uploadCapturedClientProfileImage(this.clientViewData.id, imageURL).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -236,10 +299,9 @@ export class ClientsViewComponent implements OnInit {
     const uploadImageDialogRef = this.dialog.open(UploadImageDialogComponent);
     uploadImageDialogRef.afterClosed().subscribe((image: File) => {
       if (image) {
-        this.clientsService.uploadClientProfileImage(this.clientViewData.id, image)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.clientsService.uploadClientProfileImage(this.clientViewData.id, image).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -253,12 +315,10 @@ export class ClientsViewComponent implements OnInit {
     });
     deleteClientImageDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.clientsService.deleteClientProfileImage(this.clientViewData.id)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.clientsService.deleteClientProfileImage(this.clientViewData.id).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
-
 }

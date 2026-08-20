@@ -1,18 +1,29 @@
 /** Angular Imports */
-import { Location } from '@angular/common';
-import { Component } from '@angular/core';
+import { Location, NgIf, NgClass } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AccountTransfersService } from '../account-transfers.service';
-import { TranslateService } from '@ngx-translate/core';
-import { ConfirmationDialogComponent } from 'app/shared/confirmation-dialog/confirmation-dialog.component';
-import { MatDialog } from '@angular/material/dialog';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatDivider } from '@angular/material/divider';
+import { DateFormatPipe } from '../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-view-account-transfer',
   templateUrl: './view-account-transfer.component.html',
-  styleUrls: ['./view-account-transfer.component.scss']
+  styleUrls: ['./view-account-transfer.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    NgClass,
+    MatDivider,
+    DateFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class ViewAccountTransferComponent {
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
 
   viewAccountTransferData: any;
   /**
@@ -20,11 +31,7 @@ export class ViewAccountTransferComponent {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Location} location Location.
    */
-  constructor(private route: ActivatedRoute,
-    private location: Location,
-    private accountTransfersService: AccountTransfersService,
-    public dialog: MatDialog,
-    private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { viewAccountTransferData: any }) => {
       this.viewAccountTransferData = data.viewAccountTransferData;
     });
@@ -42,23 +49,7 @@ export class ViewAccountTransferComponent {
     this.location.back();
   }
 
-  undoTransaction(): void {
-    const undoTransactionAccountDialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: { heading: this.translateService.instant('labels.heading.Undo Transaction'), dialogContext: 
-        this.translateService.instant('labels.dialogContext.Are you sure you want undo the transaction') + `${this.viewAccountTransferData.id}` }
-    });
-    undoTransactionAccountDialogRef.afterClosed().subscribe((response: { confirm: any }) => {
-      if (response.confirm) {
-        this.accountTransfersService.adjustAccountTransfer(this.viewAccountTransferData.id, {}).subscribe((response: any) => {
-          console.log(response);
-          this.goBack();
-        });
-      }
-    });
-  }
-
   transactionColor(): string {
     return this.viewAccountTransferData.reversed ? 'undo' : 'active';
   }
-
 }

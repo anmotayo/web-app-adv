@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef, inject } from '@angular/core';
 
 /** Custom Services */
 import { AuthenticationService } from '../../core/authentication/authentication.service';
@@ -7,10 +7,11 @@ import { AuthenticationService } from '../../core/authentication/authentication.
 /**
  * Has Permission Directive
  */
-@Directive({
-  selector: '[mifosxHasPermission]'
-})
+@Directive({ selector: '[mifosxHasPermission]', standalone: true })
 export class HasPermissionDirective {
+  private templateRef = inject<TemplateRef<any>>(TemplateRef);
+  private viewContainer = inject(ViewContainerRef);
+  private authenticationService = inject(AuthenticationService);
 
   /** User Permissions */
   private userPermissions: any[];
@@ -21,9 +22,7 @@ export class HasPermissionDirective {
    * @param {ViewContainerRef} viewContainer View Container Reference
    * @param {AuthenticationService} authenticationService AuthenticationService
    */
-  constructor(private templateRef: TemplateRef<any>,
-              private viewContainer: ViewContainerRef,
-              private authenticationService: AuthenticationService) {
+  constructor() {
     const savedCredentials = this.authenticationService.getCredentials();
     this.userPermissions = savedCredentials.permissions;
   }
@@ -60,16 +59,15 @@ export class HasPermissionDirective {
     if (this.userPermissions.includes('ALL_FUNCTIONS')) {
       return true;
     } else if (permission !== '') {
-        if (permission.substring(0, 5) === 'READ_' && this.userPermissions.includes('ALL_FUNCTIONS_READ')) {
-          return true;
-        } else if (this.userPermissions.includes(permission)) {
-          return true;
-        } else {
-          return false;
-        }
+      if (permission.substring(0, 5) === 'READ_' && this.userPermissions.includes('ALL_FUNCTIONS_READ')) {
+        return true;
+      } else if (this.userPermissions.includes(permission)) {
+        return true;
+      } else {
+        return false;
+      }
     } else {
       return false;
     }
   }
-
 }

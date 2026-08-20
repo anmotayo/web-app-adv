@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { AccountingService } from '../accounting.service';
  * Closing entry data resolver.
  */
 @Injectable()
-export class ClosingEntryResolver implements Resolve<Object> {
-
-  /**
-   * @param {AccountingService} accountingService Accounting service.
-   */
-  constructor(private accountingService: AccountingService) {}
+export class ClosingEntryResolver {
+  private accountingService = inject(AccountingService);
 
   /**
    * Returns the gl account closure data.
@@ -27,5 +23,4 @@ export class ClosingEntryResolver implements Resolve<Object> {
     const glAccountClosureId = route.paramMap.get('id');
     return this.accountingService.getAccountingClosure(glAccountClosureId);
   }
-
 }

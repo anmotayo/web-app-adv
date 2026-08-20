@@ -1,11 +1,17 @@
 /** Angular Imports */
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 
 /** Custom Model */
 import { Theme } from './theme.model';
 
 /** Custom Services */
 import { ThemeStorageService } from './theme-storage.service';
+import { MatIconButton } from '@angular/material/button';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatGridList, MatGridTile } from '@angular/material/grid-list';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Theme picker component.
@@ -16,9 +22,21 @@ import { ThemeStorageService } from './theme-storage.service';
   selector: 'mifosx-theme-picker',
   templateUrl: './theme-picker.component.html',
   styleUrls: ['./theme-picker.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    MatMenuTrigger,
+    MatTooltip,
+    FaIconComponent,
+    MatMenu,
+    MatGridList,
+    MatGridTile,
+    MatMenuItem
+  ]
 })
 export class ThemePickerComponent implements OnInit {
+  themeStorageService = inject(ThemeStorageService);
 
   /** Default theme for the application. */
   currentTheme: Theme = {
@@ -41,7 +59,7 @@ export class ThemePickerComponent implements OnInit {
       href: 'indigo-pink.css',
       primary: '#3F51B5',
       accent: '#E91E63',
-      isDark: false,
+      isDark: false
     },
     {
       href: 'deeppurple-amber.css',
@@ -64,11 +82,6 @@ export class ThemePickerComponent implements OnInit {
   ];
 
   /**
-   * @param {ThemeStorageService} themeStorageService Theme Storage Service.
-   */
-  constructor(public themeStorageService: ThemeStorageService) {  }
-
-  /**
    * Initializes the theme for the application.
    */
   ngOnInit() {
@@ -86,5 +99,4 @@ export class ThemePickerComponent implements OnInit {
     this.currentTheme = theme;
     this.themeStorageService.installTheme(theme);
   }
-
 }

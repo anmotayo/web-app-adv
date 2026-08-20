@@ -1,12 +1,17 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
-
+import { maxNumberValueValidator } from 'app/shared/validators/max-number-value.validator';
+import { minNumberValueValidator } from 'app/shared/validators/min-number-value.validator';
+import { ValidateOnFocusDirective } from '../../../directives/validate-on-focus.directive';
+import { GlAccountSelectorComponent } from '../../../shared/accounting/gl-account-selector/gl-account-selector.component';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Charge component.
@@ -14,9 +19,20 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-edit-charge',
   templateUrl: './edit-charge.component.html',
-  styleUrls: ['./edit-charge.component.scss']
+  styleUrls: ['./edit-charge.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    ValidateOnFocusDirective,
+    GlAccountSelectorComponent,
+    MatCheckbox
+  ]
 })
 export class EditChargeComponent implements OnInit {
+  private productsService = inject(ProductsService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Selected Data. */
   chargeData: any;
@@ -53,11 +69,7 @@ export class EditChargeComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private productsService: ProductsService,
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { chargesTemplate: any }) => {
       this.chargeData = data.chargesTemplate;
     });
@@ -71,19 +83,43 @@ export class EditChargeComponent implements OnInit {
    * Edit Charge form.
    */
   editChargeForm() {
-    this.showFeeOptions = (this.chargeData.feeInterval && this.chargeData.feeInterval > 0);
+    this.showFeeOptions = this.chargeData.feeInterval && this.chargeData.feeInterval > 0;
 
     this.chargeForm = this.formBuilder.group({
-      'name': [this.chargeData.name, Validators.required],
-      'chargeAppliesTo': [{ value: this.chargeData.chargeAppliesTo.id, disabled: true }, Validators.required],
-      'currencyCode': [this.chargeData.currency.code, Validators.required],
-      'amount': [this.chargeData.amount, Validators.required],
-      'active': [this.chargeData.active],
-      'penalty': [this.chargeData.penalty],
-      'minCap': [this.chargeData.minCap],
-      'maxCap': [this.chargeData.maxCap],
-      'chargeTimeType': [this.chargeData.chargeTimeType.id, Validators.required],
-      'chargeCalculationType': [this.chargeData.chargeCalculationType.id, Validators.required],
+      name: [
+        this.chargeData.name,
+        Validators.required
+      ],
+      chargeAppliesTo: [
+        { value: this.chargeData.chargeAppliesTo.id, disabled: true },
+        Validators.required
+      ],
+      currencyCode: [
+        this.chargeData.currency.code,
+        Validators.required
+      ],
+      amount: [
+        this.chargeData.amount,
+        Validators.required
+      ],
+      active: [this.chargeData.active],
+      penalty: [this.chargeData.penalty],
+      minCap: [
+        this.chargeData.minCap || null,
+        [maxNumberValueValidator('maxCap')]
+      ],
+      maxCap: [
+        this.chargeData.maxCap || null,
+        [minNumberValueValidator('minCap')]
+      ],
+      chargeTimeType: [
+        this.chargeData.chargeTimeType.id,
+        Validators.required
+      ],
+      chargeCalculationType: [
+        this.chargeData.chargeCalculationType.id,
+        Validators.required
+      ]
     });
     switch (this.chargeData.chargeAppliesTo.value) {
       case 'Loan': {
@@ -91,12 +127,15 @@ export class EditChargeComponent implements OnInit {
         this.chargeCalculationTypeOptions = this.chargeData.loanChargeCalculationTypeOptions;
         this.addFeeFrequency = true;
         this.chargePaymentMode = true;
-        this.chargeForm.addControl('chargePaymentMode', this.formBuilder.control(this.chargeData.chargePaymentMode.id, Validators.required));
+        this.chargeForm.addControl(
+          'chargePaymentMode',
+          this.formBuilder.control(this.chargeData.chargePaymentMode.id, Validators.required)
+        );
         if (this.showFeeOptions) {
           this.getFeeFrequency(this.showFeeOptions);
           this.chargeForm.patchValue({
-            'feeInterval': this.chargeData.feeInterval,
-            'feeFrequency': this.chargeData.feeFrequency.id
+            feeInterval: this.chargeData.feeInterval,
+            feeFrequency: this.chargeData.feeFrequency.id
           });
         }
         break;
@@ -120,12 +159,18 @@ export class EditChargeComponent implements OnInit {
         this.chargeTimeTypeOptions = this.chargeData.clientChargeTimeTypeOptions;
         this.showGLAccount = true;
         this.addFeeFrequency = false;
-        this.chargeForm.addControl('incomeAccountId', this.formBuilder.control(this.chargeData.incomeOrLiabilityAccount.id, Validators.required));
+        this.chargeForm.addControl(
+          'incomeAccountId',
+          this.formBuilder.control(this.chargeData.incomeOrLiabilityAccount?.id, Validators.required)
+        );
         break;
       }
     }
     if (this.chargeData.taxGroup) {
-      this.chargeForm.addControl('taxGroupId', this.formBuilder.control({ value: this.chargeData.taxGroup.id, disabled: true }));
+      this.chargeForm.addControl(
+        'taxGroupId',
+        this.formBuilder.control({ value: this.chargeData.taxGroup.id, disabled: true })
+      );
     } else {
       this.chargeForm.addControl('taxGroupId', this.formBuilder.control({ value: '' }));
     }
@@ -160,10 +205,8 @@ export class EditChargeComponent implements OnInit {
     if (!charges.maxCap) {
       delete charges.maxCap;
     }
-    this.productsService.updateCharge(this.chargeData.id.toString(), charges)
-      .subscribe((response: any) => {
-        this.router.navigate(['../'], { relativeTo: this.route });
-      });
+    this.productsService.updateCharge(this.chargeData.id.toString(), charges).subscribe((response: any) => {
+      this.router.navigate(['../'], { relativeTo: this.route });
+    });
   }
-
 }

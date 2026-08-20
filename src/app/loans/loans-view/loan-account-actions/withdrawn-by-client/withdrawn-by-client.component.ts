@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Withdrawn By Applicant Loan Form
@@ -14,9 +16,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-withdrawn-by-client',
   templateUrl: './withdrawn-by-client.component.html',
-  styleUrls: ['./withdrawn-by-client.component.scss']
+  styleUrls: ['./withdrawn-by-client.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class WithdrawnByClientComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** Loan Id */
@@ -35,12 +47,7 @@ export class WithdrawnByClientComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
+  constructor() {
     this.loanId = this.route.snapshot.params['loanId'];
   }
 
@@ -58,8 +65,11 @@ export class WithdrawnByClientComponent implements OnInit {
    */
   createWithdrawnByClientLoanForm() {
     this.withdrawnByClientLoanForm = this.formBuilder.group({
-      'withdrawnOnDate': [new Date(), Validators.required],
-      'note': ''
+      withdrawnOnDate: [
+        new Date(),
+        Validators.required
+      ],
+      note: ''
     });
   }
 
@@ -77,10 +87,8 @@ export class WithdrawnByClientComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.loanService.loanActionButtons(this.loanId, 'withdrawnByApplicant', data)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../general'], { relativeTo: this.route });
-      });
+    this.loanService.loanActionButtons(this.loanId, 'withdrawnByApplicant', data).subscribe((response: any) => {
+      this.router.navigate(['../../general'], { relativeTo: this.route });
+    });
   }
-
 }

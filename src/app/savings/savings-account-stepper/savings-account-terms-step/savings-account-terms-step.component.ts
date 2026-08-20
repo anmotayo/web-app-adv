@@ -1,7 +1,18 @@
 /** Angular Imports */
-import { Component, OnChanges, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
+import { Component, OnChanges, OnInit, Input, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDivider } from '@angular/material/divider';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings Account Terms Step
@@ -9,9 +20,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-savings-account-terms-step',
   templateUrl: './savings-account-terms-step.component.html',
-  styleUrls: ['./savings-account-terms-step.component.scss']
+  styleUrls: ['./savings-account-terms-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatDivider,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private settingsService = inject(SettingsService);
 
   /** Savings Account and Product Template */
   @Input() savingsAccountProductTemplate: any;
@@ -39,8 +60,7 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
    * @param {FormBuilder} formBuilder Form Builder
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private settingsService: SettingsService) {
+  constructor() {
     this.createSavingsAccountTermsForm();
     this.buildDependencies();
   }
@@ -48,22 +68,22 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
   ngOnChanges() {
     if (this.savingsAccountProductTemplate) {
       this.savingsAccountTermsForm.patchValue({
-        'currencyCode': this.savingsAccountProductTemplate.currency.code,
-        'decimal': this.savingsAccountProductTemplate.currency.decimalPlaces,
-        'minBalanceForInterestCalculation': this.savingsAccountProductTemplate.minBalanceForInterestCalculation,
-        'nominalAnnualInterestRate': this.savingsAccountProductTemplate.nominalAnnualInterestRate,
-        'interestCompoundingPeriodType': this.savingsAccountProductTemplate.interestCompoundingPeriodType.id,
-        'interestPostingPeriodType': this.savingsAccountProductTemplate.interestPostingPeriodType.id,
-        'interestCalculationType': this.savingsAccountProductTemplate.interestCalculationType.id,
-        'interestCalculationDaysInYearType': this.savingsAccountProductTemplate.interestCalculationDaysInYearType.id,
-        'minRequiredOpeningBalance': this.savingsAccountProductTemplate.minRequiredOpeningBalance,
-        'allowOverdraft': this.savingsAccountProductTemplate.allowOverdraft,
-        'overdraftLimit': this.savingsAccountProductTemplate.overdraftLimit,
-        'enforceMinRequiredBalance': this.savingsAccountProductTemplate.enforceMinRequiredBalance,
-        'minOverdraftForInterestCalculation': this.savingsAccountProductTemplate.minOverdraftForInterestCalculation,
-        'nominalAnnualInterestRateOverdraft': this.savingsAccountProductTemplate.nominalAnnualInterestRateOverdraft,
-        'minRequiredBalance': this.savingsAccountProductTemplate.minRequiredBalance,
-        'withdrawalFeeForTransfers': this.savingsAccountProductTemplate.withdrawalFeeForTransfers
+        currencyCode: this.savingsAccountProductTemplate.currency.code,
+        decimal: this.savingsAccountProductTemplate.currency.decimalPlaces,
+        minBalanceForInterestCalculation: this.savingsAccountProductTemplate.minBalanceForInterestCalculation,
+        nominalAnnualInterestRate: this.savingsAccountProductTemplate.nominalAnnualInterestRate,
+        interestCompoundingPeriodType: this.savingsAccountProductTemplate.interestCompoundingPeriodType.id,
+        interestPostingPeriodType: this.savingsAccountProductTemplate.interestPostingPeriodType.id,
+        interestCalculationType: this.savingsAccountProductTemplate.interestCalculationType.id,
+        interestCalculationDaysInYearType: this.savingsAccountProductTemplate.interestCalculationDaysInYearType.id,
+        minRequiredOpeningBalance: this.savingsAccountProductTemplate.minRequiredOpeningBalance,
+        allowOverdraft: this.savingsAccountProductTemplate.allowOverdraft,
+        overdraftLimit: this.savingsAccountProductTemplate.overdraftLimit,
+        enforceMinRequiredBalance: this.savingsAccountProductTemplate.enforceMinRequiredBalance,
+        minOverdraftForInterestCalculation: this.savingsAccountProductTemplate.minOverdraftForInterestCalculation,
+        nominalAnnualInterestRateOverdraft: this.savingsAccountProductTemplate.nominalAnnualInterestRateOverdraft,
+        minRequiredBalance: this.savingsAccountProductTemplate.minRequiredBalance,
+        withdrawalFeeForTransfers: this.savingsAccountProductTemplate.withdrawalFeeForTransfers
       });
       this.setOptions();
     }
@@ -73,18 +93,20 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
     this.maxDate = this.settingsService.businessDate;
     if (this.savingsAccountTemplate) {
       this.savingsAccountTermsForm.patchValue({
-        'nominalAnnualInterestRate': this.savingsAccountTemplate.nominalAnnualInterestRate,
-        'interestCompoundingPeriodType': this.savingsAccountTemplate.interestCompoundingPeriodType.id,
-        'interestPostingPeriodType': this.savingsAccountTemplate.interestPostingPeriodType.id,
-        'interestCalculationType': this.savingsAccountTemplate.interestCalculationType.id,
-        'interestCalculationDaysInYearType': this.savingsAccountTemplate.interestCalculationDaysInYearType.id,
-        'minRequiredOpeningBalance': this.savingsAccountTemplate.minRequiredOpeningBalance,
-        'withdrawalFeeForTransfers': this.savingsAccountTemplate.withdrawalFeeForTransfers,
-        'lockinPeriodFrequency': this.savingsAccountTemplate.lockinPeriodFrequency,
-        'lockinPeriodFrequencyType': this.savingsAccountTemplate.lockinPeriodFrequencyType && this.savingsAccountTemplate.lockinPeriodFrequencyType.id,
-        'allowOverdraft': this.savingsAccountTemplate.allowOverdraft,
-        'enforceMinRequiredBalance': this.savingsAccountTemplate.enforceMinRequiredBalance,
-        'minRequiredBalance': this.savingsAccountTemplate.minRequiredBalance,
+        nominalAnnualInterestRate: this.savingsAccountTemplate.nominalAnnualInterestRate,
+        interestCompoundingPeriodType: this.savingsAccountTemplate.interestCompoundingPeriodType.id,
+        interestPostingPeriodType: this.savingsAccountTemplate.interestPostingPeriodType.id,
+        interestCalculationType: this.savingsAccountTemplate.interestCalculationType.id,
+        interestCalculationDaysInYearType: this.savingsAccountTemplate.interestCalculationDaysInYearType.id,
+        minRequiredOpeningBalance: this.savingsAccountTemplate.minRequiredOpeningBalance,
+        withdrawalFeeForTransfers: this.savingsAccountTemplate.withdrawalFeeForTransfers,
+        lockinPeriodFrequency: this.savingsAccountTemplate.lockinPeriodFrequency,
+        lockinPeriodFrequencyType:
+          this.savingsAccountTemplate.lockinPeriodFrequencyType &&
+          this.savingsAccountTemplate.lockinPeriodFrequencyType.id,
+        allowOverdraft: this.savingsAccountTemplate.allowOverdraft,
+        enforceMinRequiredBalance: this.savingsAccountTemplate.enforceMinRequiredBalance,
+        minRequiredBalance: this.savingsAccountTemplate.minRequiredBalance
       });
     }
   }
@@ -94,21 +116,36 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
    */
   createSavingsAccountTermsForm() {
     this.savingsAccountTermsForm = this.formBuilder.group({
-      'currencyCode': [{value: '', disabled: true}],
-      'decimal': [{value: '',  disabled: true}],
-      'nominalAnnualInterestRate': ['', Validators.required],
-      'interestCompoundingPeriodType': ['', Validators.required],
-      'interestPostingPeriodType': ['', Validators.required],
-      'interestCalculationType': ['', Validators.required],
-      'interestCalculationDaysInYearType': ['', Validators.required],
-      'minRequiredOpeningBalance': [''],
-      'withdrawalFeeForTransfers': [false],
-      'lockinPeriodFrequency': [''],
-      'lockinPeriodFrequencyType': [''],
-      'allowOverdraft': [false],
-      'enforceMinRequiredBalance': [false],
-      'minRequiredBalance': [''],
-      'minBalanceForInterestCalculation': [{value: '', disabled: true}]
+      currencyCode: [{ value: '', disabled: true }],
+      decimal: [{ value: '', disabled: true }],
+      nominalAnnualInterestRate: [
+        '',
+        Validators.required
+      ],
+      interestCompoundingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestPostingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationDaysInYearType: [
+        '',
+        Validators.required
+      ],
+      minRequiredOpeningBalance: [''],
+      withdrawalFeeForTransfers: [false],
+      lockinPeriodFrequency: [''],
+      lockinPeriodFrequencyType: [''],
+      allowOverdraft: [false],
+      enforceMinRequiredBalance: [false],
+      minRequiredBalance: [''],
+      minBalanceForInterestCalculation: [{ value: '', disabled: true }]
     });
   }
 
@@ -120,7 +157,8 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
     this.interestCompoundingPeriodTypeData = this.savingsAccountProductTemplate.interestCompoundingPeriodTypeOptions;
     this.interestPostingPeriodTypeData = this.savingsAccountProductTemplate.interestPostingPeriodTypeOptions;
     this.interestCalculationTypeData = this.savingsAccountProductTemplate.interestCalculationTypeOptions;
-    this.interestCalculationDaysInYearTypeData = this.savingsAccountProductTemplate.interestCalculationDaysInYearTypeOptions;
+    this.interestCalculationDaysInYearTypeData =
+      this.savingsAccountProductTemplate.interestCalculationDaysInYearTypeOptions;
   }
 
   /**
@@ -150,5 +188,4 @@ export class SavingsAccountTermsStepComponent implements OnChanges, OnInit {
     delete payload.minBalanceForInterestCalculation; // Backend is not accepting minBalanceForInterestCalculation value
     return payload;
   }
-
 }

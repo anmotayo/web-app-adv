@@ -1,17 +1,26 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
-import { UploadDocumentDialogComponent } from 'app/clients/clients-view/custom-dialogs/upload-document-dialog/upload-document-dialog.component';
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
-import { environment } from 'environments/environment';
+import { environment } from '../../../../environments/environment';
+import { EntityDocumentsTabComponent } from '../../../shared/tabs/entity-documents-tab/entity-documents-tab.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-savings-documents-tab',
   templateUrl: './savings-documents-tab.component.html',
-  styleUrls: ['./savings-documents-tab.component.scss']
+  styleUrls: ['./savings-documents-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    EntityDocumentsTabComponent
+  ]
 })
-export class SavingsDocumentsTabComponent implements OnInit {
+export class SavingsDocumentsTabComponent {
+  private route = inject(ActivatedRoute);
+  private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
+  dialog = inject(MatDialog);
 
   /** Stores the resolved savings documents data */
   entityDocuments: any;
@@ -23,24 +32,29 @@ export class SavingsDocumentsTabComponent implements OnInit {
    * Retrieves the savings data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute,
-    private savingsService: SavingsService,
-    private settingsService: SettingsService,
-    public dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { savingsDocuments: any }) => {
       this.setSavingsDocumentsData(data.savingsDocuments);
     });
     this.entityId = this.route.parent.snapshot.paramMap.get('savingAccountId');
   }
 
-  ngOnInit() {
-  }
-
   setSavingsDocumentsData(data: any) {
     data.forEach((ele: any) => {
-      ele.docUrl = this.settingsService.serverUrl + '/savings/' + ele.parentEntityId + '/documents/' + ele.id + '/attachment?tenantIdentifier=' + environment.fineractPlatformTenantId;
+      ele.docUrl =
+        this.settingsService.serverUrl +
+        '/savings/' +
+        ele.parentEntityId +
+        '/documents/' +
+        ele.id +
+        '/attachment?tenantIdentifier=' +
+        environment.fineractPlatformTenantId;
       if (ele.fileName) {
-        if (ele.fileName.toLowerCase().indexOf('.jpg') !== -1 || ele.fileName.toLowerCase().indexOf('.jpeg') !== -1 || ele.fileName.toLowerCase().indexOf('.png') !== -1) {
+        if (
+          ele.fileName.toLowerCase().indexOf('.jpg') !== -1 ||
+          ele.fileName.toLowerCase().indexOf('.jpeg') !== -1 ||
+          ele.fileName.toLowerCase().indexOf('.png') !== -1
+        ) {
           ele.fileIsImage = true;
         }
       }
@@ -53,13 +67,6 @@ export class SavingsDocumentsTabComponent implements OnInit {
     this.entityDocuments = data;
   }
 
-  downloadDocument(documentId: string) {
-    this.savingsService.downloadSavingsDocument(this.entityId, documentId).subscribe(res => {
-      const url = window.URL.createObjectURL(res);
-      window.open(url);
-    });
-  }
-
   uploadDocument(formData: FormData): any {
     return this.savingsService.loadSavingsDocument(this.entityId, formData);
   }
@@ -67,5 +74,4 @@ export class SavingsDocumentsTabComponent implements OnInit {
   deleteDocument(documentId: any) {
     this.savingsService.deleteSavingsDocument(this.entityId, documentId).subscribe((res: any) => {});
   }
-
 }

@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { ProductsService } from '../products.service';
  * Floating Rates data resolver.
  */
 @Injectable()
-export class FloatingRatesResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class FloatingRatesResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the floating rates data.
@@ -26,5 +21,4 @@ export class FloatingRatesResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.productsService.getFloatingRates();
   }
-
 }

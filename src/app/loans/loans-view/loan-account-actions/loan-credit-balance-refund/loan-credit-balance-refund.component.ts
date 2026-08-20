@@ -1,17 +1,31 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Currency } from 'app/shared/models/general.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-loan-credit-balance-refund',
   templateUrl: './loan-credit-balance-refund.component.html',
-  styleUrls: ['./loan-credit-balance-refund.component.scss']
+  styleUrls: ['./loan-credit-balance-refund.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    CdkTextareaAutosize
+  ]
 })
 export class LoanCreditBalanceRefundComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** Loan Id */
@@ -31,14 +45,9 @@ export class LoanCreditBalanceRefundComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+  }
 
   /**
    * Creates the Credit Balance loan form
@@ -58,10 +67,16 @@ export class LoanCreditBalanceRefundComponent implements OnInit {
    */
   createCreditBalanceLoanForm() {
     this.creditBalanceLoanForm = this.formBuilder.group({
-      'transactionDate': [new Date(), Validators.required],
-      'transactionAmount': ['', Validators.required],
-      'externalId': '',
-      'note': ''
+      transactionDate: [
+        new Date(),
+        Validators.required
+      ],
+      transactionAmount: [
+        '',
+        Validators.required
+      ],
+      externalId: '',
+      note: ''
     });
   }
 
@@ -87,10 +102,8 @@ export class LoanCreditBalanceRefundComponent implements OnInit {
     };
     const command = this.dataObject.type.code.split('.')[1];
     data['transactionAmount'] = data['transactionAmount'] * 1;
-    this.loanService.submitLoanActionButton(this.loanId, data, command)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../transactions'], { relativeTo: this.route });
+    this.loanService.submitLoanActionButton(this.loanId, data, command).subscribe((response: any) => {
+      this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

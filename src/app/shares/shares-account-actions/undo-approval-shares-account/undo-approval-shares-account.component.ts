@@ -1,9 +1,11 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SharesService } from 'app/shares/shares.service';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Undo Approval Shares Account Component
@@ -11,9 +13,16 @@ import { SharesService } from 'app/shares/shares.service';
 @Component({
   selector: 'mifosx-undo-approval-shares-account',
   templateUrl: './undo-approval-shares-account.component.html',
-  styleUrls: ['./undo-approval-shares-account.component.scss']
+  styleUrls: ['./undo-approval-shares-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FormsModule
+  ]
 })
 export class UndoApprovalSharesAccountComponent {
+  private sharesService = inject(SharesService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Shares Account Id */
   accountId: any;
@@ -23,9 +32,7 @@ export class UndoApprovalSharesAccountComponent {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private sharesService: SharesService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['shareAccountId'];
   }
 
@@ -38,5 +45,4 @@ export class UndoApprovalSharesAccountComponent {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

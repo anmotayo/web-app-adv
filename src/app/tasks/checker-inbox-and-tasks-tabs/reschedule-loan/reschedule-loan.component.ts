@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import * as _ from 'lodash';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Dialog Imports */
@@ -14,13 +26,47 @@ import { TasksService } from '../../tasks.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
 import { TranslateService } from '@ngx-translate/core';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
+interface RescheduleFormData {
+  dateFormat: string;
+  locale: string;
+  approvedOnDate?: string;
+  rejectedOnDate?: string;
+}
 
 @Component({
   selector: 'mifosx-reschedule-loan',
   templateUrl: './reschedule-loan.component.html',
-  styleUrls: ['./reschedule-loan.component.scss']
+  styleUrls: ['./reschedule-loan.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCheckbox,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    DateFormatPipe
+  ]
 })
-export class RescheduleLoanComponent implements OnInit {
+export class RescheduleLoanComponent {
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
+  private tasksService = inject(TasksService);
 
   /** Loans Data */
   loans: any;
@@ -31,7 +77,14 @@ export class RescheduleLoanComponent implements OnInit {
   /** Batch Requests */
   batchRequests: any[];
   /** Displayed Columns */
-  displayedColumns: string[] = ['select', 'client', 'rescheduleRequestNo', 'loanAccountNo', 'rescheduleForm', 'rescheduleReason'];
+  displayedColumns: string[] = [
+    'select',
+    'client',
+    'rescheduleRequestNo',
+    'loanAccountNo',
+    'rescheduleForm',
+    'rescheduleReason'
+  ];
 
   /**
    * Retrieves the reschedule loan data from `resolve`.
@@ -42,21 +95,12 @@ export class RescheduleLoanComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    * @param {TasksService} tasksService Tasks Service.
    */
-  constructor(private route: ActivatedRoute,
-    private dialog: MatDialog,
-    private dateUtils: Dates,
-    private router: Router,
-    private settingsService: SettingsService,
-    private translateService: TranslateService,
-    private tasksService: TasksService) {
-    this.route.data.subscribe((data: { recheduleLoansData: any }) => {
-      this.loans = data.recheduleLoansData;
+  constructor() {
+    this.route.data.subscribe((data: { rescheduleLoansData: any }) => {
+      this.loans = data.rescheduleLoansData;
       this.dataSource = new MatTableDataSource(this.loans);
       this.selection = new SelectionModel(true, []);
     });
-  }
-
-  ngOnInit() {
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -68,9 +112,9 @@ export class RescheduleLoanComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected() ?
-      this.selection.clear() :
-      this.dataSource.data.forEach((row: any) => this.selection.select(row));
+    this.isAllSelected()
+      ? this.selection.clear()
+      : this.dataSource.data.forEach((row: any) => this.selection.select(row));
   }
 
   /** The label for the checkbox on the passed row */
@@ -83,7 +127,13 @@ export class RescheduleLoanComponent implements OnInit {
 
   bulkLoanReschedule(action: string) {
     const rescheduleLoanDialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: { heading: this.translateService.instant('labels.heading.Reschedule Loan'), dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want to') + action + this.translateService.instant('labels.dialogContext.the Reschedule Loan') }
+      data: {
+        heading: this.translateService.instant('labels.heading.Reschedule Loan'),
+        dialogContext:
+          this.translateService.instant('labels.dialogContext.Are you sure you want to') +
+          action +
+          this.translateService.instant('labels.dialogContext.the Reschedule Loan')
+      }
     });
     rescheduleLoanDialogRef.afterClosed().subscribe((response: { confirm: any }) => {
       if (response.confirm) {
@@ -96,14 +146,14 @@ export class RescheduleLoanComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const transactionDate = this.dateUtils.formatDate(this.settingsService.businessDate, dateFormat);
     const locale = this.settingsService.language.code;
-    const formData = {
+    const formData: RescheduleFormData = {
       dateFormat,
       locale
     };
     if (command === 'approve') {
-      formData['approvedOnDate'] = transactionDate;
+      formData.approvedOnDate = transactionDate;
     } else {
-      formData['rejectedOnDate'] = transactionDate;
+      formData.rejectedOnDate = transactionDate;
     }
     const listSelectedAccounts = this.selection.selected;
     this.batchRequests = [];
@@ -129,8 +179,8 @@ export class RescheduleLoanComponent implements OnInit {
    */
   reload() {
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
+    this.router
+      .navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
       .then(() => this.router.navigate([url]));
   }
-
 }

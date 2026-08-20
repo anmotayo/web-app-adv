@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { SystemService } from '../system.service';
  * Maker Checker Tasks resolver.
  */
 @Injectable()
-export class MakerCheckerTasksResolver implements Resolve<Object> {
+export class MakerCheckerTasksResolver {
+  private systemService = inject(SystemService);
 
-    /**
-     * @param {SystemService} systemService System service.
-     */
-    constructor(private systemService: SystemService) { }
-
-    /**
-     * Returns all the Configurable Maker Checker Tasks.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.systemService.getMakerCheckerPermissions();
-    }
-
+  /**
+   * Returns all the Configurable Maker Checker Tasks.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.systemService.getMakerCheckerPermissions();
+  }
 }

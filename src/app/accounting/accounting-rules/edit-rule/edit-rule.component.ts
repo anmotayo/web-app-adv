@@ -1,13 +1,17 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../../accounting.service';
 
 /** Custom Validators */
 import { oneOfTheFieldsIsRequiredValidator } from '../one-of-the-fields-is-required.validator';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit accounting rule component.
@@ -15,9 +19,20 @@ import { oneOfTheFieldsIsRequiredValidator } from '../one-of-the-fields-is-requi
 @Component({
   selector: 'mifosx-edit-rule',
   templateUrl: './edit-rule.component.html',
-  styleUrls: ['./edit-rule.component.scss']
+  styleUrls: ['./edit-rule.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatRadioGroup,
+    MatRadioButton,
+    MatCheckbox,
+    CdkTextareaAutosize
+  ]
 })
 export class EditRuleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Accounting rule form. */
   accountingRuleForm: UntypedFormGroup;
@@ -39,20 +54,14 @@ export class EditRuleComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private accountingService: AccountingService,
-              private route: ActivatedRoute,
-              private router: Router) {
-    this.route.data.subscribe((data: {
-        accountingRulesTemplate: any,
-        accountingRule: any
-      }) => {
-        this.officeData = data.accountingRulesTemplate.allowedOffices;
-        this.glAccountData = data.accountingRulesTemplate.allowedAccounts;
-        this.debitTagData = data.accountingRulesTemplate.allowedDebitTagOptions;
-        this.creditTagData = data.accountingRulesTemplate.allowedCreditTagOptions;
-        this.accountingRule = data.accountingRule;
-      });
+  constructor() {
+    this.route.data.subscribe((data: { accountingRulesTemplate: any; accountingRule: any }) => {
+      this.officeData = data.accountingRulesTemplate.allowedOffices;
+      this.glAccountData = data.accountingRulesTemplate.allowedAccounts;
+      this.debitTagData = data.accountingRulesTemplate.allowedDebitTagOptions;
+      this.creditTagData = data.accountingRulesTemplate.allowedCreditTagOptions;
+      this.accountingRule = data.accountingRule;
+    });
   }
 
   /**
@@ -67,26 +76,35 @@ export class EditRuleComponent implements OnInit {
    * Creates accounting rule form.
    */
   createAccountingRuleForm() {
-    this.accountingRuleForm = this.formBuilder.group({
-      'name': [this.accountingRule.name, Validators.required],
-      'officeId': [this.accountingRule.officeId, Validators.required],
-      'debitRuleType': [''],
-      'accountToDebit': [''],
-      'debitTags': [''],
-      'allowMultipleDebitEntries': [''],
-      'creditRuleType': [''],
-      'accountToCredit': [''],
-      'creditTags': [''],
-      'allowMultipleCreditEntries': [''],
-      'description': [this.accountingRule.description]
-    }, { validator: oneOfTheFieldsIsRequiredValidator });
+    this.accountingRuleForm = this.formBuilder.group(
+      {
+        name: [
+          this.accountingRule.name,
+          Validators.required
+        ],
+        officeId: [
+          this.accountingRule.officeId,
+          Validators.required
+        ],
+        debitRuleType: [''],
+        accountToDebit: [''],
+        debitTags: [''],
+        allowMultipleDebitEntries: [''],
+        creditRuleType: [''],
+        accountToCredit: [''],
+        creditTags: [''],
+        allowMultipleCreditEntries: [''],
+        description: [this.accountingRule.description]
+      },
+      { validator: oneOfTheFieldsIsRequiredValidator }
+    );
   }
 
   /**
    * Sets accounting rule form for selected accounting rule type.
    */
   setAccountingRulesForm() {
-    this.accountingRuleForm.get('debitRuleType').valueChanges.subscribe(debitRuleType => {
+    this.accountingRuleForm.get('debitRuleType').valueChanges.subscribe((debitRuleType) => {
       if (debitRuleType === 'fixedAccount') {
         this.accountingRuleForm.get('debitTags').reset();
         this.accountingRuleForm.get('allowMultipleDebitEntries').reset();
@@ -95,7 +113,7 @@ export class EditRuleComponent implements OnInit {
         this.accountingRuleForm.get('allowMultipleDebitEntries').setValue(false);
       }
     });
-    this.accountingRuleForm.get('creditRuleType').valueChanges.subscribe(creditRuleType => {
+    this.accountingRuleForm.get('creditRuleType').valueChanges.subscribe((creditRuleType) => {
       if (creditRuleType === 'fixedAccount') {
         this.accountingRuleForm.get('creditTags').reset();
         this.accountingRuleForm.get('allowMultipleCreditEntries').reset();
@@ -110,7 +128,9 @@ export class EditRuleComponent implements OnInit {
       this.accountingRuleForm.get('accountToDebit').setValue(this.accountingRule.debitAccounts[0].id);
     } else {
       this.accountingRuleForm.get('debitRuleType').setValue('listOfAccounts');
-      this.accountingRuleForm.get('debitTags').setValue(this.accountingRule.debitTags.map((debitTag: any) => debitTag.tag.id));
+      this.accountingRuleForm
+        .get('debitTags')
+        .setValue(this.accountingRule.debitTags.map((debitTag: any) => debitTag.tag.id));
       this.accountingRuleForm.get('allowMultipleDebitEntries').setValue(this.accountingRule.allowMultipleDebitEntries);
     }
 
@@ -119,8 +139,12 @@ export class EditRuleComponent implements OnInit {
       this.accountingRuleForm.get('accountToCredit').setValue(this.accountingRule.creditAccounts[0].id);
     } else {
       this.accountingRuleForm.get('creditRuleType').setValue('listOfAccounts');
-      this.accountingRuleForm.get('creditTags').setValue(this.accountingRule.creditTags.map((creditTag: any) => creditTag.tag.id));
-      this.accountingRuleForm.get('allowMultipleCreditEntries').setValue(this.accountingRule.allowMultipleCreditEntries);
+      this.accountingRuleForm
+        .get('creditTags')
+        .setValue(this.accountingRule.creditTags.map((creditTag: any) => creditTag.tag.id));
+      this.accountingRuleForm
+        .get('allowMultipleCreditEntries')
+        .setValue(this.accountingRule.allowMultipleCreditEntries);
     }
   }
 
@@ -145,8 +169,13 @@ export class EditRuleComponent implements OnInit {
     delete accountingRule.debitRuleType;
     delete accountingRule.creditRuleType;
     this.accountingService.updateAccountingRule(this.accountingRule.id, accountingRule).subscribe((response: any) => {
-      this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

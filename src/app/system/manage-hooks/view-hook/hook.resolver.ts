@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import {ActivatedRouteSnapshot, Resolve} from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { SystemService } from '../../system.service';
  * Hook data resolver.
  */
 @Injectable()
-export class HookResolver implements Resolve<Object> {
-
-  /**
-   * @param {SystemService} systemService System service.
-   */
-  constructor(private systemService: SystemService) {}
+export class HookResolver {
+  private systemService = inject(SystemService);
 
   /**
    * Returns the manage hooks data.
@@ -27,5 +23,4 @@ export class HookResolver implements Resolve<Object> {
     const hookId = route.paramMap.get('id');
     return this.systemService.getHook(hookId);
   }
-
 }

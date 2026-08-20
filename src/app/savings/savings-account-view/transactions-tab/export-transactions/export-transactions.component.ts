@@ -1,13 +1,15 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ReportsService } from 'app/reports/reports.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Export Client Savings Transactions Component
@@ -15,9 +17,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-export-transactions',
   templateUrl: './export-transactions.component.html',
-  styleUrls: ['./export-transactions.component.scss']
+  styleUrls: ['./export-transactions.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
 export class ExportTransactionsComponent implements OnInit {
+  private sanitizer = inject(DomSanitizer);
+  private reportsService = inject(ReportsService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -41,17 +53,11 @@ export class ExportTransactionsComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private sanitizer: DomSanitizer,
-              private reportsService: ReportsService,
-              private formBuilder: UntypedFormBuilder,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.parent.parent.data.subscribe((data: { savingsAccountData: any }) => {
       this.savingsAccountId = data.savingsAccountData.accountNo;
     });
   }
-
 
   ngOnInit() {
     this.maxDate = this.settingsService.businessDate;
@@ -63,8 +69,14 @@ export class ExportTransactionsComponent implements OnInit {
    */
   createTransactionsReportForm() {
     this.transactionsReportForm = this.formBuilder.group({
-      'fromDate': ['', Validators.required],
-      'toDate': ['', Validators.required],
+      fromDate: [
+        '',
+        Validators.required
+      ],
+      toDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -73,19 +85,28 @@ export class ExportTransactionsComponent implements OnInit {
    */
   generate() {
     const data = {
-      'output-type':	'PDF',
-      R_startDate:	this.dateUtils.formatDate(this.transactionsReportForm.value.fromDate, this.settingsService.dateFormat),
-      R_endDate:	this.dateUtils.formatDate(this.transactionsReportForm.value.toDate, this.settingsService.dateFormat),
-      R_savingsAccountId:	this.savingsAccountId
+      'output-type': 'PDF',
+      R_startDate: this.dateUtils.formatDate(
+        this.transactionsReportForm.value.fromDate,
+        this.settingsService.dateFormat
+      ),
+      R_endDate: this.dateUtils.formatDate(this.transactionsReportForm.value.toDate, this.settingsService.dateFormat),
+      R_savingsAccountId: this.savingsAccountId
     };
-    this.reportsService.getPentahoRunReportData('Client Saving Transactions', data, 'default', this.settingsService.language.code, this.settingsService.dateFormat)
-      .subscribe( (res: any) => {
+    this.reportsService
+      .getPentahoRunReportData(
+        'Client Saving Transactions',
+        data,
+        'default',
+        this.settingsService.language.code,
+        this.settingsService.dateFormat
+      )
+      .subscribe((res: any) => {
         const contentType = res.headers.get('Content-Type');
-        const file = new Blob([res.body], {type: contentType});
+        const file = new Blob([res.body], { type: contentType });
         const filecontent = URL.createObjectURL(file);
         this.pentahoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(filecontent);
         this.hideOutput = false;
       });
   }
-
 }

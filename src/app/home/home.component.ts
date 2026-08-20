@@ -1,7 +1,7 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit} from '@angular/core';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 
 /** rxjs Imports */
@@ -16,9 +16,15 @@ import { WarningDialogComponent } from './warning-dialog/warning-dialog.componen
 import { AuthenticationService } from '../core/authentication/authentication.service';
 import { PopoverService } from '../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../configuration-wizard/configuration-wizard.service';
+import { SettingsService } from 'app/settings/settings.service';
 
 /** Custom Components */
 import { NextStepDialogComponent } from '../configuration-wizard/next-step-dialog/next-step-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardImage } from '@angular/material/card';
+import { MatAutocompleteTrigger, MatAutocomplete, MatOption } from '@angular/material/autocomplete';
+import { AsyncPipe } from '@angular/common';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Home component.
@@ -26,12 +32,31 @@ import { NextStepDialogComponent } from '../configuration-wizard/next-step-dialo
 @Component({
   selector: 'mifosx-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatCardHeader,
+    MatCardTitle,
+    MatAutocompleteTrigger,
+    MatAutocomplete,
+    MatCardImage,
+    AsyncPipe
+  ]
 })
 export class HomeComponent implements OnInit, AfterViewInit {
+  private authenticationService = inject(AuthenticationService);
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
+  private settingsService = inject(SettingsService);
 
   /** Username of authenticated user. */
   username: string;
+  /** Tenant name */
+  tenant: string;
   /** Activity Form. */
   activityForm: any;
   /** Search Text. */
@@ -42,28 +67,16 @@ export class HomeComponent implements OnInit, AfterViewInit {
   allActivities: any[] = activities;
 
   /* Reference of dashboard button */
-  @ViewChild('buttonDashboard', {static: false}) buttonDashboard: ElementRef<any>;
+  @ViewChild('buttonDashboard', { static: false }) buttonDashboard: ElementRef<any>;
   /* Template for popover on dashboard button */
-  @ViewChild('templateButtonDashboard', {static: false}) templateButtonDashboard: TemplateRef<any>;
+  @ViewChild('templateButtonDashboard', { static: false }) templateButtonDashboard: TemplateRef<any>;
   /* Reference of search activity */
-  @ViewChild('searchActivity', {static: false}) searchActivity: ElementRef<any>;
+  @ViewChild('searchActivity', { static: false }) searchActivity: ElementRef<any>;
   /* Template for popover on search activity */
-  @ViewChild('templateSearchActivity', {static: false}) templateSearchActivity: TemplateRef<any>;
+  @ViewChild('templateSearchActivity', { static: false }) templateSearchActivity: TemplateRef<any>;
 
-  /**
-   * @param {AuthenticationService} authenticationService Authentication Service.
-   * @param {ActivatedRoute} activatedRoute ActivatedRoute.
-   * @param {Router} router Router.
-   * @param {MatDialog} dialog MatDialog.
-   * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
-   * @param {PopoverService} popoverService PopoverService.
-   */
-  constructor(private authenticationService: AuthenticationService,
-              private activatedRoute: ActivatedRoute,
-              private router: Router,
-              private dialog: MatDialog,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) { }
+  // All dependencies are injected using inject() above. No constructor needed.
+  constructor() {}
 
   /**
    * Sets the username of the authenticated user.
@@ -72,6 +85,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     const credentials = this.authenticationService.getCredentials();
     this.username = credentials.username;
+    this.tenant = this.tenantIdentifier();
     this.setFilteredActivities();
     if (!this.authenticationService.hasDialogBeenShown()) {
       this.dialog.open(WarningDialogComponent);
@@ -83,10 +97,10 @@ export class HomeComponent implements OnInit, AfterViewInit {
    * Sets filtered activities for autocomplete.
    */
   setFilteredActivities() {
-    this.filteredActivities = this.searchText.valueChanges
-    .pipe(
-      map((activity: any) => typeof activity === 'string' ? activity : activity.activity),
-      map((activityName: string) => activityName ? this.filterActivity(activityName) : this.allActivities));
+    this.filteredActivities = this.searchText.valueChanges.pipe(
+      map((activity: any) => (typeof activity === 'string' ? activity : activity.activity)),
+      map((activityName: string) => (activityName ? this.filterActivity(activityName) : this.allActivities))
+    );
   }
 
   /**
@@ -96,7 +110,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
    */
   private filterActivity(activityName: string): any {
     const filterValue = activityName.toLowerCase();
-    return this.allActivities.filter(activity => activity.activity.toLowerCase().indexOf(filterValue) === 0);
+    return this.allActivities.filter((activity) => activity.activity.toLowerCase().indexOf(filterValue) === 0);
   }
 
   /**
@@ -106,7 +120,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -140,23 +159,23 @@ export class HomeComponent implements OnInit, AfterViewInit {
    * Next Step (Organization) Dialog Configuration Wizard.
    */
   openNextStepDialog() {
-    const nextStepDialogRef = this.dialog.open( NextStepDialogComponent, {
+    const nextStepDialogRef = this.dialog.open(NextStepDialogComponent, {
       data: {
         nextStepName: 'Setup Organization',
         previousStepName: 'Home Tour',
         stepPercentage: 10
-      },
+      }
     });
     nextStepDialogRef.afterClosed().subscribe((response: { nextStep: boolean }) => {
-    if (response.nextStep) {
-      this.configurationWizardService.showHome = false;
-      this.configurationWizardService.showHomeSearchActivity = false;
-      this.configurationWizardService.showCreateOffice = true;
-      this.router.navigate(['/organization']);
+      if (response.nextStep) {
+        this.configurationWizardService.showHome = false;
+        this.configurationWizardService.showHomeSearchActivity = false;
+        this.configurationWizardService.showCreateOffice = true;
+        this.router.navigate(['/organization']);
       } else {
-      this.configurationWizardService.showHome = false;
-      this.configurationWizardService.showHomeSearchActivity = false;
-      this.router.navigate(['/home']);
+        this.configurationWizardService.showHome = false;
+        this.configurationWizardService.showHomeSearchActivity = false;
+        this.router.navigate(['/home']);
       }
     });
   }
@@ -171,5 +190,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
     this.router.routeReuseStrategy.shouldReuseRoute = () => false;
     this.router.onSameUrlNavigation = 'reload';
     this.router.navigate(['/home']);
+  }
+
+  tenantIdentifier() {
+    if (!this.settingsService.tenantIdentifier || this.settingsService.tenantIdentifier === '') {
+      return 'default';
+    }
+    return this.settingsService.tenantIdentifier;
   }
 }

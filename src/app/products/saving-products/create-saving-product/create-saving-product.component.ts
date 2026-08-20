@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /** Custom Components */
@@ -14,20 +14,49 @@ import { SavingProductAccountingStepComponent } from '../saving-product-stepper/
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Accounting } from 'app/core/utils/accounting';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { SavingProductPreviewStepComponent } from '../saving-product-stepper/saving-product-preview-step/saving-product-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-create-saving-product',
   templateUrl: './create-saving-product.component.html',
-  styleUrls: ['./create-saving-product.component.scss']
+  styleUrls: ['./create-saving-product.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    SavingProductDetailsStepComponent,
+    SavingProductCurrencyStepComponent,
+    SavingProductTermsStepComponent,
+    SavingProductSettingsStepComponent,
+    SavingProductChargesStepComponent,
+    SavingProductAccountingStepComponent,
+    SavingProductPreviewStepComponent
+  ]
 })
-export class CreateSavingProductComponent implements OnInit {
+export class CreateSavingProductComponent {
+  private route = inject(ActivatedRoute);
+  private productsService = inject(ProductsService);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private accounting = inject(Accounting);
 
-  @ViewChild(SavingProductDetailsStepComponent, { static: true }) savingProductDetailsStep: SavingProductDetailsStepComponent;
-  @ViewChild(SavingProductCurrencyStepComponent, { static: true }) savingProductCurrencyStep: SavingProductCurrencyStepComponent;
+  @ViewChild(SavingProductDetailsStepComponent, { static: true })
+  savingProductDetailsStep: SavingProductDetailsStepComponent;
+  @ViewChild(SavingProductCurrencyStepComponent, { static: true })
+  savingProductCurrencyStep: SavingProductCurrencyStepComponent;
   @ViewChild(SavingProductTermsStepComponent, { static: true }) savingProductTermsStep: SavingProductTermsStepComponent;
-  @ViewChild(SavingProductSettingsStepComponent, { static: true }) savingProductSettingsStep: SavingProductSettingsStepComponent;
-  @ViewChild(SavingProductChargesStepComponent, { static: true }) savingProductChargesStep: SavingProductChargesStepComponent;
-  @ViewChild(SavingProductAccountingStepComponent, { static: true }) savingProductAccountingStep: SavingProductAccountingStepComponent;
+  @ViewChild(SavingProductSettingsStepComponent, { static: true })
+  savingProductSettingsStep: SavingProductSettingsStepComponent;
+  @ViewChild(SavingProductChargesStepComponent, { static: true })
+  savingProductChargesStep: SavingProductChargesStepComponent;
+  @ViewChild(SavingProductAccountingStepComponent, { static: true })
+  savingProductAccountingStep: SavingProductAccountingStepComponent;
 
   savingProductsTemplate: any;
   accountingRuleData: string[] = [];
@@ -39,18 +68,11 @@ export class CreateSavingProductComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    */
 
-  constructor(private route: ActivatedRoute,
-              private productsService: ProductsService,
-              private router: Router,
-              private settingsService: SettingsService,
-              private accounting: Accounting) {
+  constructor() {
     this.route.data.subscribe((data: { savingProductsTemplate: any }) => {
       this.savingProductsTemplate = data.savingProductsTemplate;
     });
     this.accountingRuleData = this.accounting.getAccountingRulesForSavings();
-  }
-
-  ngOnInit() {
   }
 
   get savingProductDetailsForm() {
@@ -102,10 +124,14 @@ export class CreateSavingProductComponent implements OnInit {
       locale: this.settingsService.language.code // locale required for nominalAnnualInterestRate
     };
     delete savingProduct.advancedAccountingRules;
-    this.productsService.createSavingProduct(savingProduct)
-      .subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.productsService.createSavingProduct(savingProduct).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

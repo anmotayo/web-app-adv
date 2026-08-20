@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { SystemService } from '../system.service';
  * System data resolver.
  */
 @Injectable()
-export class SurveyResolver implements Resolve<Object> {
-
-  /**
-   * @param {SystemService} systemService System service.
-   */
-  constructor(private systemService: SystemService) {}
+export class SurveyResolver {
+  private systemService = inject(SystemService);
 
   /**
    * Returns the Survey data.
@@ -27,5 +23,4 @@ export class SurveyResolver implements Resolve<Object> {
     const surveyId = route.paramMap.get('id');
     return this.systemService.getSurvey(surveyId);
   }
-
 }

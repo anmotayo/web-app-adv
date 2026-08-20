@@ -62,6 +62,7 @@ import { ProvisioningJournalEntriesResolver } from './provisioning-entries/view-
 import { ViewJournalEntryTransactionComponent } from 'app/shared/accounting/view-journal-entry-transaction/view-journal-entry-transaction.component';
 import { JournalEntryTransactionResolver } from './common-resolvers/journal-entry-transaction.resolver';
 import { ExternalAssetOwnerJournalEntryResolver } from 'app/loans/common-resolvers/external-asset-owner-journal-entry.resolver';
+import { ExternalAssetConfigurationResolver } from './common-resolvers/external-asset-configuration.resolver';
 
 /** Accounting Routes */
 const routes: Routes = [
@@ -84,7 +85,7 @@ const routes: Routes = [
               resolve: {
                 offices: OfficesResolver,
                 glAccounts: GlAccountsResolver
-              },
+              }
             },
             {
               path: 'frequent-postings',
@@ -105,7 +106,8 @@ const routes: Routes = [
                 offices: OfficesResolver,
                 currencies: CurrenciesResolver,
                 paymentTypes: PaymentTypesResolver,
-                glAccounts: GlAccountsResolver
+                glAccounts: GlAccountsResolver,
+                globalConfig: ExternalAssetConfigurationResolver
               }
             },
             {
@@ -121,7 +123,7 @@ const routes: Routes = [
                   }
                 }
               ]
-            },
+            }
           ]
         },
         {
@@ -199,7 +201,10 @@ const routes: Routes = [
                 },
                 {
                   path: 'view/:id',
-                  data: { title: 'View GL Account', routeResolveBreadcrumb: ['glAccountAndChartOfAccountsTemplate', 'name'] },
+                  data: { title: 'View GL Account', routeResolveBreadcrumb: [
+                      'glAccountAndChartOfAccountsTemplate',
+                      'name'
+                    ] },
                   resolve: {
                     glAccountAndChartOfAccountsTemplate: GlAccountAndChartOfAccountsTemplateResolver
                   },
@@ -282,7 +287,10 @@ const routes: Routes = [
             },
             {
               path: 'view/:id',
-              data: { title: 'View Accounting Rule', routeResolveBreadcrumb: ['accountingRule', 'name'] },
+              data: { title: 'View Accounting Rule', routeResolveBreadcrumb: [
+                  'accountingRule',
+                  'name'
+                ] },
               resolve: {
                 accountingRule: AccountingRuleResolver
               },
@@ -357,7 +365,7 @@ const routes: Routes = [
     },
     {
       path: 'journal-entry',
-      data: {title: 'Journal Entries', breadcrumb: 'Journal Entries' },
+      data: { title: 'Journal Entries', breadcrumb: 'Journal Entries' },
       children: [
         {
           path: 'view/:id',
@@ -412,7 +420,8 @@ const routes: Routes = [
     ProvisioningEntryEntriesResolver,
     LoanProductsResolver,
     ProvisioningCategoriesResolver,
-    ProvisioningJournalEntriesResolver
+    ProvisioningJournalEntriesResolver,
+    ExternalAssetConfigurationResolver
   ]
 })
-export class AccountingRoutingModule { }
+export class AccountingRoutingModule {}

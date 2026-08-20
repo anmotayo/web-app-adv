@@ -1,16 +1,37 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LoansService } from 'app/loans/loans.service';
 import { OrganizationService } from 'app/organization/organization.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-adjust-loan-charge',
   templateUrl: './adjust-loan-charge.component.html',
-  styleUrls: ['./adjust-loan-charge.component.scss']
+  styleUrls: ['./adjust-loan-charge.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatSlideToggle,
+    CdkTextareaAutosize
+  ]
 })
 export class AdjustLoanChargeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private organizationService = inject(OrganizationService);
+
   /** Loan Id */
   loanId: string;
   chargeId: string;
@@ -36,19 +57,14 @@ export class AdjustLoanChargeComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService,
-    private organizationService: OrganizationService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-      this.chargeId = this.route.snapshot.params['id'];
-      this.route.data.subscribe((data: { loansAccountCharge: any, loanDetailsData: any }) => {
-        this.chargeData = data.loansAccountCharge;
-        this.loanDetailsData = data.loanDetailsData;
-      });
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+    this.chargeId = this.route.snapshot.params['id'];
+    this.route.data.subscribe((data: { loansAccountCharge: any; loanDetailsData: any }) => {
+      this.chargeData = data.loansAccountCharge;
+      this.loanDetailsData = data.loanDetailsData;
+    });
+  }
 
   /**
    * Creates the repayment loan form
@@ -65,10 +81,13 @@ export class AdjustLoanChargeComponent implements OnInit {
    */
   createAdjustLoanChargeForm() {
     this.adjustLoanChargeForm = this.formBuilder.group({
-      'amount': [this.chargeData.amount, Validators.required],
-      'externalId': '',
-      'paymentTypeId': '',
-      'note': ''
+      amount: [
+        this.chargeData.amount,
+        Validators.required
+      ],
+      externalId: '',
+      paymentTypeId: '',
+      note: ''
     });
   }
 
@@ -107,10 +126,10 @@ export class AdjustLoanChargeComponent implements OnInit {
       locale
     };
     const command = 'adjustment';
-    this.loanService.executeLoansAccountChargesCommand(this.loanId, command, data, this.chargeId)
+    this.loanService
+      .executeLoansAccountChargesCommand(this.loanId, command, data, this.chargeId)
       .subscribe((response: any) => {
         this.router.navigate(['../..'], { relativeTo: this.route });
-    });
+      });
   }
-
 }

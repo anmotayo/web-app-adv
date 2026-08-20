@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { OrganizationService } from '../organization.service';
  * Working Days data resolver.
  */
 @Injectable()
-export class WorkingDaysResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class WorkingDaysResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the working days data.
@@ -26,5 +21,4 @@ export class WorkingDaysResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.organizationService.getWorkingDays();
   }
-
 }

@@ -1,19 +1,27 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
 import { CollateralsService } from '../collaterals.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-edit-collateral',
   templateUrl: './edit-collateral.component.html',
-  styleUrls: ['./edit-collateral.component.scss']
+  styleUrls: ['./edit-collateral.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditCollateralComponent implements OnInit {
-
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private collateralService = inject(CollateralsService);
 
   /** Client Collateral Form */
   clientCollateralForm: UntypedFormGroup;
@@ -32,18 +40,12 @@ export class EditCollateralComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service
    * @param {CollateralsService} collateralService Collateral Service
    */
-  constructor(
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService,
-    private collateralService: CollateralsService
-    ) {
-      this.route.data.subscribe((data: { clientCollateralData: any }) => {
-        this.collateralDetails = data.clientCollateralData;
-      });
-      this.clientId = this.route.parent.snapshot.params['clientId'];
-    }
+  constructor() {
+    this.route.data.subscribe((data: { clientCollateralData: any }) => {
+      this.collateralDetails = data.clientCollateralData;
+    });
+    this.clientId = this.route.parent.snapshot.params['clientId'];
+  }
 
   ngOnInit(): void {
     this.createClientCollateralForm();
@@ -54,16 +56,19 @@ export class EditCollateralComponent implements OnInit {
    */
   createClientCollateralForm() {
     this.clientCollateralForm = this.formBuilder.group({
-      'quantity': [ '', Validators.required ],
-      'name': [{ value: '', disabled: true }],
-      'total': [{value: '', disabled: true}],
-      'totalCollateral': [{value: '', disabled: true}],
+      quantity: [
+        '',
+        Validators.required
+      ],
+      name: [{ value: '', disabled: true }],
+      total: [{ value: '', disabled: true }],
+      totalCollateral: [{ value: '', disabled: true }]
     });
     this.clientCollateralForm.patchValue({
-      'name': this.collateralDetails.name,
-      'quantity': this.collateralDetails.quantity,
-      'total': this.collateralDetails.total,
-      'totalCollateral': this.collateralDetails.totalCollateral,
+      name: this.collateralDetails.name,
+      quantity: this.collateralDetails.quantity,
+      total: this.collateralDetails.total,
+      totalCollateral: this.collateralDetails.totalCollateral
     });
   }
 
@@ -79,8 +84,7 @@ export class EditCollateralComponent implements OnInit {
       locale
     };
     this.collateralService.updateClientCollateral(this.clientId, collateralId, clientCollateralData).subscribe(() => {
-      this.router.navigate(['../'], {relativeTo: this.route});
+      this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

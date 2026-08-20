@@ -1,22 +1,21 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({
-  name: 'statusLookup'
-})
+@Pipe({ name: 'statusLookup' })
 export class StatusLookupPipe implements PipeTransform {
-
   transform(status: string): string {
     const cssClassNameLookup = {
-      'true': 'status-active',
-      'false': 'status-deleted',
-      'Active': 'status-active',
-      'Block': 'status-block',
+      true: 'status-active',
+      false: 'status-deleted',
+      Active: 'status-active',
+      Block: 'status-block',
       'charges.StatusType.active.true': 'status-active',
       'loanStatusType.submitted.and.pending.approval': 'status-pending',
       'loanStatusType.approved': 'status-approved',
       'loanStatusType.active': 'status-active',
       'loanStatusType.overpaid': 'status-overpaid',
       'loanStatusType.chargeoff': 'status-chargeoff',
+      'loanStatusType.activeOverdue': 'status-active-overdue',
+      'loanSubStatusType.contractTermination': 'subStatus-contract-termination',
       'savingsAccountStatusType.submitted.and.pending.approval': 'status-pending',
       'savingsAccountStatusType.approved': 'status-approved',
       'savingsAccountStatusType.active': 'status-active',
@@ -47,6 +46,6 @@ export class StatusLookupPipe implements PipeTransform {
       'smsCampaignStatus.closed': 'status-closed',
       'purchasedSharesStatusType.applied': 'status-pending'
     };
-    return cssClassNameLookup[status];
+    return cssClassNameLookup[status as keyof typeof cssClassNameLookup] ?? 'status-unknown';
   }
 }

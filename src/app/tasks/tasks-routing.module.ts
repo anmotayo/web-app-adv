@@ -47,7 +47,7 @@ const routes: Routes = [
           data: { title: 'Client Approval' },
           resolve: {
             groupedClientData: GetGroupedClientsData
-          },
+          }
         },
         {
           path: 'loan-approval',
@@ -56,7 +56,7 @@ const routes: Routes = [
           resolve: {
             officesData: GetOffices,
             loansData: GetLoansToBeApproved
-          },
+          }
         },
         {
           path: 'loan-disbursal',
@@ -71,7 +71,7 @@ const routes: Routes = [
           component: RescheduleLoanComponent,
           data: { title: 'Reschedule Loan' },
           resolve: {
-            recheduleLoansData: GetRescheduleLoans
+            rescheduleLoansData: GetRescheduleLoans
           }
         }
       ]
@@ -88,7 +88,7 @@ const routes: Routes = [
           }
         }
       ]
-    },
+    }
   ])
 ];
 
@@ -106,4 +106,4 @@ const routes: Routes = [
     GetCheckerInboxDetailResolver
   ]
 })
-export class TasksRoutingModule { }
+export class TasksRoutingModule {}

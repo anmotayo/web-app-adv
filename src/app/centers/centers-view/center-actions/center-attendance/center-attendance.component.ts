@@ -1,8 +1,8 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { CentersService } from 'app/centers/centers.service';
@@ -12,9 +12,29 @@ import { SettingsService } from 'app/settings/settings.service';
 import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.component';
 
 /** Custom Models */
+import { TranslateService } from '@ngx-translate/core';
+import { Dates } from 'app/core/utils/dates';
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
-import { Dates } from 'app/core/utils/dates';
+import { MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
+import { NgFor, NgSwitch, NgSwitchCase } from '@angular/common';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FindPipe } from '../../../../pipes/find.pipe';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Center Attendance component.
@@ -22,9 +42,36 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-center-attendance',
   templateUrl: './center-attendance.component.html',
-  styleUrls: ['./center-attendance.component.scss']
+  styleUrls: ['./center-attendance.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatHint,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    NgSwitch,
+    NgSwitchCase,
+    MatIconButton,
+    FaIconComponent,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FindPipe,
+    DateFormatPipe
+  ]
 })
 export class CenterAttendanceComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private centersService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Members data. */
   membersData: any;
@@ -33,7 +80,10 @@ export class CenterAttendanceComponent implements OnInit {
   /** Attendance Type Options */
   attendanceTypeOptions: any;
   /** Columns to be displayed in member's attendance table. */
-  displayedColumns: string[] = ['name', 'attendance'];
+  displayedColumns: string[] = [
+    'name',
+    'attendance'
+  ];
   /** Start Date Form Control */
   meetingDate = new UntypedFormControl();
   /** Meeting Dates Data */
@@ -54,13 +104,8 @@ export class CenterAttendanceComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    * @param {MatDialog} dialog Mat Dialog
    */
-  constructor(private route: ActivatedRoute,
-              private dateUtils: Dates,
-              private router: Router,
-              private centersService: CentersService,
-              private settingsService: SettingsService,
-              public dialog: MatDialog) {
-    this.route.data.subscribe(( data: { centersActionData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { centersActionData: any }) => {
       this.centerData = data.centersActionData;
       this.membersData = data.centersActionData.clients;
     });
@@ -74,8 +119,9 @@ export class CenterAttendanceComponent implements OnInit {
     if (this.membersData !== undefined && this.membersData !== null) {
       this.dataSource = this.membersData.map((member: any) => ({ clientId: member.id, attendanceType: 1 }));
     }
-    this.meetingDates = this.centerData.collectionMeetingCalendar.recurringDates
-      .filter((date: any) => new Date(date).getTime() < new Date().getTime());
+    this.meetingDates = this.centerData.collectionMeetingCalendar.recurringDates.filter(
+      (date: any) => new Date(date).getTime() < new Date().getTime()
+    );
     this.getAttendanceOptions();
   }
 
@@ -83,7 +129,8 @@ export class CenterAttendanceComponent implements OnInit {
    * Gets attendance type options based on calendar id.
    */
   getAttendanceOptions() {
-    this.centersService.getMeetingsTemplate(this.centerData.id, this.centerData.collectionMeetingCalendar.id)
+    this.centersService
+      .getMeetingsTemplate(this.centerData.id, this.centerData.collectionMeetingCalendar.id)
       .subscribe((response: any) => {
         this.attendanceTypeOptions = response.attendanceTypeOptions;
       });
@@ -97,14 +144,17 @@ export class CenterAttendanceComponent implements OnInit {
     const formfields: FormfieldBase[] = [
       new SelectBase({
         controlName: 'attendanceType',
-        label: 'Attendance',
+        label: this.translateService.instant('labels.buttons.Attendance'),
         value: member.attendanceType,
         options: { label: 'value', value: 'id', data: this.attendanceTypeOptions },
         required: false
-      }),
+      })
     ];
     const data = {
-      title: 'Assign Member Attendance',
+      title:
+        this.translateService.instant('labels.buttons.Assign Member') +
+        ' ' +
+        this.translateService.instant('labels.buttons.Attendance'),
       layout: { addButtonText: 'Confirm' },
       formfields: formfields
     };
@@ -133,9 +183,10 @@ export class CenterAttendanceComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.centersService.assignCenterAttendance(this.centerData.id, this.centerData.collectionMeetingCalendar.id, data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.centersService
+      .assignCenterAttendance(this.centerData.id, this.centerData.collectionMeetingCalendar.id, data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

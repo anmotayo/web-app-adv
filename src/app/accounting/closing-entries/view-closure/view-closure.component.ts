@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Services */
@@ -8,6 +8,8 @@ import { AccountingService } from '../../accounting.service';
 
 /** Custom Components */
 import { DeleteDialogComponent } from '../../../shared/delete-dialog/delete-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View closure component.
@@ -15,9 +17,17 @@ import { DeleteDialogComponent } from '../../../shared/delete-dialog/delete-dial
 @Component({
   selector: 'mifosx-view-closure',
   templateUrl: './view-closure.component.html',
-  styleUrls: ['./view-closure.component.scss']
+  styleUrls: ['./view-closure.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
-export class ViewClosureComponent implements OnInit {
+export class ViewClosureComponent {
+  private accountingService = inject(AccountingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
 
   /** GL Account closure. */
   glAccountClosure: any;
@@ -29,16 +39,10 @@ export class ViewClosureComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private accountingService: AccountingService,
-              private route: ActivatedRoute,
-              private router: Router,
-              public dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { glAccountClosure: any }) => {
       this.glAccountClosure = data.glAccountClosure;
     });
-  }
-
-  ngOnInit() {
   }
 
   /**
@@ -50,12 +54,10 @@ export class ViewClosureComponent implements OnInit {
     });
     deleteAccountingClosureDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.accountingService.deleteAccountingClosure(this.glAccountClosure.id)
-          .subscribe(() => {
-            this.router.navigate(['/accounting/closing-entries']);
-          });
+        this.accountingService.deleteAccountingClosure(this.glAccountClosure.id).subscribe(() => {
+          this.router.navigate(['/accounting/closing-entries']);
+        });
       }
     });
   }
-
 }

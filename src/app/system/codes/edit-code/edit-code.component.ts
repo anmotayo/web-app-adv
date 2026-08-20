@@ -1,10 +1,11 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Code Component.
@@ -12,9 +13,16 @@ import { SystemService } from '../../system.service';
 @Component({
   selector: 'mifosx-edit-code',
   templateUrl: './edit-code.component.html',
-  styleUrls: ['./edit-code.component.scss']
+  styleUrls: ['./edit-code.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditCodeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Code Form */
   codeForm: UntypedFormGroup;
@@ -28,10 +36,7 @@ export class EditCodeComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { code: any }) => {
       this.codeData = data.code;
     });
@@ -49,7 +54,10 @@ export class EditCodeComponent implements OnInit {
    */
   createCodeForm() {
     this.codeForm = this.formBuilder.group({
-      'name': [this.codeData.name, Validators.required]
+      name: [
+        this.codeData.name,
+        Validators.required
+      ]
     });
   }
 
@@ -58,10 +66,14 @@ export class EditCodeComponent implements OnInit {
    * if successful redirects to view updated code.
    */
   submit() {
-    this.systemService.updateCode(this.codeForm.value, this.codeData.id)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
-      });
+    this.systemService.updateCode(this.codeForm.value, this.codeData.id).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

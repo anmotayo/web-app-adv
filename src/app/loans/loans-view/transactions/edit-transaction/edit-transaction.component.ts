@@ -1,13 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Currency } from 'app/shared/models/general.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Transaction component.
@@ -15,9 +24,20 @@ import { Currency } from 'app/shared/models/general.model';
 @Component({
   selector: 'mifosx-edit-transaction',
   templateUrl: './edit-transaction.component.html',
-  styleUrls: ['./edit-transaction.component.scss']
+  styleUrls: ['./edit-transaction.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    MatSlideToggle
+  ]
 })
 export class EditTransactionComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private loansService = inject(LoansService);
+  private settingsService = inject(SettingsService);
 
   /** Minimum Due Date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -27,11 +47,11 @@ export class EditTransactionComponent implements OnInit {
   editTransactionForm: UntypedFormGroup;
   /** loans account transaction payment options. */
   paymentTypeOptions: {
-    id: number,
-    name: string,
-    description: string,
-    isCashPayment: boolean,
-    position: number
+    id: number;
+    name: string;
+    description: string;
+    isCashPayment: boolean;
+    position: number;
   }[];
   /** Flag to enable payment details fields. */
   showPaymentDetails: Boolean = false;
@@ -50,12 +70,7 @@ export class EditTransactionComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private loansService: LoansService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { loansAccountTransactionTemplate: any }) => {
       this.transactionTemplateData = data.loansAccountTransactionTemplate;
       if (data.loansAccountTransactionTemplate.currency) {
@@ -73,10 +88,10 @@ export class EditTransactionComponent implements OnInit {
     this.maxDate = this.settingsService.businessDate;
     this.createEditTransactionForm();
     this.editTransactionForm.patchValue({
-      'transactionDate': this.transactionTemplateData.date && new Date(this.transactionTemplateData.date),
-      'transactionAmount': this.transactionTemplateData.amount,
-      'externalId': this.transactionTemplateData.externalId,
-      'paymentTypeId': this.transactionTemplateData.paymentTypeId
+      transactionDate: this.transactionTemplateData.date && new Date(this.transactionTemplateData.date),
+      transactionAmount: this.transactionTemplateData.amount,
+      externalId: this.transactionTemplateData.externalId,
+      paymentTypeId: this.transactionTemplateData.paymentTypeId
     });
   }
 
@@ -85,10 +100,16 @@ export class EditTransactionComponent implements OnInit {
    */
   createEditTransactionForm() {
     this.editTransactionForm = this.formBuilder.group({
-      'transactionDate': ['', Validators.required],
-      'transactionAmount': ['', Validators.required],
-      'externalId': [''],
-      'paymentTypeId': [''],
+      transactionDate: [
+        '',
+        Validators.required
+      ],
+      transactionAmount: [
+        '',
+        Validators.required
+      ],
+      externalId: [''],
+      paymentTypeId: ['']
     });
   }
 
@@ -129,10 +150,10 @@ export class EditTransactionComponent implements OnInit {
       locale
     };
     data['transactionAmount'] = data['transactionAmount'] * 1;
-    this.loansService.executeLoansAccountTransactionsCommand(this.loanAccountId, 'modify', data, this.transactionTemplateData.id)
+    this.loansService
+      .executeLoansAccountTransactionsCommand(this.loanAccountId, 'modify', data, this.transactionTemplateData.id)
       .subscribe((res: any) => {
         this.router.navigate(['../'], { relativeTo: this.route });
       });
   }
-
 }

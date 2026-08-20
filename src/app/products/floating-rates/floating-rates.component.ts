@@ -1,9 +1,24 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Floating Rates Component.
@@ -11,14 +26,38 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'mifosx-floating-rates',
   templateUrl: './floating-rates.component.html',
-  styleUrls: ['./floating-rates.component.scss']
+  styleUrls: ['./floating-rates.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class FloatingRatesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** Floating Rates data. */
   floatingRatesData: any;
   /** Columns to be displayed in floating rates table. */
-  displayedColumns: string[] = ['name', 'createdBy', 'isBaseLendingRate', 'isActive'];
+  displayedColumns: string[] = [
+    'name',
+    'createdBy',
+    'isBaseLendingRate',
+    'isActive'
+  ];
   /** Data source for floating rates table. */
   dataSource: MatTableDataSource<any>;
 
@@ -31,11 +70,11 @@ export class FloatingRatesComponent implements OnInit {
    * Retrieves the floating rates data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
-    this.route.data.subscribe(( data: { floatingrates: any } ) => {
+  constructor() {
+    this.route.data.subscribe((data: { floatingrates: any }) => {
       this.floatingRatesData = data.floatingrates;
     });
-   }
+  }
 
   /**
    * Filters data in floating rates table based on passed value.
@@ -56,9 +95,8 @@ export class FloatingRatesComponent implements OnInit {
    * Initializes the data source, paginator and sorter for floating rates table.
    */
   setFloatingRates() {
-   this.dataSource = new MatTableDataSource(this.floatingRatesData);
-   this.dataSource.paginator = this.paginator;
-   this.dataSource.sort = this.sort;
+    this.dataSource = new MatTableDataSource(this.floatingRatesData);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
   }
-
 }

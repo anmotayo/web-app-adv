@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { GroupsService } from '../groups.service';
  * GLIM Loans Accounts data resolver.
  */
 @Injectable()
-export class GLIMAccountsResolver implements Resolve<Object> {
-
-  /**
-   * @param {GroupsService} groupsService Groups service.
-   */
-  constructor(private groupsService: GroupsService) { }
+export class GLIMAccountsResolver {
+  private groupsService = inject(GroupsService);
 
   /**
    * Returns the Group's GLIM Loans Acccounts data.
@@ -28,5 +24,4 @@ export class GLIMAccountsResolver implements Resolve<Object> {
     const groupId = route.parent.paramMap.get('groupId');
     return this.groupsService.getGLIMAccountsData(groupId);
   }
-
 }

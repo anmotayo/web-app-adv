@@ -1,11 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
@@ -16,6 +28,13 @@ import { TranslateService } from '@ngx-translate/core';
 import { Dates } from 'app/core/utils/dates';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { FloatingRatePeriodDialogComponent } from '../floating-rate-period-dialog/floating-rate-period-dialog.component';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDivider } from '@angular/material/divider';
+import { MatMiniFabButton, MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Floating Rate Component.
@@ -23,9 +42,40 @@ import { FloatingRatePeriodDialogComponent } from '../floating-rate-period-dialo
 @Component({
   selector: 'mifosx-edit-floating-rate',
   templateUrl: './edit-floating-rate.component.html',
-  styleUrls: ['./edit-floating-rate.component.scss']
+  styleUrls: ['./edit-floating-rate.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTooltip,
+    MatCheckbox,
+    MatDivider,
+    MatMiniFabButton,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    DateFormatPipe
+  ]
 })
 export class EditFloatingRateComponent implements OnInit {
+  private router = inject(Router);
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
 
   /** Floating Rate Form. */
   floatingRateForm: UntypedFormGroup;
@@ -36,7 +86,12 @@ export class EditFloatingRateComponent implements OnInit {
   /** Form Pristine Status. */
   isFloatingRateFormPristine = true;
   /** Columns to be displayed in floating rate periods table. */
-  displayedColumns: string[] = ['fromDate', 'interestRate', 'isDifferential', 'actions'];
+  displayedColumns: string[] = [
+    'fromDate',
+    'interestRate',
+    'isDifferential',
+    'actions'
+  ];
   /** Data source for floating rate periods table. */
   dataSource: MatTableDataSource<any>;
   /** Date Format. */
@@ -60,14 +115,7 @@ export class EditFloatingRateComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private router: Router,
-              private formBuilder: UntypedFormBuilder,
-              private productsService: ProductsService,
-              private route: ActivatedRoute,
-              private dateUtils: Dates,
-              private dialog: MatDialog,
-              private settingsService: SettingsService,
-              private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { floatingRate: any }) => {
       this.floatingRateData = data.floatingRate;
       this.floatingRatePeriodsData = data.floatingRate.ratePeriods ? data.floatingRate.ratePeriods : [];
@@ -87,9 +135,12 @@ export class EditFloatingRateComponent implements OnInit {
    */
   createFloatingRateForm() {
     this.floatingRateForm = this.formBuilder.group({
-      'name': [this.floatingRateData.name, Validators.required],
-      'isBaseLendingRate': [this.floatingRateData.isBaseLendingRate],
-      'isActive': [this.floatingRateData.isActive]
+      name: [
+        this.floatingRateData.name,
+        Validators.required
+      ],
+      isBaseLendingRate: [this.floatingRateData.isBaseLendingRate],
+      isActive: [this.floatingRateData.isActive]
     });
   }
 
@@ -157,7 +208,12 @@ export class EditFloatingRateComponent implements OnInit {
    */
   deleteFloatingRatePeriod(ratePeriod: any) {
     const deleteFloatingRatePeriodRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext:  this.translateService.instant('labels.inputs.floating rate period with from date as') + ' ' + ratePeriod.fromDate }
+      data: {
+        deleteContext:
+          this.translateService.instant('labels.inputs.floating rate period with from date as') +
+          ' ' +
+          ratePeriod.fromDate
+      }
     });
     deleteFloatingRatePeriodRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
@@ -173,7 +229,7 @@ export class EditFloatingRateComponent implements OnInit {
    * if successful redirects to view created floating rate.
    */
   submit() {
-    this.floatingRatePeriodsData.map(floatingRatePeriod => {
+    this.floatingRatePeriodsData.map((floatingRatePeriod) => {
       floatingRatePeriod.modifiedOn = undefined;
       floatingRatePeriod.createdOn = undefined;
       floatingRatePeriod.id = undefined;
@@ -184,11 +240,18 @@ export class EditFloatingRateComponent implements OnInit {
       floatingRatePeriod.dateFormat = this.dateFormat;
       floatingRatePeriod.fromDate = this.dateUtils.formatDate(floatingRatePeriod.fromDate, this.dateFormat);
     });
-    this.floatingRateForm.value.ratePeriods = this.floatingRatePeriodsData.length > 0 ? this.floatingRatePeriodsData : undefined;
-    this.productsService.updateFloatingRate(this.route.snapshot.paramMap.get('id'), this.floatingRateForm.value)
+    this.floatingRateForm.value.ratePeriods =
+      this.floatingRatePeriodsData.length > 0 ? this.floatingRatePeriodsData : undefined;
+    this.productsService
+      .updateFloatingRate(this.route.snapshot.paramMap.get('id'), this.floatingRateForm.value)
       .subscribe((response: any) => {
-        this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
+        this.router.navigate(
+          [
+            '../../',
+            response.resourceId
+          ],
+          { relativeTo: this.route }
+        );
       });
   }
-
 }

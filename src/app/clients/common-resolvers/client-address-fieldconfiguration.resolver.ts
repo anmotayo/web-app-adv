@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { ClientsService } from '../clients.service';
  * Client Address Field Configuration resolver.
  */
 @Injectable()
-export class ClientAddressFieldConfigurationResolver implements Resolve<Object> {
+export class ClientAddressFieldConfigurationResolver {
+  private clientsService = inject(ClientsService);
 
-    /**
-     * @param {ClientsService} ClientsService Clients service.
-     */
-    constructor(private clientsService: ClientsService) { }
-
-    /**
-     * Returns the Client Address Field Configuration.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.clientsService.getAddressFieldConfiguration();
-    }
-
+  /**
+   * Returns the Client Address Field Configuration.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.clientsService.getAddressFieldConfiguration();
+  }
 }

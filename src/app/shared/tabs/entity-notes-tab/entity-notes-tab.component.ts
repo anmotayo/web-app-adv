@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, Input, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ClientsService } from 'app/clients/clients.service';
 import { GroupsService } from 'app/groups/groups.service';
@@ -7,13 +7,29 @@ import { LoansService } from 'app/loans/loans.service';
 import { SavingsService } from 'app/savings/savings.service';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.component';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-entity-notes-tab',
   templateUrl: './entity-notes-tab.component.html',
-  styleUrls: ['./entity-notes-tab.component.scss']
+  styleUrls: ['./entity-notes-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize,
+    FaIconComponent,
+    DateFormatPipe
+  ]
 })
 export class EntityNotesTabComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private loansService = inject(LoansService);
+  private clientsService = inject(ClientsService);
+  private groupsService = inject(GroupsService);
+  private dialog = inject(MatDialog);
 
   @ViewChild('formRef', { static: true }) formRef: any;
 
@@ -26,20 +42,16 @@ export class EntityNotesTabComponent implements OnInit {
 
   noteForm: UntypedFormGroup;
 
-  constructor(private formBuilder: UntypedFormBuilder,
-    private savingsService: SavingsService,
-    private loansService: LoansService,
-    private clientsService: ClientsService,
-    private groupsService: GroupsService,
-    private dialog: MatDialog) { }
-
   ngOnInit() {
     this.createNoteForm();
   }
 
   createNoteForm() {
     this.noteForm = this.formBuilder.group({
-      'note': ['', Validators.required]
+      note: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -50,19 +62,22 @@ export class EntityNotesTabComponent implements OnInit {
 
   editNote(noteId: string, noteContent: string, index: number) {
     const editNoteDialogRef = this.dialog.open(FormDialogComponent, {
-      data: { formfields: [{
-                controlName: 'note',
-                required: true,
-                value: noteContent,
-                controlType: 'input',
-                label: 'Note'
-              }],
-              layout: {
-                columns: 1,
-                addButtonText: 'Confirm'
-              },
-              title: 'Edit Note'
-            }
+      data: {
+        formfields: [
+          {
+            controlName: 'note',
+            required: true,
+            value: noteContent,
+            controlType: 'input',
+            label: 'Note'
+          }
+        ],
+        layout: {
+          columns: 1,
+          addButtonText: 'Confirm'
+        },
+        title: 'Edit Note'
+      }
     });
     editNoteDialogRef.afterClosed().subscribe((response: any) => {
       if (response.data && response.data.value.note !== noteContent) {
@@ -81,5 +96,4 @@ export class EntityNotesTabComponent implements OnInit {
       }
     });
   }
-
 }

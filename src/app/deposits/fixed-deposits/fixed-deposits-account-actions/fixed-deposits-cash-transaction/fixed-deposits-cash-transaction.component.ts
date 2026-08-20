@@ -1,17 +1,40 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { FixedDepositsService } from '../../fixed-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Currency, PaymentType } from 'app/shared/models/general.model';
+import { TransactionCommand, TransactionTypeFlags } from '../../../transaction.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-fixed-deposits-cash-transaction',
   templateUrl: './fixed-deposits-cash-transaction.component.html',
-  styleUrls: ['./fixed-deposits-cash-transaction.component.scss']
+  styleUrls: ['./fixed-deposits-cash-transaction.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    MatSlideToggle,
+    CdkTextareaAutosize
+  ]
 })
 export class FixedDepositsCashTransactionComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private fixedDepositsService = inject(FixedDepositsService);
+  private settingsService = inject(SettingsService);
 
   /** Minimum Due Date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -24,9 +47,9 @@ export class FixedDepositsCashTransactionComponent implements OnInit {
   /** Flag to enable payment details fields. */
   addPaymentDetailsFlag: Boolean = false;
   /** transaction type flag to render required UI */
-  transactionType: { deposit: boolean, withdrawal: boolean } = { deposit: false, withdrawal: false };
+  transactionType: TransactionTypeFlags = { deposit: false, withdrawal: false };
   /** transaction command for submit request */
-  transactionCommand: string;
+  transactionCommand: TransactionCommand;
   actionName: string;
   /** saving account's Id */
   accountId: string;
@@ -41,19 +64,20 @@ export class FixedDepositsCashTransactionComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private fixedDepositsService: FixedDepositsService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { fixedDepositsAccountActionData: any }) => {
       this.currency = data.fixedDepositsAccountActionData.currency;
       this.paymentTypeOptions = data.fixedDepositsAccountActionData.paymentTypeOptions;
     });
     this.actionName = this.route.snapshot.params['name'];
-    this.transactionCommand = this.actionName.toLowerCase();
-    this.transactionType[this.transactionCommand] = true;
+    const lowerName = this.actionName.toLowerCase();
+    if (lowerName === 'deposit' || lowerName === 'withdrawal') {
+      this.transactionCommand = lowerName;
+      this.transactionType[this.transactionCommand] = true;
+    } else {
+      throw new Error(`Invalid transaction action: ${this.actionName}`);
+    }
+
     this.accountId = this.route.parent.snapshot.params['fixedDepositAccountId'];
   }
 
@@ -70,10 +94,16 @@ export class FixedDepositsCashTransactionComponent implements OnInit {
    */
   createSavingAccountTransactionForm() {
     this.accountTransactionForm = this.formBuilder.group({
-      'transactionDate': [this.settingsService.businessDate, Validators.required],
-      'transactionAmount': [0, Validators.required],
-      'paymentTypeId': [''],
-      'note': ['']
+      transactionDate: [
+        this.settingsService.businessDate,
+        Validators.required
+      ],
+      transactionAmount: [
+        0,
+        Validators.required
+      ],
+      paymentTypeId: [''],
+      note: ['']
     });
   }
 
@@ -115,9 +145,10 @@ export class FixedDepositsCashTransactionComponent implements OnInit {
     };
     delete data.note;
     data['transactionAmount'] = data['transactionAmount'] * 1;
-    this.fixedDepositsService.executeFixedDepositsAccountTransactionsCommand(this.accountId, this.transactionCommand, data).subscribe(res => {
-      this.router.navigate(['../../transactions'], { relativeTo: this.route });
-    });
+    this.fixedDepositsService
+      .executeFixedDepositsAccountTransactionsCommand(this.accountId, this.transactionCommand, data)
+      .subscribe((res) => {
+        this.router.navigate(['../../transactions'], { relativeTo: this.route });
+      });
   }
-
 }

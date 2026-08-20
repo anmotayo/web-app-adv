@@ -1,12 +1,32 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatTreeNestedDataSource } from '@angular/material/tree';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import {
+  MatTreeNestedDataSource,
+  MatTree,
+  MatTreeNodeDef,
+  MatTreeNode,
+  MatTreeNodeToggle,
+  MatNestedTreeNode,
+  MatTreeNodeOutlet
+} from '@angular/material/tree';
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** rxjs Imports */
 import { of } from 'rxjs';
@@ -19,6 +39,11 @@ import { GlAccountTreeService } from './gl-account-tree.service';
 import { PopoverService } from '../../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../../configuration-wizard/configuration-wizard.service';
 import { TreeControlService } from 'app/shared/common-logic/tree-control.service';
+import { MatButtonToggleGroup, MatButtonToggle } from '@angular/material/button-toggle';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Chart of accounts component.
@@ -26,16 +51,56 @@ import { TreeControlService } from 'app/shared/common-logic/tree-control.service
 @Component({
   selector: 'mifosx-chart-of-accounts',
   templateUrl: './chart-of-accounts.component.html',
-  styleUrls: ['./chart-of-accounts.component.scss']
+  styleUrls: ['./chart-of-accounts.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatButtonToggleGroup,
+    MatButtonToggle,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    MatTree,
+    MatTreeNodeDef,
+    MatTreeNode,
+    MatTreeNodeToggle,
+    MatIconButton,
+    MatNestedTreeNode,
+    MatTreeNodeOutlet
+  ]
 })
 export class ChartOfAccountsComponent implements AfterViewInit, OnInit {
+  private glAccountTreeService = inject(GlAccountTreeService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private treeControlService = inject(TreeControlService);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /** Button toggle group form control for type of view. (list/tree) */
   viewGroup = new UntypedFormControl('listView');
   /** GL Account data. */
   glAccountData: any;
   /** Columns to be displayed in chart of accounts table. */
-  displayedColumns: string[] = ['name', 'glCode', 'glAccountType', 'disabled', 'manualEntriesAllowed', 'usedAs'];
+  displayedColumns: string[] = [
+    'name',
+    'glCode',
+    'glAccountType',
+    'disabled',
+    'manualEntriesAllowed',
+    'usedAs'
+  ];
   /** Data source for chart of accounts table. */
   tableDataSource: MatTableDataSource<any>;
   /** Nested tree control for chart of accounts tree. */
@@ -69,12 +134,9 @@ export class ChartOfAccountsComponent implements AfterViewInit, OnInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private glAccountTreeService: GlAccountTreeService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private treeControlService: TreeControlService,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) {
+  constructor() {
+    const glAccountTreeService = this.glAccountTreeService;
+
     this.route.data.subscribe((data: { chartOfAccounts: any }) => {
       this.glAccountData = data.chartOfAccounts;
       glAccountTreeService.initialize(this.glAccountData);
@@ -102,9 +164,12 @@ export class ChartOfAccountsComponent implements AfterViewInit, OnInit {
     this.tableDataSource.paginator = this.paginator;
     this.tableDataSource.sortingDataAccessor = (glAccount: any, property: any) => {
       switch (property) {
-        case 'glAccountType': return glAccount.type.value;
-        case 'usedAs': return glAccount.usage.value;
-        default: return glAccount[property];
+        case 'glAccountType':
+          return glAccount.type.value;
+        case 'usedAs':
+          return glAccount.usage.value;
+        default:
+          return glAccount[property];
       }
     };
     this.tableDataSource.sort = this.sort;
@@ -158,7 +223,12 @@ export class ChartOfAccountsComponent implements AfterViewInit, OnInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -188,5 +258,4 @@ export class ChartOfAccountsComponent implements AfterViewInit, OnInit {
   toggleExpandCollapse() {
     this.isTreeExpanded = this.treeControlService.toggleExpandCollapse(this.nestedTreeControl, this.isTreeExpanded);
   }
-
 }

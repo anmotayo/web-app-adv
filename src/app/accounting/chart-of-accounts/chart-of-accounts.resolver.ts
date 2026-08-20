@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { AccountingService } from '../accounting.service';
  * Chart of acocunts data resolver.
  */
 @Injectable()
-export class ChartOfAccountsResolver implements Resolve<Object> {
-
-  /**
-   * @param {AccountingService} accountingService Accounting service.
-   */
-  constructor(private accountingService: AccountingService) {}
+export class ChartOfAccountsResolver {
+  private accountingService = inject(AccountingService);
 
   /**
    * Returns the chart of accounts data.
@@ -26,5 +21,4 @@ export class ChartOfAccountsResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.accountingService.getChartOfAccounts();
   }
-
 }

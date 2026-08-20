@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { ProductsService } from '../products.service';
  * Charges data resolver.
  */
 @Injectable()
-export class ChargesResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class ChargesResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the products data.
@@ -26,5 +21,4 @@ export class ChargesResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.productsService.getCharges();
   }
-
 }

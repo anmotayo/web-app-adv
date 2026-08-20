@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { GroupsService } from '../groups.service';
  * Groups data and template resolver.
  */
 @Injectable()
-export class GroupDataAndTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {GroupsService} GroupsService Groups service.
-   */
-  constructor(private groupsService: GroupsService) { }
+export class GroupDataAndTemplateResolver {
+  private groupsService = inject(GroupsService);
 
   /**
    * Returns the Groups data and template.
@@ -28,5 +24,4 @@ export class GroupDataAndTemplateResolver implements Resolve<Object> {
     const groupId = route.paramMap.get('groupId');
     return this.groupsService.getGroupData(groupId, 'true');
   }
-
 }

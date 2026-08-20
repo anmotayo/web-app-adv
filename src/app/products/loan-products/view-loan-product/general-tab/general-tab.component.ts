@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LoanProduct } from '../../models/loan-product.model';
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
@@ -8,31 +8,43 @@ import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.componen
 import { MatDialog } from '@angular/material/dialog';
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { LoanProductSummaryComponent } from '../../common/loan-product-summary/loan-product-summary.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-general-tab',
   templateUrl: './general-tab.component.html',
-  styleUrls: ['./general-tab.component.scss']
+  styleUrls: ['./general-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    LoanProductSummaryComponent
+  ]
 })
 export class GeneralTabComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private productsService = inject(ProductsService);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
 
   loanProduct: LoanProduct;
   useDueForRepaymentsConfigurations = false;
 
-  constructor(private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog,
-    private productsService: ProductsService,
-    private settingsService: SettingsService,
-    private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { loanProduct: any }) => {
       this.loanProduct = data.loanProduct;
-      this.useDueForRepaymentsConfigurations = (!this.loanProduct.dueDaysForRepaymentEvent && !this.loanProduct.overDueDaysForRepaymentEvent);
+      this.useDueForRepaymentsConfigurations =
+        !this.loanProduct.dueDaysForRepaymentEvent && !this.loanProduct.overDueDaysForRepaymentEvent;
     });
   }
 
   ngOnInit() {
-    this.loanProduct.allowAttributeConfiguration = Object.values(this.loanProduct.allowAttributeOverrides).some((attribute: boolean) => attribute);
+    this.loanProduct.allowAttributeConfiguration = Object.values(this.loanProduct.allowAttributeOverrides).some(
+      (attribute: boolean) => attribute
+    );
   }
 
   exportDefinition(): void {
@@ -67,7 +79,7 @@ export class GeneralTabComponent implements OnInit {
         type: 'text',
         required: true,
         order: 2
-      }),
+      })
     ];
     const data = {
       title: `${this.translateService.instant('labels.buttons.Create')} ${this.translateService.instant('labels.inputs.Loan Product')}`,
@@ -77,14 +89,15 @@ export class GeneralTabComponent implements OnInit {
     const createProductDialogRef = this.dialog.open(FormDialogComponent, { data });
     createProductDialogRef.afterClosed().subscribe((productResponse: any) => {
       if (productResponse.data) {
-
         productCopy['name'] = productResponse.data.value['name'];
         productCopy['shortName'] = productResponse.data.value['shortName'];
-        productCopy['delinquencyBucketId'] = productCopy['delinquencyBucket'] ? productCopy['delinquencyBucket']['id'] : null;
+        productCopy['delinquencyBucketId'] = productCopy['delinquencyBucket']
+          ? productCopy['delinquencyBucket']['id']
+          : null;
         productCopy['currencyCode'] = productCopy['currency'] ? productCopy['currency']['code'] : null;
         productCopy['interestRatePerPeriod'] = productCopy['annualInterestRate'];
         productCopy['transactionProcessingStrategyCode'] = productCopy['transactionProcessingStrategyName'];
-        productCopy['allowPartialPeriodInterestCalcualtion'] = productCopy['allowPartialPeriodInterestCalculation'];
+        productCopy['allowPartialPeriodInterestCalculation'] = productCopy['allowPartialPeriodInterestCalculation'];
         productCopy['locale'] = this.settingsService.language.code;
 
         let valueTmp: any = productCopy['daysInMonthType']['value'];
@@ -110,13 +123,16 @@ export class GeneralTabComponent implements OnInit {
         delete productCopy['allowPartialPeriodInterestCalculation'];
         delete productCopy['advancedPaymentAllocationFutureInstallmentAllocationRules'];
 
-        this.productsService.createLoanProduct(productCopy)
-        .subscribe((response: any) => {
-          this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
+        this.productsService.createLoanProduct(productCopy).subscribe((response: any) => {
+          this.router.navigate(
+            [
+              '../',
+              response.resourceId
+            ],
+            { relativeTo: this.route }
+          );
         });
-
       }
     });
   }
-
 }

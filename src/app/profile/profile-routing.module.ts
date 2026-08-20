@@ -13,8 +13,8 @@ const routes: Routes = [
   Route.withShell([
     {
       path: 'profile',
-      component:  ProfileComponent,
-      data: { title: 'Profile', breadcrumb: 'Profile' },
+      component: ProfileComponent,
+      data: { title: 'Profile', breadcrumb: 'Profile' }
     }
   ])
 ];
@@ -27,4 +27,4 @@ const routes: Routes = [
   exports: [RouterModule],
   providers: []
 })
-export class ProfileRoutingModule { }
+export class ProfileRoutingModule {}

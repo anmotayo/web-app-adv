@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { OrganizationService } from '../../organization.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Employee Component.
@@ -14,9 +16,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-edit-employee',
   templateUrl: './edit-employee.component.html',
-  styleUrls: ['./edit-employee.component.scss']
+  styleUrls: ['./edit-employee.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class EditEmployeeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private organizationService = inject(OrganizationService);
+  private settingsService = inject(SettingsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
 
   /** Employee data. */
   employeeData: any;
@@ -38,13 +50,8 @@ export class EditEmployeeComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {Dates} dateUtils Date Utils to format date.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private organizationService: OrganizationService,
-              private settingsService: SettingsService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates) {
-    this.route.data.subscribe((data: { employee: any, offices: any  }) => {
+  constructor() {
+    this.route.data.subscribe((data: { employee: any; offices: any }) => {
       this.employeeData = data.employee;
       this.officeData = data.employee.allowedOffices;
     });
@@ -63,13 +70,31 @@ export class EditEmployeeComponent implements OnInit {
    */
   createEditEmployeeForm() {
     this.editEmployeeForm = this.formBuilder.group({
-      'officeId': [this.employeeData.officeId, Validators.required],
-      'firstname': [this.employeeData.firstname, [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'lastname': [this.employeeData.lastname, [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'isLoanOfficer': [this.employeeData.isLoanOfficer],
-      'mobileNo': [this.employeeData.mobileNo],
-      'isActive': [this.employeeData.isActive],
-      'joiningDate': [this.employeeData.joiningDate  && new Date(this.employeeData.joiningDate), Validators.required]
+      officeId: [
+        this.employeeData.officeId,
+        Validators.required
+      ],
+      firstname: [
+        this.employeeData.firstname,
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      lastname: [
+        this.employeeData.lastname,
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      isLoanOfficer: [this.employeeData.isLoanOfficer],
+      mobileNo: [this.employeeData.mobileNo],
+      isActive: [this.employeeData.isActive],
+      joiningDate: [
+        this.employeeData.joiningDate && new Date(this.employeeData.joiningDate),
+        Validators.required
+      ]
     });
   }
 
@@ -91,8 +116,13 @@ export class EditEmployeeComponent implements OnInit {
       locale
     };
     this.organizationService.updateEmployee(this.employeeData.id, data).subscribe((response: any) => {
-      this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

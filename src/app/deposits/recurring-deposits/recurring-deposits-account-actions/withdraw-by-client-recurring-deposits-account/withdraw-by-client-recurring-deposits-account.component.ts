@@ -1,21 +1,33 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { RecurringDepositsService } from 'app/deposits/recurring-deposits/recurring-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Withdrawn by Client Recurring Deposits Account Component
  */
 @Component({
   selector: 'mifosx-withdraw-by-client-recurring-deposits-account',
   templateUrl: './withdraw-by-client-recurring-deposits-account.component.html',
-  styleUrls: ['./withdraw-by-client-recurring-deposits-account.component.scss']
+  styleUrls: ['./withdraw-by-client-recurring-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class WithdrawByClientRecurringDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private recurringDepositsService = inject(RecurringDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -34,12 +46,7 @@ export class WithdrawByClientRecurringDepositsAccountComponent implements OnInit
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private recurringDepositsService: RecurringDepositsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['recurringDepositAccountId'];
   }
 
@@ -56,8 +63,11 @@ export class WithdrawByClientRecurringDepositsAccountComponent implements OnInit
    */
   createWithdrawRecurringDepositsAccountForm() {
     this.withdrawRecurringDepositsAccountForm = this.formBuilder.group({
-      'withdrawnOnDate': ['', Validators.required],
-      'note': ['']
+      withdrawnOnDate: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -71,16 +81,20 @@ export class WithdrawByClientRecurringDepositsAccountComponent implements OnInit
     const dateFormat = this.settingsService.dateFormat;
     const prevWithdrawnOnDate: Date = this.withdrawRecurringDepositsAccountForm.value.withdrawnOnDate;
     if (withdrawRecurringDepositsAccountFormData.withdrawnOnDate instanceof Date) {
-      withdrawRecurringDepositsAccountFormData.withdrawnOnDate = this.dateUtils.formatDate(prevWithdrawnOnDate, dateFormat);
+      withdrawRecurringDepositsAccountFormData.withdrawnOnDate = this.dateUtils.formatDate(
+        prevWithdrawnOnDate,
+        dateFormat
+      );
     }
     const data = {
       ...withdrawRecurringDepositsAccountFormData,
       dateFormat,
       locale
     };
-    this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, 'withdrawnByApplicant', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.recurringDepositsService
+      .executeRecurringDepositsAccountCommand(this.accountId, 'withdrawnByApplicant', data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import * as _ from 'lodash';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Dialog Imports */
@@ -14,13 +26,46 @@ import { TasksService } from '../../tasks.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
 import { TranslateService } from '@ngx-translate/core';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
+interface OfficeNode {
+  id: number;
+  name: string;
+  loans: any[];
+}
 
 @Component({
   selector: 'mifosx-loan-approval',
   templateUrl: './loan-approval.component.html',
-  styleUrls: ['./loan-approval.component.scss']
+  styleUrls: ['./loan-approval.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCheckbox,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FormatNumberPipe
+  ]
 })
 export class LoanApprovalComponent {
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private translateService = inject(TranslateService);
+  private settingsService = inject(SettingsService);
+  private tasksService = inject(TasksService);
 
   /** Offices Data */
   offices: any;
@@ -33,13 +78,19 @@ export class LoanApprovalComponent {
   /** Row Selection Data */
   selection: SelectionModel<any>;
   /** Map data */
-  idToNodeMap = {};
+  idToNodeMap: { [key: number]: OfficeNode } = {};
   /** Grouped Office Data */
   officesArray: any[];
   /** List of Requests */
   batchRequests: any[];
   /** Displayed Columns */
-  displayedColumns: string[] = ['select', 'clientName', 'loan', 'amount', 'loanPurpose'];
+  displayedColumns: string[] = [
+    'select',
+    'clientName',
+    'loan',
+    'amount',
+    'loanPurpose'
+  ];
 
   /**
    * Retrieves the offices and loans data from `resolve`.
@@ -50,14 +101,8 @@ export class LoanApprovalComponent {
    * @param {SettingsService} settingsService Settings Service.
    * @param {TasksService} tasksService Tasks Service.
    */
-  constructor(private route: ActivatedRoute,
-    private dialog: MatDialog,
-    private dateUtils: Dates,
-    private router: Router,
-    private translateService: TranslateService,
-    private settingsService: SettingsService,
-    private tasksService: TasksService) {
-    this.route.data.subscribe((data: { officesData: any, loansData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { officesData: any; loansData: any }) => {
       this.offices = data.officesData;
       this.loans = data.loansData.pageItems;
       this.setOfficeData();
@@ -72,15 +117,15 @@ export class LoanApprovalComponent {
     });
     this.loans.forEach((loanEle: any) => {
       if (loanEle.status.pendingApproval) {
-        let tempOffice = {};
+        let tempOffice: OfficeNode | undefined;
         if (loanEle.clientOfficeId) {
           tempOffice = this.idToNodeMap[loanEle.clientOfficeId];
-          tempOffice['loans'].push(loanEle);
-        } else {
-          if (loanEle.group) {
-            tempOffice = this.idToNodeMap[loanEle.group.officeId];
-            tempOffice['loans'].push(loanEle);
-          }
+        } else if (loanEle.group?.officeId) {
+          tempOffice = this.idToNodeMap[loanEle.group.officeId];
+        }
+
+        if (tempOffice) {
+          tempOffice.loans.push(loanEle);
         }
       }
     });
@@ -107,9 +152,9 @@ export class LoanApprovalComponent {
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle(dataSource3: any) {
     if (dataSource3) {
-      this.isAllSelected(dataSource3) ?
-        dataSource3.forEach((row: any) => this.selection.deselect(row)) :
-        dataSource3.forEach((row: any) => this.selection.select(row));
+      this.isAllSelected(dataSource3)
+        ? dataSource3.forEach((row: any) => this.selection.deselect(row))
+        : dataSource3.forEach((row: any) => this.selection.select(row));
     }
   }
 
@@ -123,7 +168,10 @@ export class LoanApprovalComponent {
 
   approveLoan() {
     const approveLoanDialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: { heading: this.translateService.instant('labels.heading.Approve Loan'), dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want to Approve Loan') }
+      data: {
+        heading: this.translateService.instant('labels.heading.Approve Loan'),
+        dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want to Approve Loan')
+      }
     });
     approveLoanDialogRef.afterClosed().subscribe((response: { confirm: any }) => {
       if (response.confirm) {
@@ -154,7 +202,7 @@ export class LoanApprovalComponent {
     });
     this.tasksService.submitBatchData(this.batchRequests).subscribe((response: any) => {
       response.forEach((responseEle: any) => {
-        if (responseEle.statusCode = '200') {
+        if (responseEle.statusCode === '200') {
           approvedAccounts++;
           responseEle.body = JSON.parse(responseEle.body);
           if (selectedAccounts === approvedAccounts) {
@@ -174,7 +222,7 @@ export class LoanApprovalComponent {
     this.tasksService.getAllLoansToBeApproved().subscribe((response: any) => {
       this.loans = response.pageItems;
       this.loans = this.loans.filter((account: any) => {
-        return (account.status.waitingForDisbursal === true);
+        return account.status.waitingForDisbursal === true;
       });
       this.dataSource = new MatTableDataSource(this.loans);
       this.selection = new SelectionModel(true, []);
@@ -187,8 +235,8 @@ export class LoanApprovalComponent {
    */
   reload() {
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
+    this.router
+      .navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
       .then(() => this.router.navigate([url]));
   }
-
 }

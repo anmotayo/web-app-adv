@@ -1,8 +1,24 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgClass } from '@angular/common';
+import { MatTooltip } from '@angular/material/tooltip';
+import { StatusLookupPipe } from '../../pipes/status-lookup.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * GSIM Accounts Overview component.
@@ -10,12 +26,37 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-gsim-account',
   templateUrl: './gsim-account.component.html',
-  styleUrls: ['./gsim-account.component.scss']
+  styleUrls: ['./gsim-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    NgClass,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    StatusLookupPipe
+  ]
 })
 export class GsimAccountComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  dialog = inject(MatDialog);
 
   /** Columns to be displayed in charge overview table. */
-  displayedColumns: string[] = ['clientDetails', 'savingsAccount', 'products', 'balance', 'Actions'];
+  displayedColumns: string[] = [
+    'clientDetails',
+    'savingsAccount',
+    'products',
+    'balance',
+    'Actions'
+  ];
   /** Data source for charge overview table. */
   dataSource: MatTableDataSource<any>;
   /** Charge Overview data */
@@ -33,9 +74,8 @@ export class GsimAccountComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {MatDialog} dialog Dialog reference.
    */
-   constructor(private route: ActivatedRoute,
-               public dialog: MatDialog) {
-      this.route.data.subscribe((data: { gsimData: any, savingAccountData: any, groupsData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { gsimData: any; savingAccountData: any; groupsData: any }) => {
       this.gsimOverviewData = data.gsimData[0].childGSIMAccounts;
       this.savingAccountData = data.savingAccountData;
       this.groupsData = data.groupsData;
@@ -49,7 +89,7 @@ export class GsimAccountComponent implements OnInit {
   /**
    * Set Client Charge Overview.
    */
-   setLoanClientChargeOverview() {
+  setLoanClientChargeOverview() {
     this.dataSource = new MatTableDataSource(this.gsimOverviewData);
     // this.dataSource.paginator = this.paginator;
   }
@@ -58,8 +98,7 @@ export class GsimAccountComponent implements OnInit {
    * Stops the propagation to view pages.
    * @param $event Mouse Event
    */
-   routeEdit($event: MouseEvent) {
+  routeEdit($event: MouseEvent) {
     $event.stopPropagation();
   }
-
 }

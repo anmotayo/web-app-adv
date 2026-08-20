@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, FormControl, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { OrganizationService } from 'app/organization/organization.service';
+import { UntypedFormGroup, UntypedFormBuilder, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ProductsService } from '../../products.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Collateral component.
@@ -14,9 +16,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-collateral',
   templateUrl: './create-collateral.component.html',
-  styleUrls: ['./create-collateral.component.scss']
+  styleUrls: ['./create-collateral.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class CreateCollateralComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private organizationService = inject(OrganizationService);
 
   /** Collateral form */
   collateralForm: UntypedFormGroup;
@@ -31,15 +42,18 @@ export class CreateCollateralComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private productsService: ProductsService,
-              private route:  ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
-                this.route.data.subscribe((data: { collateralTemplate: any }) => {
-                  this.collateralTemplateData = data.collateralTemplate;
-                });
-               }
+  constructor() {
+    this.route.data.subscribe((data: { collateralTemplate: any }) => {
+      this.organizationService.getCurrencies().subscribe((orgCurrencies: any) => {
+        let orgCurrencyList = Array.isArray(orgCurrencies.selectedCurrencyOptions)
+          ? orgCurrencies.selectedCurrencyOptions
+          : [];
+        this.collateralTemplateData = data.collateralTemplate.filter((currency: any) =>
+          orgCurrencyList.some((orgCurrency: any) => orgCurrency.code === currency.code)
+        );
+      });
+    });
+  }
 
   /**
    * Create and sets Collateral Form
@@ -53,12 +67,30 @@ export class CreateCollateralComponent implements OnInit {
    */
   createCollateralForm() {
     this.collateralForm = this.formBuilder.group({
-      'name': ['', Validators.required],
-      'unitType': ['', Validators.required],
-      'basePrice': ['', Validators.required],
-      'pctToBase': ['', Validators.required],
-      'currency': ['', Validators.required],
-      'quality': ['', Validators.required]
+      name: [
+        '',
+        Validators.required
+      ],
+      unitType: [
+        '',
+        Validators.required
+      ],
+      basePrice: [
+        '',
+        Validators.required
+      ],
+      pctToBase: [
+        '',
+        Validators.required
+      ],
+      currency: [
+        '',
+        Validators.required
+      ],
+      quality: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -76,7 +108,4 @@ export class CreateCollateralComponent implements OnInit {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
-
-
 }

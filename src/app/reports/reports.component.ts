@@ -1,9 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Reports component.
@@ -11,16 +24,38 @@ import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'mifosx-reports',
   templateUrl: './reports.component.html',
-  styleUrls: ['./reports.component.scss']
+  styleUrls: ['./reports.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ReportsComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Reports data. */
   reportsData: any;
   /** Report category filter. */
   filter: string;
   /** Columns to be displayed in reports table. */
-  displayedColumns: string[] = ['reportName', 'reportType', 'reportCategory'];
+  displayedColumns: string[] = [
+    'reportName',
+    'reportType',
+    'reportCategory'
+  ];
   /** Data source for reports table. */
   dataSource = new MatTableDataSource();
 
@@ -35,10 +70,9 @@ export class ReportsComponent implements OnInit {
    * Prevents reuse of route parameter `filter`.
    * @param {Router} router: Router.
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.router.routeReuseStrategy.shouldReuseRoute = () => false;
-    this.route.data.subscribe(( data: { reports: any }) => {
+    this.route.data.subscribe((data: { reports: any }) => {
       this.reportsData = data.reports;
     });
     this.filter = this.route.snapshot.params['filter'];
@@ -58,8 +92,8 @@ export class ReportsComponent implements OnInit {
    */
   applyFilter(filterValue: string) {
     if (filterValue.length) {
-        this.setCustomFilterPredicate();
-        this.dataSource.filter = filterValue.trim().toLowerCase();
+      this.setCustomFilterPredicate();
+      this.dataSource.filter = filterValue.trim().toLowerCase();
     } else {
       this.filterReportsByCategory();
     }
@@ -89,22 +123,23 @@ export class ReportsComponent implements OnInit {
    */
   setCustomFilterPredicate() {
     this.dataSource.filterPredicate = (data: any, filter: string) => {
-        /** Transform the data into a lowercase string of all property values. */
-        const dataStr = Object.keys(data).reduce(function (currentTerm: string, key: string) {
-            /** Use an obscure Unicode character to delimit the words in the concatenated string.
-             * This avoids matches where the values of two columns combined will match the user's query
-             */
-            return currentTerm + ((/** @type {any} */ (data)))[key] + '◬';
-        }, '').toLowerCase();
-        /** Transform the filter by converting it to lowercase and removing whitespace. */
-        const transformedFilter = filter.trim().toLowerCase();
-        /* Seperates filter for All reports page.*/
-        if (this.filter) {
-          return dataStr.indexOf(transformedFilter) !== -1 && data.reportCategory === this.filter;
-        } else {
-          return dataStr.indexOf(transformedFilter) !== -1;
-        }
+      /** Transform the data into a lowercase string of all property values. */
+      const dataStr = Object.keys(data)
+        .reduce(function (currentTerm: string, key: string) {
+          /** Use an obscure Unicode character to delimit the words in the concatenated string.
+           * This avoids matches where the values of two columns combined will match the user's query
+           */
+          return currentTerm + /** @type {any} */ data[key] + '◬';
+        }, '')
+        .toLowerCase();
+      /** Transform the filter by converting it to lowercase and removing whitespace. */
+      const transformedFilter = filter.trim().toLowerCase();
+      /* Seperates filter for All reports page.*/
+      if (this.filter) {
+        return dataStr.indexOf(transformedFilter) !== -1 && data.reportCategory === this.filter;
+      } else {
+        return dataStr.indexOf(transformedFilter) !== -1;
+      }
     };
   }
-
 }

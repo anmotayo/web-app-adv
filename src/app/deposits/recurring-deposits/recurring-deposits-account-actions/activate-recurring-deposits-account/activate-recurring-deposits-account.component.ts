@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { RecurringDepositsService } from '../../recurring-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Activate Recurring Deposits Account Component
@@ -14,9 +15,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-activate-recurring-deposits-account',
   templateUrl: './activate-recurring-deposits-account.component.html',
-  styleUrls: ['./activate-recurring-deposits-account.component.scss']
+  styleUrls: ['./activate-recurring-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class ActivateRecurringDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private recurringDepositsService = inject(RecurringDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +45,7 @@ export class ActivateRecurringDepositsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SavingsService} savingsService Savings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private recurringDepositsService: RecurringDepositsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['recurringDepositAccountId'];
   }
 
@@ -57,7 +62,10 @@ export class ActivateRecurringDepositsAccountComponent implements OnInit {
    */
   createActivateRecurringDepositsAccountForm() {
     this.activateRecurringDepositsAccountForm = this.formBuilder.group({
-      'activatedOnDate': ['', Validators.required]
+      activatedOnDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -71,15 +79,20 @@ export class ActivateRecurringDepositsAccountComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const prevActivatedOnDate: Date = this.activateRecurringDepositsAccountForm.value.activatedOnDate;
     if (activateRecurringDepositsAccountFormData.activatedOnDate instanceof Date) {
-      activateRecurringDepositsAccountFormData.activatedOnDate = this.dateUtils.formatDate(prevActivatedOnDate, dateFormat);
+      activateRecurringDepositsAccountFormData.activatedOnDate = this.dateUtils.formatDate(
+        prevActivatedOnDate,
+        dateFormat
+      );
     }
     const data = {
       ...activateRecurringDepositsAccountFormData,
       dateFormat,
       locale
     };
-    this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, 'activate', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.recurringDepositsService
+      .executeRecurringDepositsAccountCommand(this.accountId, 'activate', data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
 }

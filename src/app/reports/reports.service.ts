@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
@@ -18,11 +18,7 @@ import { ChartData } from './common-models/chart-data.model';
   providedIn: 'root'
 })
 export class ReportsService {
-
-  /**
-   * @param {HttpClient} http Http Client to send requests.
-   */
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
 
   /**
    * @returns {Observable<any>} Reports data
@@ -32,48 +28,14 @@ export class ReportsService {
   }
 
   /**
-   * @returns {Observable<any>} Mix Taxonomy data
-   */
-  getMixTaxonomyArray(): Observable<any> {
-    return this.http.get('/mixtaxonomy');
-  }
-
-  /**
-   * @returns {Observable<any>} Mix Taxonomy data
-   */
-  getMixMappings(): Observable<any> {
-    return this.http.get('/mixmapping');
-  }
-
-  /**
-   * @param {any} mixMappingData Mix Mapping data to be posted
-   * @returns {Observable<any>} response code
-   */
-  editMixMappings(mixMappingData: any): Observable<any> {
-    return this.http.put('/mixmapping', mixMappingData);
-  }
-
-  /**
-   * @param {any} dates start date and end date
-   * @returns {Observable<any>} Mix Report
-   */
-  getMixReport(dates: any): Observable<any> {
-    const httpParams = new HttpParams()
-      .set('startDate', dates.startDate)
-      .set('endDate', dates.endDate);
-    return this.http.get('/mixreport', { params: httpParams, responseType: 'text' });
-  }
-
-  /**
    * @param {string} reportName Report name for which parameters are needed.
    * @returns {Observable<ReportParameter[]>}
    */
   getReportParams(reportName: string): Observable<ReportParameter[]> {
-    const httpParams = new HttpParams()
-      .set('R_reportListing', `'${reportName}'`)
-      .set('parameterType', 'true');
-    return this.http.get(`/runreports/FullParameterList`, {params: httpParams})
-           .pipe(map((response: any) => response.data.map((entry: any) => new ReportParameter(entry.row)) ));
+    const httpParams = new HttpParams().set('R_reportListing', `'${reportName}'`).set('parameterType', 'true');
+    return this.http
+      .get(`/runreports/FullParameterList`, { params: httpParams })
+      .pipe(map((response: any) => response.data.map((entry: any) => new ReportParameter(entry.row))));
   }
 
   /**
@@ -82,8 +44,9 @@ export class ReportsService {
    */
   getSelectOptions(inputString: string): Observable<SelectOption[]> {
     const httpParams = new HttpParams().set('parameterType', 'true');
-    return this.http.get(`/runreports/${inputString}`, {params: httpParams})
-      .pipe(map((response: any) => response.data.map((entry: any) => new SelectOption(entry.row)) ));
+    return this.http
+      .get(`/runreports/${inputString}`, { params: httpParams })
+      .pipe(map((response: any) => response.data.map((entry: any) => new SelectOption(entry.row))));
   }
 
   /**
@@ -92,7 +55,8 @@ export class ReportsService {
    */
   getPentahoParams(reportId: number): Observable<any> {
     const httpParams = new HttpParams().set('fields', 'reportParameters');
-    return this.http.get(`/reports/${reportId}`, {params: httpParams})
+    return this.http
+      .get(`/reports/${reportId}`, { params: httpParams })
       .pipe(map((response: any) => response.reportParameters));
   }
 
@@ -104,10 +68,13 @@ export class ReportsService {
    */
   getRunReportData(reportName: string, formData: object): Observable<any> {
     let httpParams = new HttpParams();
-    for (const [key, value] of Object.entries(formData)) {
+    for (const [
+      key,
+      value
+    ] of Object.entries(formData)) {
       httpParams = httpParams.set(key, value);
     }
-    return this.http.get(`/runreports/${reportName}`, {params: httpParams});
+    return this.http.get(`/runreports/${reportName}`, { params: httpParams });
   }
 
   /**
@@ -118,11 +85,15 @@ export class ReportsService {
    */
   getChartRunReportData(reportName: string, formData: object): Observable<ChartData> {
     let httpParams = new HttpParams();
-    for (const [key, value] of Object.entries(formData)) {
+    for (const [
+      key,
+      value
+    ] of Object.entries(formData)) {
       httpParams = httpParams.set(key, value);
     }
-    return this.http.get(`/runreports/${reportName}`, {params: httpParams})
-    .pipe(map((response: any) => new ChartData(response)));
+    return this.http
+      .get(`/runreports/${reportName}`, { params: httpParams })
+      .pipe(map((response: any) => new ChartData(response)));
   }
 
   /**
@@ -131,15 +102,27 @@ export class ReportsService {
    * @param {object} formData Form Data.
    * @returns {Observable<any>}
    */
-  getPentahoRunReportData(reportName: string, formData: object, tenantIdentifier: string, locale: string, dateFormat: string): Observable<any> {
+  getPentahoRunReportData(
+    reportName: string,
+    formData: object,
+    tenantIdentifier: string,
+    locale: string,
+    dateFormat: string
+  ): Observable<any> {
     let httpParams = new HttpParams()
-        .set('tenantIdentifier', tenantIdentifier)
-        .set('locale', locale)
-        .set('dateFormat', dateFormat);
-    for (const [key, value] of Object.entries(formData)) {
+      .set('tenantIdentifier', tenantIdentifier)
+      .set('locale', locale)
+      .set('dateFormat', dateFormat);
+    for (const [
+      key,
+      value
+    ] of Object.entries(formData)) {
       httpParams = httpParams.set(key, value);
     }
-    return this.http.get(`/runreports/${reportName}`, {responseType: 'arraybuffer', observe: 'response', params: httpParams});
+    return this.http.get(`/runreports/${reportName}`, {
+      responseType: 'arraybuffer',
+      observe: 'response',
+      params: httpParams
+    });
   }
-
 }

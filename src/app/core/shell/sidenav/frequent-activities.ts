@@ -25,7 +25,7 @@ export const frequentActivities: any[] = [
     toolTip: 'Reports'
   },
   {
-    path: '/users',
+    path: '/appusers',
     icon: 'users',
     toolTip: 'Users'
   },
@@ -48,10 +48,5 @@ export const frequentActivities: any[] = [
     path: '/templates',
     icon: 'address-card',
     toolTip: 'Templates'
-  },
-  {
-    path: '/self-service',
-    icon: 'laptop',
-    toolTip: 'Self Service'
-  },
+  }
 ];

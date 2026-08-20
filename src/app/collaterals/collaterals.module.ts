@@ -13,18 +13,15 @@ import { CollateralsRoutingModule } from './collaterals-routing.module';
 import { ViewCollateralComponent } from './view-collateral/view-collateral.component';
 import { EditCollateralComponent } from './edit-collateral/edit-collateral.component';
 
-
 @NgModule({
-  declarations: [
-    ViewCollateralComponent,
-    EditCollateralComponent
-  ],
   imports: [
     CommonModule,
     CollateralsRoutingModule,
     SharedModule,
     DirectivesModule,
-    PipesModule
+    PipesModule,
+    ViewCollateralComponent,
+    EditCollateralComponent
   ]
 })
-export class CollateralsModule { }
+export class CollateralsModule {}

@@ -1,13 +1,34 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
-import { TooltipPosition } from '@angular/material/tooltip';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDivider } from '@angular/material/divider';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-saving-product-settings-step',
   templateUrl: './saving-product-settings-step.component.html',
-  styleUrls: ['./saving-product-settings-step.component.scss']
+  styleUrls: ['./saving-product-settings-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTooltip,
+    MatCheckbox,
+    MatDivider,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class SavingProductSettingsStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
 
   @Input() savingProductsTemplate: any;
 
@@ -16,7 +37,7 @@ export class SavingProductSettingsStepComponent implements OnInit {
   lockinPeriodFrequencyTypeData: any;
   taxGroupData: any;
 
-  constructor(private formBuilder: UntypedFormBuilder) {
+  constructor() {
     this.createSavingProductSettingsForm();
     this.setConditionalControls();
   }
@@ -26,66 +47,77 @@ export class SavingProductSettingsStepComponent implements OnInit {
     this.taxGroupData = this.savingProductsTemplate.taxGroupOptions;
 
     this.savingProductSettingsForm.patchValue({
-      'minRequiredOpeningBalance': this.savingProductsTemplate.minRequiredOpeningBalance,
-      'lockinPeriodFrequency': this.savingProductsTemplate.lockinPeriodFrequency,
-      'lockinPeriodFrequencyType': this.savingProductsTemplate.lockinPeriodFrequencyType && this.savingProductsTemplate.lockinPeriodFrequencyType.id,
-      'withdrawalFeeForTransfers': this.savingProductsTemplate.withdrawalFeeForTransfers,
-      'minBalanceForInterestCalculation': this.savingProductsTemplate.minBalanceForInterestCalculation,
-      'enforceMinRequiredBalance': this.savingProductsTemplate.enforceMinRequiredBalance,
-      'minRequiredBalance': this.savingProductsTemplate.minRequiredBalance,
-      'allowOverdraft': this.savingProductsTemplate.allowOverdraft,
-      'minOverdraftForInterestCalculation': this.savingProductsTemplate.minOverdraftForInterestCalculation,
-      'nominalAnnualInterestRateOverdraft': this.savingProductsTemplate.nominalAnnualInterestRateOverdraft,
-      'overdraftLimit': this.savingProductsTemplate.overdraftLimit,
-      'withHoldTax': this.savingProductsTemplate.withHoldTax,
-      'taxGroupId': this.savingProductsTemplate.taxGroup && this.savingProductsTemplate.taxGroup.id,
-      'isDormancyTrackingActive': this.savingProductsTemplate.isDormancyTrackingActive,
-      'daysToInactive': this.savingProductsTemplate.daysToInactive,
-      'daysToDormancy': this.savingProductsTemplate.daysToDormancy,
-      'daysToEscheat': this.savingProductsTemplate.daysToEscheat
+      minRequiredOpeningBalance: this.savingProductsTemplate.minRequiredOpeningBalance,
+      lockinPeriodFrequency: this.savingProductsTemplate.lockinPeriodFrequency,
+      lockinPeriodFrequencyType:
+        this.savingProductsTemplate.lockinPeriodFrequencyType &&
+        this.savingProductsTemplate.lockinPeriodFrequencyType.id,
+      withdrawalFeeForTransfers: this.savingProductsTemplate.withdrawalFeeForTransfers,
+      minBalanceForInterestCalculation: this.savingProductsTemplate.minBalanceForInterestCalculation,
+      enforceMinRequiredBalance: this.savingProductsTemplate.enforceMinRequiredBalance,
+      minRequiredBalance: this.savingProductsTemplate.minRequiredBalance,
+      allowOverdraft: this.savingProductsTemplate.allowOverdraft,
+      minOverdraftForInterestCalculation: this.savingProductsTemplate.minOverdraftForInterestCalculation,
+      nominalAnnualInterestRateOverdraft: this.savingProductsTemplate.nominalAnnualInterestRateOverdraft,
+      overdraftLimit: this.savingProductsTemplate.overdraftLimit,
+      withHoldTax: this.savingProductsTemplate.withHoldTax,
+      taxGroupId: this.savingProductsTemplate.taxGroup && this.savingProductsTemplate.taxGroup.id,
+      isDormancyTrackingActive: this.savingProductsTemplate.isDormancyTrackingActive,
+      daysToInactive: this.savingProductsTemplate.daysToInactive,
+      daysToDormancy: this.savingProductsTemplate.daysToDormancy,
+      daysToEscheat: this.savingProductsTemplate.daysToEscheat
     });
   }
 
   createSavingProductSettingsForm() {
     this.savingProductSettingsForm = this.formBuilder.group({
-      'minRequiredOpeningBalance': [''],
-      'lockinPeriodFrequency': [''],
-      'lockinPeriodFrequencyType': [''],
-      'withdrawalFeeForTransfers': [false],
-      'minBalanceForInterestCalculation': [''],
-      'enforceMinRequiredBalance': [false],
-      'minRequiredBalance': [''],
-      'allowOverdraft': [false],
-      'withHoldTax': [false],
-      'isDormancyTrackingActive': [false]
+      minRequiredOpeningBalance: [
+        '',
+        [Validators.min(0)]
+      ],
+      lockinPeriodFrequency: [
+        '',
+        [
+          Validators.required,
+          Validators.min(1),
+          Validators.pattern('^[1-9]\\d*$')
+        ]
+      ],
+      lockinPeriodFrequencyType: [''],
+      withdrawalFeeForTransfers: [false],
+      minBalanceForInterestCalculation: [''],
+      enforceMinRequiredBalance: [false],
+      minRequiredBalance: [''],
+      allowOverdraft: [false],
+      withHoldTax: [false],
+      isDormancyTrackingActive: [false]
     });
   }
 
   setConditionalControls() {
-    this.savingProductSettingsForm.get('allowOverdraft').valueChanges
-      .subscribe((allowOverdraft: any) => {
-        if (allowOverdraft) {
-          this.savingProductSettingsForm.addControl('minOverdraftForInterestCalculation', new UntypedFormControl(''));
-          this.savingProductSettingsForm.addControl('nominalAnnualInterestRateOverdraft', new UntypedFormControl(''));
-          this.savingProductSettingsForm.addControl('overdraftLimit', new UntypedFormControl(''));
-        } else {
-          this.savingProductSettingsForm.removeControl('minOverdraftForInterestCalculation');
-          this.savingProductSettingsForm.removeControl('nominalAnnualInterestRateOverdraft');
-          this.savingProductSettingsForm.removeControl('overdraftLimit');
-        }
-      });
+    this.savingProductSettingsForm.get('allowOverdraft').valueChanges.subscribe((allowOverdraft: any) => {
+      if (allowOverdraft) {
+        this.savingProductSettingsForm.addControl('minOverdraftForInterestCalculation', new UntypedFormControl(''));
+        this.savingProductSettingsForm.addControl('nominalAnnualInterestRateOverdraft', new UntypedFormControl(''));
+        this.savingProductSettingsForm.addControl('overdraftLimit', new UntypedFormControl(''));
+      } else {
+        this.savingProductSettingsForm.removeControl('minOverdraftForInterestCalculation');
+        this.savingProductSettingsForm.removeControl('nominalAnnualInterestRateOverdraft');
+        this.savingProductSettingsForm.removeControl('overdraftLimit');
+      }
+    });
 
-    this.savingProductSettingsForm.get('withHoldTax').valueChanges
-      .subscribe((withHoldTax: any) => {
-        if (withHoldTax) {
-          this.savingProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
-        } else {
-          this.savingProductSettingsForm.removeControl('taxGroupId');
-        }
-      });
+    this.savingProductSettingsForm.get('withHoldTax').valueChanges.subscribe((withHoldTax: any) => {
+      if (withHoldTax) {
+        this.savingProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
+      } else {
+        this.savingProductSettingsForm.removeControl('taxGroupId');
+      }
+    });
 
-    this.savingProductSettingsForm.get('isDormancyTrackingActive').valueChanges
-      .subscribe((isDormancyTrackingActive: any) => {
+    this.savingProductSettingsForm
+      .get('isDormancyTrackingActive')
+      .valueChanges.subscribe((isDormancyTrackingActive: any) => {
         if (isDormancyTrackingActive) {
           this.savingProductSettingsForm.addControl('daysToInactive', new UntypedFormControl('', Validators.required));
           this.savingProductSettingsForm.addControl('daysToDormancy', new UntypedFormControl('', Validators.required));
@@ -101,5 +133,4 @@ export class SavingProductSettingsStepComponent implements OnInit {
   get savingProductSettings() {
     return this.savingProductSettingsForm.value;
   }
-
 }

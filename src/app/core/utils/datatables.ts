@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SettingsService } from 'app/settings/settings.service';
 import { CheckboxBase } from 'app/shared/form-dialog/formfield/model/checkbox-base';
 import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicker-base';
@@ -11,42 +11,59 @@ import { Dates } from './dates';
   providedIn: 'root'
 })
 export class Datatables {
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
-  systemFields: string[] = ['id', 'created_at', 'updated_at'];
+  systemFields: string[] = [
+    'id',
+    'created_at',
+    'updated_at'
+  ];
 
-  entitiesIdFields: string[] = ['client_id', 'savings_account_id', 'savings_transaction_id',
-    'loan_id', 'group_id', 'center_id', 'office_id', 'product_loan_id', 'savings_product_id', 'share_product_id'];
-
-  constructor(private dateUtils: Dates,
-    private settingsService: SettingsService) { }
+  entitiesIdFields: string[] = [
+    'client_id',
+    'savings_account_id',
+    'savings_transaction_id',
+    'loan_id',
+    'group_id',
+    'center_id',
+    'office_id',
+    'product_loan_id',
+    'savings_product_id',
+    'share_product_id'
+  ];
 
   public getFormfields(columns: any, dateTransformColumns: string[], dataTableEntryObject: any) {
     return columns.map((column: any) => {
+      const displayLabel = this.toDisplayLabel(column.columnName);
       switch (column.columnDisplayType) {
         case 'INTEGER':
         case 'STRING':
         case 'DECIMAL':
-        case 'TEXT': return new InputBase({
-          controlName: column.columnName,
-          label: column.columnName,
-          value: '',
-          type: (column.columnDisplayType === 'INTEGER' || column.columnDisplayType === 'DECIMAL') ? 'number' : 'text',
-          required: (column.isColumnNullable) ? false : true
-        });
-        case 'BOOLEAN': return new CheckboxBase({
-          controlName: column.columnName,
-          label: column.columnName,
-          value: '',
-          type: 'checkbox',
-          required: (column.isColumnNullable) ? false : true
-        });
-        case 'CODELOOKUP': return new SelectBase({
-          controlName: column.columnName,
-          label: column.columnName,
-          value: '',
-          options: { label: 'value', value: 'id', data: column.columnValues },
-          required: (column.isColumnNullable) ? false : true
-        });
+        case 'TEXT':
+          return new InputBase({
+            controlName: column.columnName,
+            label: displayLabel,
+            value: '',
+            type: column.columnDisplayType === 'INTEGER' || column.columnDisplayType === 'DECIMAL' ? 'number' : 'text',
+            required: column.isColumnNullable ? false : true
+          });
+        case 'BOOLEAN':
+          return new CheckboxBase({
+            controlName: column.columnName,
+            label: displayLabel,
+            value: '',
+            type: 'checkbox',
+            required: column.isColumnNullable ? false : true
+          });
+        case 'CODELOOKUP':
+          return new SelectBase({
+            controlName: column.columnName,
+            label: displayLabel,
+            value: '',
+            options: { label: 'value', value: 'id', data: column.columnValues },
+            required: column.isColumnNullable ? false : true
+          });
         case 'DATE': {
           dateTransformColumns.push(column.columnName);
           if (!dataTableEntryObject.dateFormat) {
@@ -54,10 +71,10 @@ export class Datatables {
           }
           return new DatepickerBase({
             controlName: column.columnName,
-            label: column.columnName,
+            label: displayLabel,
             value: '',
             maxDate: this.settingsService.maxAllowedDate,
-            required: (column.isColumnNullable) ? false : true
+            required: column.isColumnNullable ? false : true
           });
         }
         case 'DATETIME': {
@@ -65,10 +82,10 @@ export class Datatables {
           dataTableEntryObject.dateFormat = Dates.DEFAULT_DATETIMEFORMAT;
           return new DateTimepickerBase({
             controlName: column.columnName,
-            label: column.columnName,
+            label: displayLabel,
             value: '',
             maxDate: this.settingsService.maxAllowedDate,
-            required: (column.isColumnNullable) ? false : true
+            required: column.isColumnNullable ? false : true
           });
         }
       }
@@ -76,11 +93,11 @@ export class Datatables {
   }
 
   public isEntityId(columnName: string): boolean {
-    return (this.entitiesIdFields.includes(columnName));
+    return this.entitiesIdFields.includes(columnName);
   }
 
   public isSystemColumn(columnName: string): boolean {
-    return (this.systemFields.includes(columnName) || this.entitiesIdFields.includes(columnName));
+    return this.systemFields.includes(columnName) || this.entitiesIdFields.includes(columnName);
   }
 
   public filterSystemColumns(columnHeaders: any): any {
@@ -124,7 +141,7 @@ export class Datatables {
   }
 
   public isColumnType(columnType: string, expectedType: string): boolean {
-    return (columnType === expectedType);
+    return columnType === expectedType;
   }
 
   public buildPayload(datatableInputs: any, datatableDataValues: any, dateFormat: string, output: any): any {
@@ -158,13 +175,62 @@ export class Datatables {
     return columnName;
   }
 
-  public isValidUrl(urlString: string): boolean {
-      try {
-        const url = new URL(urlString);
-        return url.protocol.startsWith('http') || url.protocol.startsWith('https');
-      } catch (e) {
-        return false;
+  public toDisplayLabel(columnName: string): string {
+    if (!columnName) {
+      return '';
+    }
+
+    // Handle CODELOOKUP pattern: extract the part after _cd_
+    if (columnName.includes('_cd_')) {
+      const parts = columnName.split('_cd_');
+      // Ensure parts[1] exists and is not empty before processing
+      if (parts.length > 1 && parts[1] && parts[1].trim()) {
+        // Return the part after _cd_ converted to Title Case
+        // Filter out standalone "cd" or "CD" words that are artifacts from naming convention
+        // This only affects display, not database column names
+        const displayWords = parts[1]
+          .split('_')
+          .filter((word) => word.trim() && word.toLowerCase() !== 'cd') // Remove empty strings and standalone "cd" artifacts
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+
+        // Return empty string if all words were filtered out, otherwise return formatted label
+        return displayWords || parts[1].trim();
       }
+    }
+
+    // Convert snake_case to Title Case (e.g., "created_at" -> "Created At")
+    // For non-CODELOOKUP fields, only filter standalone "cd" if it appears as an artifact
+    return (
+      columnName
+        .split('_')
+        .filter((word) => word.trim() && word.toLowerCase() !== 'cd') // Remove empty strings and standalone "cd" artifacts
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ') || columnName
+    ); // Fallback to original if all filtered out
   }
 
+  public getCodeLookupValue(columnHeader: any, id: number): string {
+    if (!columnHeader?.columnValues || id === null || id === undefined) {
+      return '';
+    }
+    const codeValue = columnHeader.columnValues.find((cv: any) => cv.id === id);
+    return codeValue ? codeValue.value : id.toString();
+  }
+
+  public getCodeName(columnName: string): string {
+    if (columnName && columnName.includes('_cd_')) {
+      return columnName.split('_cd_')[0];
+    }
+    return '';
+  }
+
+  public isValidUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+      return url.protocol.startsWith('http') || url.protocol.startsWith('https');
+    } catch (e) {
+      return false;
+    }
+  }
 }

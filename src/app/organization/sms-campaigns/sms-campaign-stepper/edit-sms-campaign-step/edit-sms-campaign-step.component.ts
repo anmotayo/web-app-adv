@@ -1,6 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit, Output, Input, EventEmitter } from '@angular/core';
-import { UntypedFormGroup, Validators, UntypedFormBuilder, UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, Output, Input, EventEmitter, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  Validators,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
 
 /** Custom Services */
 import { ReportsService } from 'app/reports/reports.service';
@@ -8,6 +14,9 @@ import { ReportsService } from 'app/reports/reports.service';
 /** Custom Models */
 import { ReportParameter } from 'app/reports/common-models/report-parameter.model';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { EditBusinessRuleParametersComponent } from './edit-business-rule-parameters/edit-business-rule-parameters.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit SMS Campaign step.
@@ -15,9 +24,17 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-edit-sms-campaign-step',
   templateUrl: './edit-sms-campaign-step.component.html',
-  styleUrls: ['./edit-sms-campaign-step.component.scss']
+  styleUrls: ['./edit-sms-campaign-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    EditBusinessRuleParametersComponent
+  ]
 })
 export class EditSmsCampaignStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private reportService = inject(ReportsService);
+  private settingsService = inject(SettingsService);
 
   /** SMS Campaign Template */
   @Input() smsCampaignTemplate: any;
@@ -49,9 +66,7 @@ export class EditSmsCampaignStepComponent implements OnInit {
    * @param {ReportsService} reportService Reports Service
    * @param {SettingsService} settingsService Settings Service.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private reportService: ReportsService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.createSMSCampaignDetailsForm();
   }
 
@@ -60,11 +75,20 @@ export class EditSmsCampaignStepComponent implements OnInit {
    */
   createSMSCampaignDetailsForm() {
     this.smsCampaignDetailsForm = this.formBuilder.group({
-      'campaignName': ['', Validators.required],
-      'providerId': [null],
-      'triggerType': ['', Validators.required],
-      'runReportId': ['', Validators.required],
-      'isNotification': [false]
+      campaignName: [
+        '',
+        Validators.required
+      ],
+      providerId: [null],
+      triggerType: [
+        '',
+        Validators.required
+      ],
+      runReportId: [
+        '',
+        Validators.required
+      ],
+      isNotification: [false]
     });
   }
 
@@ -100,15 +124,17 @@ export class EditSmsCampaignStepComponent implements OnInit {
    */
   setControlValues() {
     this.smsCampaignDetailsForm.patchValue({
-      'campaignName': this.smsCampaign.campaignName,
-      'providerId': this.smsCampaign.providerId,
-      'triggerType': this.smsCampaign.triggerType.id,
-      'runReportId': this.smsCampaign.runReportId,
-      'isNotification': this.smsCampaign.isNotification
+      campaignName: this.smsCampaign.campaignName,
+      providerId: this.smsCampaign.providerId,
+      triggerType: this.smsCampaign.triggerType.id,
+      runReportId: this.smsCampaign.runReportId,
+      isNotification: this.smsCampaign.isNotification
     });
     if (this.smsCampaign.triggerType.value === 'Schedule') {
-      this.smsCampaignDetailsForm.addControl('recurrenceStartDate', new UntypedFormControl(new Date(this.smsCampaign.recurrenceStartDate)));
+      this.smsCampaignDetailsForm.addControl(
+        'recurrenceStartDate',
+        new UntypedFormControl(new Date(this.smsCampaign.recurrenceStartDate))
+      );
     }
   }
-
 }

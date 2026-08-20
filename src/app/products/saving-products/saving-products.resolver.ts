@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,13 +11,8 @@ import { ProductsService } from '../products.service';
  * Saving products data resolver.
  */
 @Injectable()
-export class SavingProductsResolver implements Resolve<Object> {
-
-  /**
-   *
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class SavingProductsResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the saving products data.
@@ -27,5 +21,4 @@ export class SavingProductsResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.productsService.getSavingProducts();
   }
-
 }

@@ -1,9 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View provisioning journal entries component.
@@ -11,14 +24,42 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'mifosx-view-provisioning-journal-entries',
   templateUrl: './view-provisioning-journal-entries.component.html',
-  styleUrls: ['./view-provisioning-journal-entries.component.scss']
+  styleUrls: ['./view-provisioning-journal-entries.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ViewProvisioningJournalEntriesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** Provisioning journal entry data. */
   provisioningJournalEntryData: any;
   /** Columns to be displayed in provisioning journal entries table. */
-  displayedColumns: string[] = ['id', 'officeName', 'transactionDate', 'transactionId', 'glAccountType', 'createdByUserName', 'glAccountCode', 'glAccountName', 'debit', 'credit'];
+  displayedColumns: string[] = [
+    'id',
+    'officeName',
+    'transactionDate',
+    'transactionId',
+    'glAccountType',
+    'createdByUserName',
+    'glAccountCode',
+    'glAccountName',
+    'debit',
+    'credit'
+  ];
   /** Data source for provisioning journal entries table. */
   dataSource: MatTableDataSource<any>;
 
@@ -31,7 +72,7 @@ export class ViewProvisioningJournalEntriesComponent implements OnInit {
    * Retrieves the provisioning journal entries data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { provisioningJournalEntry: any }) => {
       this.provisioningJournalEntryData = data.provisioningJournalEntry.pageItems;
     });
@@ -52,10 +93,14 @@ export class ViewProvisioningJournalEntriesComponent implements OnInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sortingDataAccessor = (transaction: any, property: any) => {
       switch (property) {
-        case 'glAccountType': return transaction.glAccountType.value;
-        case 'debit': return transaction.amount;
-        case 'credit': return transaction.amount;
-        default: return transaction[property];
+        case 'glAccountType':
+          return transaction.glAccountType.value;
+        case 'debit':
+          return transaction.amount;
+        case 'credit':
+          return transaction.amount;
+        default:
+          return transaction[property];
       }
     };
     this.dataSource.sort = this.sort;
@@ -68,5 +113,4 @@ export class ViewProvisioningJournalEntriesComponent implements OnInit {
   applyFilter(filterValue: string) {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
-
 }

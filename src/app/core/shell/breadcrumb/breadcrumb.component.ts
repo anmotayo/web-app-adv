@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit , TemplateRef, ElementRef , ViewChild, AfterViewInit} from '@angular/core';
-import { ActivatedRoute, Router, NavigationEnd, Data } from '@angular/router';
+import { Component, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, NavigationEnd, Data, RouterLink } from '@angular/router';
 
 /** rxjs Imports */
 import { filter } from 'rxjs/operators';
@@ -12,6 +12,7 @@ import { Breadcrumb } from './breadcrumb.model';
 import { PopoverService } from '../../../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../../../configuration-wizard/configuration-wizard.service';
 import { TranslateService } from '@ngx-translate/core';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Route data property to generate breadcrumb using a static string.
@@ -48,9 +49,17 @@ const routeAddBreadcrumbLink = 'addBreadcrumbLink';
 @Component({
   selector: 'mifosx-breadcrumb',
   templateUrl: './breadcrumb.component.html',
-  styleUrls: ['./breadcrumb.component.scss']
+  styleUrls: ['./breadcrumb.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
-export class BreadcrumbComponent implements OnInit, AfterViewInit {
+export class BreadcrumbComponent implements AfterViewInit {
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
+  private translateService = inject(TranslateService);
 
   /** Array of breadcrumbs. */
   breadcrumbs: Breadcrumb[];
@@ -66,22 +75,15 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService,
-              private translateService: TranslateService) {
+  constructor() {
     this.generateBreadcrumbs();
-  }
-
-  ngOnInit() {
   }
 
   /**
    * Generates the array of breadcrumbs for the visited route.
    */
   generateBreadcrumbs() {
-    const onNavigationEnd = this.router.events.pipe(filter(event => event instanceof NavigationEnd));
+    const onNavigationEnd = this.router.events.pipe(filter((event) => event instanceof NavigationEnd));
 
     onNavigationEnd.subscribe(() => {
       this.breadcrumbs = [];
@@ -93,7 +95,7 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
         let breadcrumbLabel: any;
         let url: any;
 
-        childrenRoutes.forEach(route => {
+        childrenRoutes.forEach((route) => {
           currentRoute = route;
           breadcrumbLabel = false;
 
@@ -101,39 +103,55 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
             return;
           }
 
-          const routeURL = route.snapshot.url.map(segment => segment.path).join('/');
+          const routeURL = route.snapshot.url.map((segment) => segment.path).join('/');
           currentUrl += `/${routeURL}`;
 
           if (currentUrl === '/') {
             breadcrumbLabel = 'Home';
           }
 
-          const hasData = (route.routeConfig && route.routeConfig.data);
+          const hasData = route.routeConfig && route.routeConfig.data;
 
           if (hasData) {
-            if (route.snapshot.data.hasOwnProperty(routeResolveBreadcrumb) && route.snapshot.data[routeResolveBreadcrumb]) {
+            if (
+              route.snapshot.data.hasOwnProperty(routeResolveBreadcrumb) &&
+              route.snapshot.data[routeResolveBreadcrumb]
+            ) {
               breadcrumbLabel = route.snapshot.data;
               route.snapshot.data[routeResolveBreadcrumb].forEach((property: any) => {
                 breadcrumbLabel = breadcrumbLabel[property];
               });
-            } else if (route.snapshot.data.hasOwnProperty(routeParamBreadcrumb) && route.snapshot.paramMap.get(route.snapshot.data[routeParamBreadcrumb])) {
+            } else if (
+              route.snapshot.data.hasOwnProperty(routeParamBreadcrumb) &&
+              route.snapshot.paramMap.get(route.snapshot.data[routeParamBreadcrumb])
+            ) {
               breadcrumbLabel = route.snapshot.paramMap.get(route.snapshot.data[routeParamBreadcrumb]);
               const routeData: Data = route.snapshot.data;
               if (routeData.breadcrumb === 'Clients') {
-                breadcrumbLabel = routeData.clientViewData.displayName;
+                breadcrumbLabel = this.printableValue(routeData.clientViewData.displayName);
                 currentUrl += `/general`;
               } else if (routeData.breadcrumb === 'Groups') {
                 breadcrumbLabel = routeData.groupViewData.name;
               } else if (routeData.breadcrumb === 'Centers') {
                 breadcrumbLabel = routeData.centerViewData.name;
               } else if (routeData.breadcrumb === 'Loans') {
-                breadcrumbLabel = routeData.loanDetailsData.loanProductName + ' (' + routeData.loanDetailsData.accountNo + ')';
+                breadcrumbLabel =
+                  this.printableValue(routeData.loanDetailsData.loanProductName) +
+                  ' (' +
+                  routeData.loanDetailsData.accountNo +
+                  ')';
               } else if (routeData.breadcrumb === 'Savings') {
-                breadcrumbLabel = routeData.savingsAccountData.savingsProductName + ' (' + routeData.savingsAccountData.accountNo + ')';
+                const savingsProductName = routeData.savingsAccountData?.savingsProductName ?? '';
+                const accountNo = routeData.savingsAccountData?.accountNo ?? '';
+                breadcrumbLabel = this.printableValue(savingsProductName) + (accountNo ? ' (' + accountNo + ')' : '');
               } else if (routeData.breadcrumb === 'Fixed Deposits') {
-                breadcrumbLabel = routeData.fixedDepositsAccountData.depositProductName + ' (' + routeData.fixedDepositsAccountData.accountNo + ')';
+                breadcrumbLabel =
+                  this.printableValue(routeData.fixedDepositsAccountData.depositProductName) +
+                  ' (' +
+                  routeData.fixedDepositsAccountData.accountNo +
+                  ')';
               } else if (routeData.breadcrumb === 'Loan Products') {
-                breadcrumbLabel = routeData.loanProduct.name;
+                breadcrumbLabel = this.printableValue(routeData.loanProduct.name);
               } else if (routeData.breadcrumb === 'Charges') {
                 breadcrumbLabel = routeData.loansAccountCharge.name;
               } else if (routeData.breadcrumb === 'Saving Products') {
@@ -162,7 +180,7 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
             }
           }
           if (url !== undefined) {
-            if (url.length > 8 && url.search(`/clients/`) > 0 ) {
+            if (url.length > 8 && url.search(`/clients/`) > 0) {
               const replaceGeneral = `/general/`;
               let currentUrlTemp = url.replace(replaceGeneral, `/`);
               currentUrlTemp = currentUrlTemp.replace(`//`, `/`);
@@ -186,6 +204,13 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
     });
   }
 
+  printableValue(value: string): string {
+    if (value.length <= 30) {
+      return value;
+    }
+    return value.substring(0, 30) + '...';
+  }
+
   /**
    * Popover function
    * @param template TemplateRef<any>.
@@ -193,7 +218,12 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -202,7 +232,7 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
    */
   ngAfterViewInit() {
     if (this.configurationWizardService.showBreadcrumbs === true) {
-    setTimeout(() => {
+      setTimeout(() => {
         this.showPopover(this.templateBreadcrumb, this.breadcrumb.nativeElement, 'bottom', true);
       });
     }
@@ -233,8 +263,7 @@ export class BreadcrumbComponent implements OnInit, AfterViewInit {
   getTranslate(text: string): any {
     const key: string = 'labels.text.' + text;
     const translation = this.translateService.instant(key);
-    const result = (translation !== key) ? translation : text;
+    const result = translation !== key ? translation : text;
     return result;
   }
-
 }

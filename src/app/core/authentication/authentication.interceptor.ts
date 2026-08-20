@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
 
 /** rxjs Imports */
@@ -10,7 +10,7 @@ import { environment } from '../../../environments/environment';
 import { SettingsService } from 'app/settings/settings.service';
 
 /** Http request (default) options headers. */
-const httpOptions = {
+const httpOptions: { headers: { [key: string]: string } } = {
   headers: {
     'Fineract-Platform-TenantId': environment.fineractPlatformTenantId
   }
@@ -18,6 +18,7 @@ const httpOptions = {
 
 /** Authorization header. */
 const authorizationHeader = 'Authorization';
+const authorizationTenantHeader = 'Fineract-Platform-TenantId';
 /** Two factor access token header. */
 const twoFactorAccessTokenHeader = 'Fineract-Platform-TFA-Token';
 
@@ -26,8 +27,7 @@ const twoFactorAccessTokenHeader = 'Fineract-Platform-TFA-Token';
  */
 @Injectable()
 export class AuthenticationInterceptor implements HttpInterceptor {
-
-  constructor(private settingsService: SettingsService) {}
+  private settingsService = inject(SettingsService);
 
   /**
    * Intercepts a Http request and sets the request headers.
@@ -68,10 +68,17 @@ export class AuthenticationInterceptor implements HttpInterceptor {
   }
 
   /**
+   * Removes the authorization header.
+   */
+  removeAuthorizationTenant() {
+    delete httpOptions.headers[authorizationHeader];
+    delete httpOptions.headers[authorizationTenantHeader];
+  }
+
+  /**
    * Removes the two factor access token header.
    */
   removeTwoFactorAuthorization() {
     delete httpOptions.headers[twoFactorAccessTokenHeader];
   }
-
 }

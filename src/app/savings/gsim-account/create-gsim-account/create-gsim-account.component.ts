@@ -1,16 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 /** Custom Components */
 import { SavingsAccountDetailsStepComponent } from '../../savings-account-stepper/savings-account-details-step/savings-account-details-step.component';
 import { SavingsAccountTermsStepComponent } from '../../savings-account-stepper/savings-account-terms-step/savings-account-terms-step.component';
 import { SavingsAccountChargesStepComponent } from '../../savings-account-stepper/savings-account-charges-step/savings-account-charges-step.component';
+import { SavingsActiveClientMembersComponent } from '../../savings-account-stepper/savings-active-client-members/savings-active-client-members.component';
 
 /** Custom Services */
 import { SavingsService } from '../../savings.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { SavingsAccountPreviewStepComponent } from '../../savings-account-stepper/savings-account-preview-step/savings-account-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create GSIM Account Component
@@ -18,10 +23,27 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-gsim-account',
   templateUrl: './create-gsim-account.component.html',
-  styleUrls: ['./create-gsim-account.component.scss']
+  styleUrls: ['./create-gsim-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    SavingsAccountDetailsStepComponent,
+    SavingsAccountTermsStepComponent,
+    SavingsAccountChargesStepComponent,
+    SavingsActiveClientMembersComponent,
+    SavingsAccountPreviewStepComponent
+  ]
 })
-
-export class CreateGsimAccountComponent implements OnInit {
+export class CreateGsimAccountComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
 
   /** Savings Account Template */
   savingsAccountTemplate: any;
@@ -33,11 +55,17 @@ export class CreateGsimAccountComponent implements OnInit {
   selectedMembers: any;
 
   /** Savings Account Details Step */
-  @ViewChild(SavingsAccountDetailsStepComponent, { static: true }) savingsAccountDetailsStep: SavingsAccountDetailsStepComponent;
+  @ViewChild(SavingsAccountDetailsStepComponent, { static: true })
+  savingsAccountDetailsStep: SavingsAccountDetailsStepComponent;
   /** Savings Account Terms Step */
-  @ViewChild(SavingsAccountTermsStepComponent, { static: true }) savingsAccountTermsStep: SavingsAccountTermsStepComponent;
+  @ViewChild(SavingsAccountTermsStepComponent, { static: true })
+  savingsAccountTermsStep: SavingsAccountTermsStepComponent;
   /** Savings Account Charges Step */
-  @ViewChild(SavingsAccountChargesStepComponent, { static: true }) savingsAccountChargesStep: SavingsAccountChargesStepComponent;
+  @ViewChild(SavingsAccountChargesStepComponent, { static: true })
+  savingsAccountChargesStep: SavingsAccountChargesStepComponent;
+  /** Savings Active Client Members */
+  @ViewChild(SavingsActiveClientMembersComponent, { static: true })
+  savingsActiveClientMembers: SavingsActiveClientMembersComponent;
 
   /**
    * Fetches savings account template from `resolve`
@@ -47,26 +75,18 @@ export class CreateGsimAccountComponent implements OnInit {
    * @param {SavingsService} savingsService Savings Service
    * @param {SettingsService} settingsService Settings Service
    */
-   constructor(private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private savingsService: SavingsService,
-              private settingsService: SettingsService
-              ) {
-      this.route.data.subscribe((data: { savingsAccountTemplate: any, groupsData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { savingsAccountTemplate: any; groupsData: any }) => {
       this.savingsAccountTemplate = data.savingsAccountTemplate;
       this.dataSource = data.groupsData.activeClientMembers;
     });
-  }
-
-  ngOnInit(): void {
   }
 
   /**
    * Sets savings account product template.
    * @param {any} $event API response
    */
-   setTemplate($event: any) {
+  setTemplate($event: any) {
     this.savingsAccountProductTemplate = $event;
   }
 
@@ -87,7 +107,7 @@ export class CreateGsimAccountComponent implements OnInit {
   /**
    * Retrieves savings account terms form.
    */
-   get activeClientMembers() {
+  get activeClientMembers() {
     return this.dataSource;
   }
 
@@ -97,7 +117,8 @@ export class CreateGsimAccountComponent implements OnInit {
   get savingsAccountFormValid() {
     return (
       this.savingsAccountDetailsForm.valid &&
-      this.savingsAccountTermsForm.valid
+      this.savingsAccountTermsForm.valid &&
+      this.activeClientMembers.filter((m: any) => m.selected).length > 0
     );
   }
 
@@ -105,7 +126,7 @@ export class CreateGsimAccountComponent implements OnInit {
    * Retrieves savings account object.
    */
   get savingsAccount() {
-    this.selectedMembers = this.savingsAccountChargesStep.selectedClientMembers;
+    this.selectedMembers = this.savingsActiveClientMembers.selectedClientMembers;
     return {
       ...this.savingsAccountDetailsStep.savingsAccountDetails,
       ...this.savingsAccountTermsStep.savingsAccountTerms,
@@ -114,7 +135,7 @@ export class CreateGsimAccountComponent implements OnInit {
   }
 
   /** Set Body for each client selected */
-  setData(client: any): any {
+  setData(client: any, isParentAccount: any): any {
     const locale = this.settingsService.language.code;
     const dateFormat = this.settingsService.dateFormat;
     const monthDayFormat = 'dd MMMM';
@@ -122,11 +143,11 @@ export class CreateGsimAccountComponent implements OnInit {
       ...this.savingsAccount,
       charges: this.savingsAccount.charges.map((charge: any) => ({
         chargeId: charge.id,
-        amount: charge.amount,
+        amount: charge.amount
       })),
       clientId: client.id,
       isGSIM: true,
-      isParentAccount: true,
+      isParentAccount: isParentAccount,
       submittedOnDate: this.dateUtils.formatDate(this.savingsAccount.submittedOnDate, dateFormat),
       dateFormat,
       monthDayFormat,
@@ -135,7 +156,6 @@ export class CreateGsimAccountComponent implements OnInit {
     data.groupId = this.savingsAccountTemplate.groupId;
 
     return data;
-
   }
 
   /** Request Body Data */
@@ -143,9 +163,10 @@ export class CreateGsimAccountComponent implements OnInit {
     const requestData = [];
     const memberSelected = this.selectedMembers.selectedMembers;
     for (let index = 0; index < 1; index++) {
-      requestData.push(
-        this.setData( memberSelected[ index ] ),
-      );
+      requestData.push(this.setData(memberSelected[index], true));
+    }
+    for (let index = 1; index < memberSelected.length; index++) {
+      requestData.push(this.setData(memberSelected[index], false));
     }
     return requestData;
   }
@@ -156,11 +177,16 @@ export class CreateGsimAccountComponent implements OnInit {
   submit() {
     const data = this.buildRequestData();
     const gsimData = {
-      clientArray: data,
+      clientArray: data
     };
     this.savingsService.createGsimAcccount(gsimData).subscribe((response: any) => {
-      this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

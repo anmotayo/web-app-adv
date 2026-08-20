@@ -1,5 +1,8 @@
 /** Angular Imports */
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { NgStyle } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Custom file upload component based on angular material.
@@ -7,10 +10,14 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 @Component({
   selector: 'mifosx-file-upload',
   templateUrl: './file-upload.component.html',
-  styleUrls: ['./file-upload.component.scss']
+  styleUrls: ['./file-upload.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    NgStyle,
+    FaIconComponent
+  ]
 })
 export class FileUploadComponent implements OnInit {
-
   /** Form field flex dimension */
   @Input() flex: any;
   @Input() acceptFilter: string;
@@ -18,7 +25,7 @@ export class FileUploadComponent implements OnInit {
   /** Selected file name */
   fileName: File;
 
-  constructor() { }
+  constructor() {}
 
   ngOnInit() {
     if (!this.acceptFilter) {
@@ -33,5 +40,4 @@ export class FileUploadComponent implements OnInit {
   onFileSelect($event: any) {
     this.fileName = $event.target.files[0].name;
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from '../products.service';
  * Charges data resolver.
  */
 @Injectable()
-export class CollateralResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class CollateralResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the products data.
@@ -27,5 +23,4 @@ export class CollateralResolver implements Resolve<Object> {
     const collateralId = route.paramMap.get('id');
     return this.productsService.getCollateral(collateralId);
   }
-
 }

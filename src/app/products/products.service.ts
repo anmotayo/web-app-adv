@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
@@ -15,13 +15,8 @@ import { SettingsService } from 'app/settings/settings.service';
   providedIn: 'root'
 })
 export class ProductsService {
-
-  /**
-   * @param {HttpClient} http Http Client to send requests.
-   * @param {SettingsService} settingsService Settings Service.
-   */
-  constructor(private http: HttpClient,
-              private settingsService: SettingsService) { }
+  private http = inject(HttpClient);
+  private settingsService = inject(SettingsService);
 
   /**
    * @returns {Observable<any>} Loan products data
@@ -110,17 +105,17 @@ export class ProductsService {
   }
 
   getDividendData(shareProductId: any, dividendId: any): Observable<any> {
-    const httpParams = new HttpParams().set('dateFormat', this.settingsService.dateFormat)
-                                       .set('limit', '10')
-                                       .set('locale', this.settingsService.language.code)
-                                       .set('offset', '0');
+    const httpParams = new HttpParams()
+      .set('dateFormat', this.settingsService.dateFormat)
+      .set('limit', '10')
+      .set('locale', this.settingsService.language.code)
+      .set('offset', '0');
     return this.http.get(`/shareproduct/${shareProductId}/dividend/${dividendId}`, { params: httpParams });
   }
 
   approveDividend(shareProductId: any, dividendId: any, data: any): Observable<any> {
     const httpParams = new HttpParams().set('command', 'approve');
     return this.http.put(`/shareproduct/${shareProductId}/dividend/${dividendId}`, data, { params: httpParams });
-
   }
 
   /**
@@ -310,7 +305,7 @@ export class ProductsService {
    * @param {any} delinquencyRateId Delinquency Range Id.
    * @returns {Observable<any>} Delinquency Range data.
    */
-   getDelinquencyRange(delinquencyRateId: any): Observable<any> {
+  getDelinquencyRange(delinquencyRateId: any): Observable<any> {
     return this.http.get(`/delinquency/ranges/${delinquencyRateId}`);
   }
 
@@ -318,7 +313,7 @@ export class ProductsService {
    * @param {any} payload Delinquency Range data
    * @returns {Observable<any>} Delinquency Range Resource Id
    */
-   createDelinquencyRange(payload: any): Observable<any> {
+  createDelinquencyRange(payload: any): Observable<any> {
     return this.http.post('/delinquency/ranges', payload);
   }
 
@@ -591,5 +586,4 @@ export class ProductsService {
     const httpParams = new HttpParams().set('genericResultSet', 'true');
     return this.http.delete(`/datatables/${datatableName}/${productId}`, { params: httpParams });
   }
-
 }

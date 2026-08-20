@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { FixedDepositsService } from '../fixed-deposits.service';
  * Fixed Deposits Account Template resolver.
  */
 @Injectable()
-export class FixedDepositsAccountTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {FixedDepositsService} fixedDepositsService Fixed Deposits service.
-   */
-  constructor(private fixedDepositsService: FixedDepositsService) { }
+export class FixedDepositsAccountTemplateResolver {
+  private fixedDepositsService = inject(FixedDepositsService);
 
   /**
    * Returns the Fixed Deposits Account Template.
@@ -28,5 +24,4 @@ export class FixedDepositsAccountTemplateResolver implements Resolve<Object> {
     const clientId = route.parent.parent.paramMap.get('clientId');
     return this.fixedDepositsService.getFixedDepositsAccountTemplate(clientId);
   }
-
 }

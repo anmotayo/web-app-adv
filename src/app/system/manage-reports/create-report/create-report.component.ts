@@ -1,11 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SystemService } from 'app/system/system.service';
@@ -14,6 +26,11 @@ import { SystemService } from 'app/system/system.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { ReportParameterDialogComponent } from '../report-parameter-dialog/report-parameter-dialog.component';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Report Component.
@@ -21,23 +38,52 @@ import { ReportParameterDialogComponent } from '../report-parameter-dialog/repor
 @Component({
   selector: 'mifosx-create-report',
   templateUrl: './create-report.component.html',
-  styleUrls: ['./create-report.component.scss']
+  styleUrls: ['./create-report.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    CdkTextareaAutosize,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class CreateReportComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private translateServices = inject(TranslateService);
 
   /** Report Form. */
   reportForm: UntypedFormGroup;
   /** Report Template Data. */
   reportTemplateData: any;
   /** Data passed to dialog. */
-  dataForDialog: { allowedParameters: any[], parameterName: string, reportParameterName: string } =
-    {
-      allowedParameters: undefined,
-      parameterName: undefined,
-      reportParameterName: undefined
-    };
+  dataForDialog: { allowedParameters: any[]; parameterName: string; reportParameterName: string } = {
+    allowedParameters: undefined,
+    parameterName: undefined,
+    reportParameterName: undefined
+  };
   /** Columns to be displayed in report parameters table. */
-  displayedColumns: string[] = ['parameterName', 'parameterNamePassed', 'actions'];
+  displayedColumns: string[] = [
+    'parameterName',
+    'parameterNamePassed',
+    'actions'
+  ];
   /** Data source for report parameters table. */
   dataSource: MatTableDataSource<any>;
   /** Report Parameters Data. */
@@ -47,7 +93,13 @@ export class CreateReportComponent implements OnInit {
   /** Sorter for report parameters table. */
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  reportCategoryTypeOptions: string[] = ['Client', 'Loan', 'Savings', 'Fund', 'Accounting'];
+  reportCategoryTypeOptions: string[] = [
+    'Client',
+    'Loan',
+    'Savings',
+    'Fund',
+    'Accounting'
+  ];
 
   /**
    * Retrieves the report template data from `resolve`.
@@ -58,12 +110,7 @@ export class CreateReportComponent implements OnInit {
    * @param {MatDialog} dialog Dialog Reference.
    * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dialog: MatDialog,
-              private translateServices:TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { reportTemplate: any }) => {
       this.reportTemplateData = data.reportTemplate;
       this.dataForDialog.allowedParameters = this.reportTemplateData.allowedParameters;
@@ -93,13 +140,22 @@ export class CreateReportComponent implements OnInit {
    */
   createReportForm() {
     this.reportForm = this.formBuilder.group({
-      'reportName': ['', Validators.required],
-      'reportCategory': [''],
-      'description': [''],
-      'reportType': ['', Validators.required],
-      'reportSubType': [{ value: '', disabled: true }],
-      'useReport': [false],
-      'reportSql': ['', Validators.required]
+      reportName: [
+        '',
+        Validators.required
+      ],
+      reportCategory: [''],
+      description: [''],
+      reportType: [
+        '',
+        Validators.required
+      ],
+      reportSubType: [{ value: '', disabled: true }],
+      useReport: [false],
+      reportSql: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -110,14 +166,19 @@ export class CreateReportComponent implements OnInit {
     this.dataForDialog.parameterName = undefined;
     this.dataForDialog.reportParameterName = undefined;
     const addReportParameterDialogRef = this.dialog.open(ReportParameterDialogComponent, {
-      data: this.dataForDialog
+      data: { ...this.dataForDialog, layout: { addButtonText: 'Add' } },
+      width: '25rem'
     });
     addReportParameterDialogRef.afterClosed().subscribe((response: any) => {
       if (response !== '') {
-        this.reportParametersData.push({ id: '',
-                                         parameterName: this.reportTemplateData.allowedParameters.find((allowedParameter: any) => allowedParameter.id === response.parameterName).parameterName,
-                                         parameterId: response.parameterName,
-                                         reportParameterName: response.reportParameterName });
+        this.reportParametersData.push({
+          id: '',
+          parameterName: this.reportTemplateData.allowedParameters.find(
+            (allowedParameter: any) => allowedParameter.id === response.parameterName
+          ).parameterName,
+          parameterId: response.parameterName,
+          reportParameterName: response.reportParameterName
+        });
         this.dataSource.connect().next(this.reportParametersData);
       }
     });
@@ -135,10 +196,14 @@ export class CreateReportComponent implements OnInit {
     });
     editReportParameterDialogRef.afterClosed().subscribe((response: any) => {
       if (response !== '') {
-        this.reportParametersData[this.reportParametersData.indexOf(reportParameter)] = { id: '',
-          parameterName: this.reportTemplateData.allowedParameters.find((allowedParameter: any) => allowedParameter.id === response.parameterName).parameterName,
+        this.reportParametersData[this.reportParametersData.indexOf(reportParameter)] = {
+          id: '',
+          parameterName: this.reportTemplateData.allowedParameters.find(
+            (allowedParameter: any) => allowedParameter.id === response.parameterName
+          ).parameterName,
           parameterId: response.parameterName,
-          reportParameterName: response.reportParameterName };
+          reportParameterName: response.reportParameterName
+        };
         this.dataSource.connect().next(this.reportParametersData);
       }
     });
@@ -150,7 +215,10 @@ export class CreateReportComponent implements OnInit {
    */
   deleteReportParameter(reportParameter: any) {
     const deleteReportDialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext: this.translateServices.instant('labels.heading.Report Parameter') + ' ' + reportParameter.parameterName }
+      data: {
+        deleteContext:
+          this.translateServices.instant('labels.heading.Report Parameter') + ' ' + reportParameter.parameterName
+      }
     });
     deleteReportDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
@@ -164,22 +232,21 @@ export class CreateReportComponent implements OnInit {
    * Toggles the visibility status of Report Sub Type dropdown.
    */
   toggleVisibility() {
-    this.reportForm.get('reportType').valueChanges
-      .subscribe(type => {
-        switch (type) {
-          case 'Chart':
-            this.reportForm.get('reportSubType').enable();
-            this.reportForm.get('reportSql').enable();
-            break;
-          case 'Pentaho':
-            this.reportForm.get('reportSql').disable();
-            this.reportForm.get('reportSubType').disable();
-            break;
-          default:
-            this.reportForm.get('reportSql').enable();
-            this.reportForm.get('reportSubType').disable();
-        }
-      });
+    this.reportForm.get('reportType').valueChanges.subscribe((type) => {
+      switch (type) {
+        case 'Chart':
+          this.reportForm.get('reportSubType').enable();
+          this.reportForm.get('reportSql').enable();
+          break;
+        case 'Pentaho':
+          this.reportForm.get('reportSql').disable();
+          this.reportForm.get('reportSubType').disable();
+          break;
+        default:
+          this.reportForm.get('reportSql').enable();
+          this.reportForm.get('reportSubType').disable();
+      }
+    });
   }
 
   /**
@@ -187,15 +254,19 @@ export class CreateReportComponent implements OnInit {
    * if successful redirects to view created report.
    */
   submit() {
-    this.reportForm.value.reportParameters = this.reportParametersData.map( function(reportParameter: any) {
+    this.reportForm.value.reportParameters = this.reportParametersData.map(function (reportParameter: any) {
       reportParameter.parameterName = undefined;
       return reportParameter;
     });
-    this.systemService.createReport(this.reportForm.value)
-      .subscribe((response: any) => {
-        // TODO: Implement Maker Checker Component.
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.systemService.createReport(this.reportForm.value).subscribe((response: any) => {
+      // TODO: Implement Maker Checker Component.
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

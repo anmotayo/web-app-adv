@@ -30,4 +30,4 @@ const routes: Routes = [
   providers: [NotificationsResolver],
   exports: [RouterModule]
 })
-export class NotificationsRoutingModule { }
+export class NotificationsRoutingModule {}

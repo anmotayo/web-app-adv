@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from '../products.service';
  * tax Component data resolver.
  */
 @Injectable()
-export class TaxComponentResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class TaxComponentResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the tax Component data.

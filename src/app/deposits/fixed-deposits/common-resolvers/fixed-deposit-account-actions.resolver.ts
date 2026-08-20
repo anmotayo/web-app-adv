@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -13,14 +13,9 @@ import { FixedDepositsService } from '../fixed-deposits.service';
  * Fixed Deposits Account Actions data resolver.
  */
 @Injectable()
-export class FixedDepositsAccountActionsResolver implements Resolve<Object> {
-
-  /**
-   * @param {SavingsService} SavingsService Savings service.
-   * @param {FixedDepositsService} fixedDepositsService Fixed Deposits Service.
-   */
-  constructor(private savingsService: SavingsService,
-              private fixedDepositsService: FixedDepositsService) { }
+export class FixedDepositsAccountActionsResolver {
+  private savingsService = inject(SavingsService);
+  private fixedDepositsService = inject(FixedDepositsService);
 
   /**
    * Returns the Fixed deposits account actions data.
@@ -29,7 +24,8 @@ export class FixedDepositsAccountActionsResolver implements Resolve<Object> {
    */
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const actionName = route.paramMap.get('name');
-    const fixedDepositAccountId = route.paramMap.get('fixedDepositAccountId') || route.parent.parent.paramMap.get('fixedDepositAccountId');
+    const fixedDepositAccountId =
+      route.paramMap.get('fixedDepositAccountId') || route.parent.parent.paramMap.get('fixedDepositAccountId');
     switch (actionName) {
       case 'Add Charge':
         return this.savingsService.getSavingsChargeTemplateResource(fixedDepositAccountId);
@@ -41,5 +37,4 @@ export class FixedDepositsAccountActionsResolver implements Resolve<Object> {
         return undefined;
     }
   }
-
 }

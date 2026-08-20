@@ -1,12 +1,20 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { FixedDepositsService } from '../../fixed-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Premature Close Fixed Deposits Account Component
@@ -14,9 +22,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-premature-close-fixed-deposits-account',
   templateUrl: './premature-close-fixed-deposits-account.component.html',
-  styleUrls: ['./premature-close-fixed-deposits-account.component.scss']
+  styleUrls: ['./premature-close-fixed-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private fixedDepositsService = inject(FixedDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -33,7 +51,6 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
   /** Form submission event */
   isSubmitted = false;
 
-
   /**
    * @param {FormBuilder} formBuilder Form Builder
    * @param {FixedDepositsService} fixedDepositsService Fixed Deposits Service
@@ -42,12 +59,7 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private fixedDepositsService: FixedDepositsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['fixedDepositAccountId'];
   }
 
@@ -65,7 +77,10 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
    */
   createPrematureCloseAccountForm() {
     this.prematureCloseAccountForm = this.formBuilder.group({
-      'closedOnDate': ['', Validators.required]
+      closedOnDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -92,17 +107,23 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.fixedDepositsService.executeFixedDepositsAccountCommand(this.accountId, 'calculatePrematureAmount', data)
+    this.fixedDepositsService
+      .executeFixedDepositsAccountCommand(this.accountId, 'calculatePrematureAmount', data)
       .subscribe((response: any) => {
         this.savingsAccountsData = response.savingsAccounts;
         this.onAccountClosureOptions = response.onAccountClosureOptions;
-        this.prematureCloseAccountForm.addControl('maturityAmount', new UntypedFormControl({ value: '', disabled: true }));
-        this.prematureCloseAccountForm.addControl('onAccountClosureId', new UntypedFormControl('', Validators.required));
+        this.prematureCloseAccountForm.addControl(
+          'maturityAmount',
+          new UntypedFormControl({ value: '', disabled: true })
+        );
+        this.prematureCloseAccountForm.addControl(
+          'onAccountClosureId',
+          new UntypedFormControl('', Validators.required)
+        );
         this.prematureCloseAccountForm.addControl('note', new UntypedFormControl(''));
         this.prematureCloseAccountForm.get('maturityAmount').patchValue(response.maturityAmount);
         this.addTransferDetails();
       });
-
   }
 
   /**
@@ -111,7 +132,10 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
   addTransferDetails() {
     this.prematureCloseAccountForm.get('onAccountClosureId').valueChanges.subscribe((id: any) => {
       if (id === 200) {
-        this.prematureCloseAccountForm.addControl('toSavingsAccountId', new UntypedFormControl('', Validators.required));
+        this.prematureCloseAccountForm.addControl(
+          'toSavingsAccountId',
+          new UntypedFormControl('', Validators.required)
+        );
         this.prematureCloseAccountForm.addControl('transferDescription', new UntypedFormControl(''));
       } else {
         this.prematureCloseAccountForm.removeControl('toSavingsAccountId');
@@ -138,9 +162,10 @@ export class PrematureCloseFixedDepositsAccountComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.fixedDepositsService.executeFixedDepositsAccountCommand(this.accountId, 'prematureClose', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.fixedDepositsService
+      .executeFixedDepositsAccountCommand(this.accountId, 'prematureClose', data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

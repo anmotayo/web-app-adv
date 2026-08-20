@@ -1,8 +1,7 @@
 /** Angular Imports */
-import { Component, OnInit, Input, TemplateRef, ElementRef , ViewChild,
-         AfterViewInit } from '@angular/core';
+import { Component, OnInit, Input, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 /** Custom Components */
 import { KeyboardShortcutsDialogComponent } from 'app/shared/keyboard-shortcuts-dialog/keyboard-shortcuts-dialog.component';
@@ -15,6 +14,17 @@ import { ConfigurationWizardService } from '../../../configuration-wizard/config
 /** Custom Imports */
 import { frequentActivities } from './frequent-activities';
 import { SettingsService } from 'app/settings/settings.service';
+import { NgClass } from '@angular/common';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatDivider } from '@angular/material/divider';
+import { MatNavList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
+import { MatLine } from '@angular/material/grid-list';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
+import { catchError, finalize, of, take } from 'rxjs';
 
 /**
  * Sidenav component.
@@ -22,9 +32,28 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss']
+  styleUrls: ['./sidenav.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    NgClass,
+    MatIconButton,
+    MatTooltip,
+    FaIconComponent,
+    MatDivider,
+    MatNavList,
+    MatListItem,
+    RouterLinkActive,
+    MatIcon,
+    MatLine
+  ]
 })
 export class SidenavComponent implements OnInit, AfterViewInit {
+  private router = inject(Router);
+  dialog = inject(MatDialog);
+  private authenticationService = inject(AuthenticationService);
+  private settingsService = inject(SettingsService);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /** True if sidenav is in collapsed state. */
   @Input() sidenavCollapsed: boolean;
@@ -48,7 +77,6 @@ export class SidenavComponent implements OnInit, AfterViewInit {
   /* Template for popover on chart of accounts */
   @ViewChild('templateChartOfAccounts') templateChartOfAccounts: TemplateRef<any>;
 
-
   /**
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Mat Dialog
@@ -57,12 +85,7 @@ export class SidenavComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private router: Router,
-              public dialog: MatDialog,
-              private authenticationService: AuthenticationService,
-              private settingsService: SettingsService,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) {
+  constructor() {
     this.userActivity = JSON.parse(localStorage.getItem('mifosXLocation'));
   }
 
@@ -77,10 +100,17 @@ export class SidenavComponent implements OnInit, AfterViewInit {
 
   /**
    * Logs out the authenticated user and redirects to login page.
+   * Uses unified AuthenticationService which handles both OAuth2 and OIDC logout.
    */
   logout() {
-    this.authenticationService.logout()
-      .subscribe(() => this.router.navigate(['/login'], { replaceUrl: true }));
+    this.authenticationService
+      .logout()
+      .pipe(
+        take(1),
+        catchError(() => of(void 0)),
+        finalize(() => this.router.navigate(['/login'], { replaceUrl: true }))
+      )
+      .subscribe();
   }
 
   /**
@@ -102,18 +132,25 @@ export class SidenavComponent implements OnInit, AfterViewInit {
    * Returns top three frequent activities.
    */
   getFrequentActivities() {
-    const frequencyCounts: any  = {};
-    let index  = this.userActivity.length;
+    const frequencyCounts: any = {};
+    let index = this.userActivity?.length;
     while (index) {
-      frequencyCounts[this.userActivity[--index]] = (frequencyCounts[this.userActivity[index]] || 0) + 1;
+      const activity = this.userActivity[--index];
+      frequencyCounts[activity] = (frequencyCounts[activity] || 0) + 1;
     }
     const frequencyCountsArray = Object.entries(frequencyCounts);
-    const topThreeFrequentActivities =
-      frequencyCountsArray
-        .sort((a: any, b: any) => b[1] - a[1])
-        .map((entry: any[]) => entry[0])
-        .filter((activity: string) => !['/', '/login', '/home', '/dashboard'].includes(activity))
-        .slice(0, 3);
+    const topThreeFrequentActivities = frequencyCountsArray
+      .sort((a: any, b: any) => b[1] - a[1])
+      .map((entry: any[]) => entry[0])
+      .filter(
+        (activity: string) => ![
+            '/',
+            '/login',
+            '/home',
+            '/dashboard'
+          ].includes(activity)
+      )
+      .slice(0, 3);
     return topThreeFrequentActivities;
   }
 
@@ -133,8 +170,8 @@ export class SidenavComponent implements OnInit, AfterViewInit {
         this.pushActivity('/accounting');
       } else if (activity.includes('/reports')) {
         this.pushActivity('/reports');
-      } else if (activity.includes('/users')) {
-        this.pushActivity('/users');
+      } else if (activity.includes('/appusers')) {
+        this.pushActivity('/appusers');
       } else if (activity.includes('/organization')) {
         this.pushActivity('/organization');
       } else if (activity.includes('/system')) {
@@ -143,8 +180,6 @@ export class SidenavComponent implements OnInit, AfterViewInit {
         this.pushActivity('/products');
       } else if (activity.includes('/templates')) {
         this.pushActivity('/templates');
-      } else if (activity.includes('/self-service')) {
-        this.pushActivity('/self-service');
       }
     });
     this.mappedActivities.reverse();
@@ -168,7 +203,12 @@ export class SidenavComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -178,12 +218,12 @@ export class SidenavComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     if (this.configurationWizardService.showSideNav === true) {
       setTimeout(() => {
-          this.showPopover(this.templateLogo, this.logo.nativeElement, 'bottom', true);
+        this.showPopover(this.templateLogo, this.logo.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showSideNavChartofAccounts === true) {
       setTimeout(() => {
-          this.showPopover(this.templateChartOfAccounts, this.chartOfAccounts.nativeElement, 'top', true);
+        this.showPopover(this.templateChartOfAccounts, this.chartOfAccounts.nativeElement, 'top', true);
       });
     }
   }
@@ -218,5 +258,4 @@ export class SidenavComponent implements OnInit, AfterViewInit {
     }
     return this.settingsService.tenantIdentifier;
   }
-
 }

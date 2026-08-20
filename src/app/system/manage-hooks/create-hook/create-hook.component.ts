@@ -1,10 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
@@ -13,6 +25,11 @@ import { SystemService } from '../../system.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { AddEventDialogComponent } from '../add-event-dialog/add-event-dialog.component';
+import { MatFormField, MatLabel, MatError, MatHint } from '@angular/material/form-field';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Hook Component.
@@ -20,16 +37,45 @@ import { AddEventDialogComponent } from '../add-event-dialog/add-event-dialog.co
 @Component({
   selector: 'mifosx-create-hook',
   templateUrl: './create-hook.component.html',
-  styleUrls: ['./create-hook.component.scss']
+  styleUrls: ['./create-hook.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatHint,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow
+  ]
 })
 export class CreateHookComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private systemService = inject(SystemService);
+  private router = inject(Router);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Hooks Template Data. */
   hooksTemplateData: any;
   /** Hook Form. */
   hookForm: UntypedFormGroup;
   /** Columns to be displayed in events table. */
-  displayedColumns: string[] = ['entityName', 'actionName', 'actions'];
+  displayedColumns: string[] = [
+    'entityName',
+    'actionName',
+    'actions'
+  ];
   /** Data source for events table. */
   dataSource: MatTableDataSource<any>;
   /** Events Data. */
@@ -46,12 +92,7 @@ export class CreateHookComponent implements OnInit {
    * @param {MatDialog} dialog Dialog Reference.
    * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private route: ActivatedRoute,
-    private systemService: SystemService,
-    private router: Router,
-    private formBuilder: UntypedFormBuilder,
-    private dialog: MatDialog,
-    private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { hooksTemplate: any }) => {
       this.hooksTemplateData = data.hooksTemplate;
     });
@@ -62,7 +103,7 @@ export class CreateHookComponent implements OnInit {
    */
   ngOnInit() {
     this.createHookForm();
-    this.hookForm.get('name').valueChanges.subscribe(name => {
+    this.hookForm.get('name').valueChanges.subscribe((name) => {
       if (name === 'Web') {
         this.hookForm.get('contentType').enable();
         this.hookForm.get('phoneNumber').disable();
@@ -93,15 +134,39 @@ export class CreateHookComponent implements OnInit {
    */
   createHookForm() {
     this.hookForm = this.formBuilder.group({
-      'name': ['Web', Validators.required],
-      'displayName': ['', Validators.required],
-      'isActive': [''],
-      'phoneNumber': [{ value: '', disabled: true }, Validators.required],
-      'smsProvider': [{ value: '', disabled: true }, Validators.required],
-      'smsProviderAccountId': [{ value: '', disabled: true }, Validators.required],
-      'smsProviderToken': [{ value: '', disabled: true }, Validators.required],
-      'contentType': ['', Validators.required],
-      'payloadUrl': ['', Validators.required]
+      name: [
+        'Web',
+        Validators.required
+      ],
+      displayName: [
+        '',
+        Validators.required
+      ],
+      isActive: [''],
+      phoneNumber: [
+        { value: '', disabled: true },
+        Validators.required
+      ],
+      smsProvider: [
+        { value: '', disabled: true },
+        Validators.required
+      ],
+      smsProviderAccountId: [
+        { value: '', disabled: true },
+        Validators.required
+      ],
+      smsProviderToken: [
+        { value: '', disabled: true },
+        Validators.required
+      ],
+      contentType: [
+        '',
+        Validators.required
+      ],
+      payloadUrl: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -112,7 +177,6 @@ export class CreateHookComponent implements OnInit {
     const addEventDialogRef = this.dialog.open(AddEventDialogComponent, {
       data: this.hooksTemplateData
     });
-    console.log(this.hooksTemplateData);
 
     addEventDialogRef.afterClosed().subscribe((response: any) => {
       if (response) {
@@ -131,7 +195,12 @@ export class CreateHookComponent implements OnInit {
    */
   deleteEvent(index: number) {
     const deleteEventDialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext: this.translateService.instant('labels.inputs.event with entity name of') + ' ' + this.eventsData[index].entityName }
+      data: {
+        deleteContext:
+          this.translateService.instant('labels.inputs.event with entity name of') +
+          ' ' +
+          this.eventsData[index].entityName
+      }
     });
     deleteEventDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
@@ -147,11 +216,17 @@ export class CreateHookComponent implements OnInit {
    */
   submit() {
     const hook: {
-      name: string, isActive: boolean, displayName: string, events: any,
+      name: string;
+      isActive: boolean;
+      displayName: string;
+      events: any;
       config: {
-        'Payload URL': string, 'Content Type'?: string, 'SMS Provider'?: string,
-        'SMS Provider Account Id'?: string, 'SMS Provider Token'?: string
-      }
+        'Payload URL': string;
+        'Content Type'?: string;
+        'SMS Provider'?: string;
+        'SMS Provider Account Id'?: string;
+        'SMS Provider Token'?: string;
+      };
     } = {
       name: this.hookForm.get('name').value,
       isActive: this.hookForm.get('isActive').value,
@@ -161,13 +236,22 @@ export class CreateHookComponent implements OnInit {
         'Payload URL': this.hookForm.get('payloadUrl').value,
         'Content Type': this.hookForm.get('contentType').enabled ? this.hookForm.get('contentType').value : undefined,
         'SMS Provider': this.hookForm.get('smsProvider').enabled ? this.hookForm.get('smsProvider').value : undefined,
-        'SMS Provider Account Id': this.hookForm.get('smsProviderAccountId').enabled ? this.hookForm.get('smsProviderAccountId').value : undefined,
-        'SMS Provider Token': this.hookForm.get('smsProviderToken').enabled ? this.hookForm.get('smsProviderToken').value : undefined
+        'SMS Provider Account Id': this.hookForm.get('smsProviderAccountId').enabled
+          ? this.hookForm.get('smsProviderAccountId').value
+          : undefined,
+        'SMS Provider Token': this.hookForm.get('smsProviderToken').enabled
+          ? this.hookForm.get('smsProviderToken').value
+          : undefined
       }
     };
-    this.systemService.createHook(hook)
-      .subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.systemService.createHook(hook).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
 }

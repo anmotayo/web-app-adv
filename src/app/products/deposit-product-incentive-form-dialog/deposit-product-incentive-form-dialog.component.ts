@@ -1,17 +1,38 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogTitle,
+  MatDialogContent,
+  MatDialogActions,
+  MatDialogClose
+} from '@angular/material/dialog';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-deposit-product-incentive-form-dialog',
   templateUrl: './deposit-product-incentive-form-dialog.component.html',
-  styleUrls: ['./deposit-product-incentive-form-dialog.component.scss']
+  styleUrls: ['./deposit-product-incentive-form-dialog.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDialogTitle,
+    CdkScrollable,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose
+  ]
 })
 export class DepositProductIncentiveFormDialogComponent implements OnInit {
+  dialogRef = inject<MatDialogRef<DepositProductIncentiveFormDialogComponent>>(MatDialogRef);
+  data = inject(MAT_DIALOG_DATA);
+  private formBuilder = inject(UntypedFormBuilder);
+  private translateService = inject(TranslateService);
 
   layout: {
-    addButtonText?: string
+    addButtonText?: string;
   } = {
     addButtonText: 'Add'
   };
@@ -26,10 +47,9 @@ export class DepositProductIncentiveFormDialogComponent implements OnInit {
   attributeValueData: any;
   incentiveTypeData: any;
 
-  constructor(public dialogRef: MatDialogRef<DepositProductIncentiveFormDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: UntypedFormBuilder,
-            private translateService: TranslateService) {
+  constructor() {
+    const data = this.data;
+
     this.createDepositProductIncentiveForm();
     this.setConditionalControls();
     this.layout = { ...this.layout, ...data.layout };
@@ -46,38 +66,54 @@ export class DepositProductIncentiveFormDialogComponent implements OnInit {
 
     if (this.data.values) {
       this.depositProductIncentiveForm.patchValue({
-        'entityType': this.data.values.entityType,
-        'attributeName': this.data.values.attributeName,
-        'conditionType': this.data.values.conditionType,
-        'attributeValue': this.data.values.attributeValue,
-        'incentiveType': this.data.values.incentiveType,
-        'amount': this.data.values.amount
+        entityType: this.data.values.entityType,
+        attributeName: this.data.values.attributeName,
+        conditionType: this.data.values.conditionType,
+        attributeValue: this.data.values.attributeValue,
+        incentiveType: this.data.values.incentiveType,
+        amount: this.data.values.amount
       });
     } else {
       this.depositProductIncentiveForm.patchValue({
-        'entityType': this.data.entityType
+        entityType: this.data.entityType
       });
     }
     this.title = this.translateService.instant('labels.heading.Incentives');
   }
 
   setConditionalControls() {
-    this.depositProductIncentiveForm.get('attributeName').valueChanges
-      .subscribe((attributeName: any) => {
-        this.depositProductIncentiveForm.patchValue({ 'attributeValue': '' });
-        this.attributeValueData = this.data.chartTemplate[`${this.attributeNameData.find((option: any) => option.id === attributeName).code.split('.')[1]}Options`];
-      });
+    this.depositProductIncentiveForm.get('attributeName').valueChanges.subscribe((attributeName: any) => {
+      this.depositProductIncentiveForm.patchValue({ attributeValue: '' });
+      this.attributeValueData =
+        this.data.chartTemplate[
+          `${this.attributeNameData.find((option: any) => option.id === attributeName).code.split('.')[1]}Options`
+        ];
+    });
   }
 
   createDepositProductIncentiveForm() {
     this.depositProductIncentiveForm = this.formBuilder.group({
-      'entityType': [''],
-      'attributeName': ['', Validators.required],
-      'conditionType': ['', Validators.required],
-      'attributeValue': ['', Validators.required],
-      'incentiveType': ['', Validators.required],
-      'amount': ['', Validators.required]
+      entityType: [''],
+      attributeName: [
+        '',
+        Validators.required
+      ],
+      conditionType: [
+        '',
+        Validators.required
+      ],
+      attributeValue: [
+        '',
+        Validators.required
+      ],
+      incentiveType: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ]
     });
   }
-
 }

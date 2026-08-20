@@ -1,10 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings Account Details Step
@@ -12,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-savings-account-details-step',
   templateUrl: './savings-account-details-step.component.html',
-  styleUrls: ['./savings-account-details-step.component.scss']
+  styleUrls: ['./savings-account-details-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class SavingsAccountDetailsStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
 
   /** Savings Account Template */
   @Input() savingsAccountTemplate: any;
@@ -43,9 +55,7 @@ export class SavingsAccountDetailsStepComponent implements OnInit {
    * @param {SavingsService} savingsService Savings Service.
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private savingsService: SavingsService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.createSavingsAccountDetailsForm();
   }
 
@@ -56,13 +66,15 @@ export class SavingsAccountDetailsStepComponent implements OnInit {
       this.productData = this.savingsAccountTemplate.productOptions;
       if (this.savingsAccountTemplate.savingsProductId) {
         this.savingsAccountDetailsForm.patchValue({
-          'productId': this.savingsAccountTemplate.savingsProductId,
-          'submittedOnDate': this.savingsAccountTemplate.timeline.submittedOnDate && new Date(this.savingsAccountTemplate.timeline.submittedOnDate),
-          'externalId': this.savingsAccountTemplate.externalId
+          productId: this.savingsAccountTemplate.savingsProductId,
+          submittedOnDate:
+            this.savingsAccountTemplate.timeline.submittedOnDate &&
+            new Date(this.savingsAccountTemplate.timeline.submittedOnDate),
+          externalId: this.savingsAccountTemplate.externalId
         });
       } else {
         this.savingsAccountDetailsForm.patchValue({
-          'submittedOnDate': new Date()
+          submittedOnDate: new Date()
         });
       }
     }
@@ -73,10 +85,16 @@ export class SavingsAccountDetailsStepComponent implements OnInit {
    */
   createSavingsAccountDetailsForm() {
     this.savingsAccountDetailsForm = this.formBuilder.group({
-      'productId': ['', Validators.required],
-      'submittedOnDate': ['', Validators.required],
-      'fieldOfficerId': [''],
-      'externalId': ['']
+      productId: [
+        '',
+        Validators.required
+      ],
+      submittedOnDate: [
+        '',
+        Validators.required
+      ],
+      fieldOfficerId: [''],
+      externalId: ['']
     });
   }
 
@@ -84,20 +102,21 @@ export class SavingsAccountDetailsStepComponent implements OnInit {
    * Fetches savings account product template on productId value changes
    */
   buildDependencies() {
-    const entityId = this.savingsAccountTemplate.clientId || this.savingsAccountTemplate.groupId;
+    const entityId = this.savingsAccountTemplate.groupId || this.savingsAccountTemplate.clientId;
     this.savingsAccountDetailsForm.get('productId').valueChanges.subscribe((productId: string) => {
-      this.savingsService.getSavingsAccountTemplate(entityId, productId, this.savingsAccountTemplate.groupId ? true : false)
-      .subscribe((response: any) => {
-        this.savingsAccountProductTemplate.emit(response);
-        this.fieldOfficerData = response.fieldOfficerOptions;
-        this.savingsProductSelected = true;
-        if (!this.isFieldOfficerPatched && this.savingsAccountTemplate.fieldOfficerId) {
-          this.savingsAccountDetailsForm.get('fieldOfficerId').patchValue(this.savingsAccountTemplate.fieldOfficerId);
-          this.isFieldOfficerPatched = true;
-        } else {
-          this.savingsAccountDetailsForm.get('fieldOfficerId').patchValue('');
-        }
-      });
+      this.savingsService
+        .getSavingsAccountTemplate(entityId, productId, this.savingsAccountTemplate.groupId ? true : false)
+        .subscribe((response: any) => {
+          this.savingsAccountProductTemplate.emit(response);
+          this.fieldOfficerData = response.fieldOfficerOptions;
+          this.savingsProductSelected = true;
+          if (!this.isFieldOfficerPatched && this.savingsAccountTemplate.fieldOfficerId) {
+            this.savingsAccountDetailsForm.get('fieldOfficerId').patchValue(this.savingsAccountTemplate.fieldOfficerId);
+            this.isFieldOfficerPatched = true;
+          } else {
+            this.savingsAccountDetailsForm.get('fieldOfficerId').patchValue('');
+          }
+        });
     });
   }
 
@@ -107,5 +126,4 @@ export class SavingsAccountDetailsStepComponent implements OnInit {
   get savingsAccountDetails() {
     return this.savingsAccountDetailsForm.getRawValue();
   }
-
 }

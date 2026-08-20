@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { TasksService } from '../tasks.service';
  * Pending Reschedule Loans data resolver.
  */
 @Injectable()
-export class GetRescheduleLoans implements Resolve<Object> {
+export class GetRescheduleLoans {
+  private tasksService = inject(TasksService);
 
-    /**
-     * @param {TasksService} tasksService Tasks service.
-     */
-    constructor(private tasksService: TasksService) { }
-
-    /**
-     * Returns the pending reschedule data.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.tasksService.getPendingRescheduleLoans();
-    }
-
+  /**
+   * Returns the pending reschedule data.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.tasksService.getPendingRescheduleLoans();
+  }
 }

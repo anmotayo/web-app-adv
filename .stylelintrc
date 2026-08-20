@@ -1,7 +1,13 @@
 {
-  "extends": ["stylelint-config-standard", "stylelint-config-recommended-scss"],
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-recommended-scss"
+  ],
   "rules": {
     "font-family-name-quotes": "always-where-recommended",
+    "font-family-no-missing-generic-family-keyword": [
+      true,
+      { "ignoreFontFamilies": ["FontAwesome"] }],
     "function-url-quotes": [
       "always",
       {
@@ -9,12 +15,15 @@
       }
     ],
     "selector-attribute-quotes": "always",
-    "string-quotes": "double",
     "max-nesting-depth": 5,
     "selector-max-compound-selectors": 5,
     "selector-max-specificity": "1,3,2",
-    "declaration-no-important": true,
+    "declaration-no-important": null,
     "at-rule-no-vendor-prefix": true,
+    "at-rule-no-unknown": null,
+    "scss/at-rule-no-unknown": [
+      true,
+      { "ignoreAtRules": ["tailwind"] }],
     "media-feature-name-no-vendor-prefix": true,
     "property-no-vendor-prefix": true,
     "selector-no-vendor-prefix": true,
@@ -34,8 +43,10 @@
       true,
       {
         "ignoreTypes": [
-          "mat-spinner",
-          "mat-radio-button"
+          "/^mat/",
+          "/^mifosx/",
+          "fa-icon",
+          "ng-template"
         ]
       }
     ],
@@ -45,8 +56,16 @@
         "ignorePseudoElements": ["ng-deep"]
       }
     ],
-    "unit-whitelist": ["px", "%", "em", "rem", "vw", "vh", "deg", "s"],
-    "max-empty-lines": 2,
-    "max-line-length": 120
+    "unit-allowed-list": [
+      "px",
+      "%",
+      "em",
+      "rem",
+      "vw",
+      "vh",
+      "deg",
+      "s",
+      "ms"
+    ]
   }
 }

@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { Alert } from 'app/core/alert/alert.model';
 import { AlertService } from 'app/core/alert/alert.service';
 import { AuthenticationService } from 'app/core/authentication/authentication.service';
@@ -9,8 +9,11 @@ import { SystemService } from 'app/system/system.service';
 import { VersionService } from 'app/system/version.service';
 
 /** Environment Configuration */
-import { environment } from 'environments/environment';
+import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { NgClass, DatePipe } from '@angular/common';
+import { MatDivider } from '@angular/material/divider';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  *  Footer component.
@@ -18,9 +21,23 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'mifosx-footer',
   templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.scss']
+  styleUrls: ['./footer.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    NgClass,
+    MatDivider,
+    DatePipe
+  ]
 })
 export class FooterComponent implements OnInit, OnDestroy {
+  private systemService = inject(SystemService);
+  private settingsService = inject(SettingsService);
+  private authenticationService = inject(AuthenticationService);
+  private alertService = inject(AlertService);
+  private dateUtils = inject(Dates);
+  private versionService = inject(VersionService);
+
+  @Input() styleClass: string = '';
 
   /** Mifos X version. */
   versions: any = {
@@ -35,6 +52,8 @@ export class FooterComponent implements OnInit, OnDestroy {
   server = '';
   /** Business Date */
   businessDate: Date = null;
+  /** Tenant name */
+  tenant: string;
 
   isBusinessDateEnabled = false;
   isBusinessDateDefined = false;
@@ -44,13 +63,8 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   displayBackEndInfo = true;
 
-  constructor(private systemService: SystemService,
-    private settingsService: SettingsService,
-    private authenticationService: AuthenticationService,
-    private alertService: AlertService,
-    private dateUtils: Dates,
-    private versionService: VersionService) {
-      this.displayBackEndInfo = (environment.displayBackEndInfo === 'true');
+  constructor() {
+    this.displayBackEndInfo = environment.displayBackEndInfo === 'true';
   }
 
   ngOnInit() {
@@ -58,7 +72,7 @@ export class FooterComponent implements OnInit, OnDestroy {
       this.alert$ = this.alertService.alertEvent.subscribe((alertEvent: Alert) => {
         const alertType = alertEvent.type;
         if (alertType === SettingsService.businessDateType + ' Set Config') {
-          this.isBusinessDateEnabled = (alertEvent.message === 'enabled') ? true : false;
+          this.isBusinessDateEnabled = alertEvent.message === 'enabled' ? true : false;
           this.isBusinessDateDefined = false;
           if (this.isBusinessDateEnabled) {
             this.setBusinessDate();
@@ -68,17 +82,29 @@ export class FooterComponent implements OnInit, OnDestroy {
             this.setBusinessDate();
           }
         } else if (alertType === 'Authentication Start') {
-          this.timer = setTimeout(() => { this.getConfigurations(); }, 60000);
+          this.timer = setTimeout(() => {
+            this.getConfigurations();
+          }, 60000);
         }
       });
       this.getConfigurations();
       this.server = this.settingsService.server;
+      this.tenant = this.tenantIdentifier();
       this.versionService.getBackendInfo().subscribe((data: any) => {
-        const buildVersion: string = data.git.build.version.split('-');
-        this.versions.fineract.version = buildVersion[0];
-        this.versions.fineract.hash = buildVersion[1];
+        if (data.git && data.git.build && data.git.build.version) {
+          const buildVersion: string = data.git.build.version.split('-');
+          this.versions.fineract.version = buildVersion[0];
+          this.versions.fineract.hash = buildVersion[1];
+        }
       });
     }
+  }
+
+  tenantIdentifier() {
+    if (!this.settingsService.tenantIdentifier || this.settingsService.tenantIdentifier === '') {
+      return 'default';
+    }
+    return this.settingsService.tenantIdentifier;
   }
 
   ngOnDestroy() {
@@ -92,15 +118,18 @@ export class FooterComponent implements OnInit, OnDestroy {
    */
   getConfigurations(): void {
     if (this.authenticationService.isAuthenticated()) {
-      this.systemService.getConfigurationByName(SettingsService.businessDateConfigName)
-      .subscribe((configurationData: any) => {
-        this.isBusinessDateEnabled = configurationData.enabled;
-        this.settingsService.setBusinessDateConfig(configurationData.enabled);
-        if (this.isBusinessDateEnabled) {
-          this.setBusinessDate();
-          this.timer = setTimeout(() => { this.getConfigurations(); }, 60000);
-        }
-      });
+      this.systemService
+        .getConfigurationByName(SettingsService.businessDateConfigName)
+        .subscribe((configurationData: any) => {
+          this.isBusinessDateEnabled = configurationData.enabled;
+          this.settingsService.setBusinessDateConfig(configurationData.enabled);
+          if (this.isBusinessDateEnabled) {
+            this.setBusinessDate();
+            this.timer = setTimeout(() => {
+              this.getConfigurations();
+            }, 60000);
+          }
+        });
     } else {
       clearTimeout(this.timer);
     }
@@ -110,10 +139,11 @@ export class FooterComponent implements OnInit, OnDestroy {
    * Get the Business Date data
    */
   setBusinessDate(): void {
-    this.systemService.getBusinessDate(SettingsService.businessDateType)
-    .subscribe((data: any) => {
+    this.systemService.getBusinessDate(SettingsService.businessDateType).subscribe((data: any) => {
       this.businessDate = new Date(data.date);
-      this.settingsService.setBusinessDate(this.dateUtils.formatDate(this.businessDate, SettingsService.businessDateFormat));
+      this.settingsService.setBusinessDate(
+        this.dateUtils.formatDate(this.businessDate, SettingsService.businessDateFormat)
+      );
       this.isBusinessDateDefined = true;
     });
   }

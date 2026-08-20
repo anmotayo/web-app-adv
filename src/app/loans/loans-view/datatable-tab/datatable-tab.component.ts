@@ -1,12 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { EntityDatatableTabComponent } from '../../../shared/tabs/entity-datatable-tab/entity-datatable-tab.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-datatable-tab',
   templateUrl: './datatable-tab.component.html',
-  styleUrls: ['./datatable-tab.component.scss']
+  styleUrls: ['./datatable-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    EntityDatatableTabComponent
+  ]
 })
-export class DatatableTabComponent {
+export class DatatableTabComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   entityId: string;
   /** Loan Datatable */
@@ -18,7 +25,7 @@ export class DatatableTabComponent {
    * Fetches data table data from `resolve`
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.entityId = this.route.parent.parent.snapshot.paramMap.get('loanId');
     this.entityDatatable = null;
     this.route.data.subscribe((data: { loanDatatable: any }) => {
@@ -27,4 +34,9 @@ export class DatatableTabComponent {
     });
   }
 
+  ngOnInit() {
+    this.route.parent.parent.params.subscribe((params) => {
+      this.entityId = params['loanId'];
+    });
+  }
 }

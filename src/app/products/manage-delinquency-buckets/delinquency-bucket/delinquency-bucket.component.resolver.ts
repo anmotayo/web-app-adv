@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,18 +12,14 @@ import { ProductsService } from '../../products.service';
  * Delinquency Bucket Component data resolver.
  */
 @Injectable()
-export class DelinquencyBucketComponentsResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class DelinquencyBucketComponentsResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the delinquency buckets data.
    * @returns {Observable<any>}
    */
-   resolve(route: ActivatedRouteSnapshot): Observable<any> {
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const delinquentcyBucketId = route.paramMap.get('bucketId');
     if (delinquentcyBucketId === null) {
       return this.productsService.getDelinquencyBuckets();
@@ -31,5 +27,4 @@ export class DelinquencyBucketComponentsResolver implements Resolve<Object> {
       return this.productsService.getDelinquencyBucket(delinquentcyBucketId);
     }
   }
-
 }

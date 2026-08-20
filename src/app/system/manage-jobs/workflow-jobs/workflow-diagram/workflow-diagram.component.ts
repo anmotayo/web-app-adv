@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { DagreNodesOnlyLayout, Edge, Layout, Node } from '@swimlane/ngx-graph';
+import { DagreNodesOnlyLayout, Edge, Layout, Node, GraphModule } from '@swimlane/ngx-graph';
 import * as shape from 'd3-shape';
 import { Subject } from 'rxjs';
-
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 export class JobStep {
   id: number;
@@ -13,12 +13,19 @@ export class JobStep {
 @Component({
   selector: 'mifosx-workflow-diagram',
   templateUrl: './workflow-diagram.component.html',
-  styleUrls: ['./workflow-diagram.component.scss']
+  styleUrls: ['./workflow-diagram.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    GraphModule
+  ]
 })
 export class WorkflowDiagramComponent implements OnInit {
   @Input() jobStepsData: JobStep[] = [];
 
-  diagramSize: [number, number] = [1024, 300];
+  diagramSize: [number, number] = [
+    1024,
+    300
+  ];
   public nodes: Node[] = [];
   public links: Edge[] = [];
   public layoutSettings = {
@@ -27,11 +34,15 @@ export class WorkflowDiagramComponent implements OnInit {
   public curve: any = shape.curveLinear;
   public layout: Layout = new DagreNodesOnlyLayout();
   colorScheme = {
-    domain: ['#5AA454', '#A10A28', '#C7B42C']
+    domain: [
+      '#5AA454',
+      '#A10A28',
+      '#C7B42C'
+    ]
   };
   center$ = new Subject<any>();
 
-  constructor() { }
+  constructor() {}
 
   ngOnInit(): void {
     let nodeCounter = 0;
@@ -49,8 +60,8 @@ export class WorkflowDiagramComponent implements OnInit {
 
       if (nodeCounter > 0) {
         const edge: Edge = {
-          id: `link_${(jobStep.id)}`,
-          source: `node_${(jobStep.order - 1)}`,
+          id: `link_${jobStep.id}`,
+          source: `node_${jobStep.order - 1}`,
           target: currentNode,
           label: '',
           data: {
@@ -64,11 +75,10 @@ export class WorkflowDiagramComponent implements OnInit {
       nodeCounter++;
     }
     // trigger center
-    this.center$.next();
+    this.center$.next(undefined);
   }
 
   public getStyles(node: Node): any {
-      return 'node_odd';
+    return 'node_odd';
   }
-
 }

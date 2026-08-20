@@ -1,10 +1,11 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { GroupsService } from '../../groups.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Groups Add Role Component
@@ -12,9 +13,16 @@ import { GroupsService } from '../../groups.service';
 @Component({
   selector: 'mifosx-add-role',
   templateUrl: './add-role.component.html',
-  styleUrls: ['./add-role.component.scss']
+  styleUrls: ['./add-role.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AddRoleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private groupsService = inject(GroupsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Groups Add Role Form */
   groupsAddRoleForm: UntypedFormGroup;
@@ -31,10 +39,7 @@ export class AddRoleComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private groupsService: GroupsService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { groupAndTemplateData: any }) => {
       this.groupAndTemplateData = data.groupAndTemplateData;
     });
@@ -51,8 +56,14 @@ export class AddRoleComponent implements OnInit {
    */
   createGroupsAddRoleForm() {
     this.groupsAddRoleForm = this.formBuilder.group({
-      'clientId': ['', Validators.required],
-      'role': ['', Validators.required]
+      clientId: [
+        '',
+        Validators.required
+      ],
+      role: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -60,9 +71,10 @@ export class AddRoleComponent implements OnInit {
    * Submits the form and assigns the group role.
    */
   submit() {
-    this.groupsService.executeGroupCommand(this.groupAndTemplateData.id, 'assignRole', this.groupsAddRoleForm.value).subscribe(() => {
-      this.router.navigate(['../'], { relativeTo: this.route });
-    });
+    this.groupsService
+      .executeGroupCommand(this.groupAndTemplateData.id, 'assignRole', this.groupsAddRoleForm.value)
+      .subscribe(() => {
+        this.router.navigate(['../'], { relativeTo: this.route });
+      });
   }
-
 }

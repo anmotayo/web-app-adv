@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { AccountingService } from '../accounting.service';
  * Accounting rule data resolver.
  */
 @Injectable()
-export class AccountingRuleResolver implements Resolve<Object> {
-
-  /**
-   * @param {AccountingService} accountingService Accounting service.
-   */
-  constructor(private accountingService: AccountingService) {}
+export class AccountingRuleResolver {
+  private accountingService = inject(AccountingService);
 
   /**
    * Returns the accounting rule data.
@@ -27,5 +23,4 @@ export class AccountingRuleResolver implements Resolve<Object> {
     const id = route.paramMap.get('id');
     return this.accountingService.getAccountingRule(id);
   }
-
 }

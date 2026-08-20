@@ -1,8 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Notification Configuration Component.
@@ -10,14 +24,34 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'mifosx-notification',
   templateUrl: './notification.component.html',
-  styleUrls: ['./notification.component.scss']
+  styleUrls: ['./notification.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow
+  ]
 })
 export class NotificationComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** Notification configuration data. */
   notificationConfigurationData: any;
   /** Columns to be displayed in Notification configuration table. */
-  displayedColumns: string[] = ['name', 'value'];
+  displayedColumns: string[] = [
+    'name',
+    'value'
+  ];
   /** Data source for Notification configuration table. */
   dataSource: MatTableDataSource<any>;
 
@@ -28,7 +62,7 @@ export class NotificationComponent implements OnInit {
    * Retrieves the Notification configuration data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { notificationConfiguration: any }) => {
       this.notificationConfigurationData = data.notificationConfiguration;
     });
@@ -56,5 +90,4 @@ export class NotificationComponent implements OnInit {
     }
     return value;
   }
-
 }

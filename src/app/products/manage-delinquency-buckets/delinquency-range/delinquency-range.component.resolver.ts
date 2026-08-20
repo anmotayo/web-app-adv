@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from '../../products.service';
  * Delinquency Range Component data resolver.
  */
 @Injectable()
-export class DelinquencyRangeComponentsResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class DelinquencyRangeComponentsResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the delinquency ranges data.
@@ -31,5 +27,4 @@ export class DelinquencyRangeComponentsResolver implements Resolve<Object> {
       return this.productsService.getDelinquencyRange(delinquentcyRangeId);
     }
   }
-
 }

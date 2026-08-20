@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
@@ -9,14 +9,10 @@ import { Observable } from 'rxjs';
  * Clients service.
  */
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class CentersService {
-
-  /**
-   * @param {HttpClient} http Http Client to send requests.
-   */
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
 
   /**
    * @param {any} filterBy Properties by which entries should be filtered.
@@ -47,7 +43,7 @@ export class CentersService {
    * @returns {Observable<any>}
    */
   createCenter(center: any): Observable<any> {
-      return this.http.post('/centers', center);
+    return this.http.post('/centers', center);
   }
 
   /**
@@ -55,10 +51,8 @@ export class CentersService {
    * @returns {Observable<any>}
    */
   getStaff(officeId: number): Observable<any> {
-      const httpParams = new HttpParams()
-          .set('officeId', officeId.toString())
-          .set('staffInSelectedOfficeOnly', 'true');
-      return this.http.get('/centers/template', { params: httpParams });
+    const httpParams = new HttpParams().set('officeId', officeId.toString()).set('staffInSelectedOfficeOnly', 'true');
+    return this.http.get('/centers/template', { params: httpParams });
   }
 
   /**
@@ -66,9 +60,8 @@ export class CentersService {
    * @returns {Observable<any>} Group Data for Center
    */
   getCenterData(centerId: string): Observable<any> {
-    const httpParams = new HttpParams()
-        .set('associations', 'groupMembers,collectionMeetingCalendar');
-    return this.http.get(`/centers/${centerId}`, { params: httpParams } );
+    const httpParams = new HttpParams().set('associations', 'groupMembers,collectionMeetingCalendar');
+    return this.http.get(`/centers/${centerId}`, { params: httpParams });
   }
 
   /**
@@ -76,8 +69,7 @@ export class CentersService {
    * @returns {Observable<any>} Returns the entire details of the Center ID
    */
   getCenterSummary(centerId: string): Observable<any> {
-    const httpParams = new HttpParams().set('R_groupId', centerId)
-      .set('genericResultSet', 'false');
+    const httpParams = new HttpParams().set('R_groupId', centerId).set('genericResultSet', 'false');
     return this.http.get(`/runreports/GroupSummaryCounts`, { params: httpParams });
   }
 
@@ -131,7 +123,7 @@ export class CentersService {
    */
   getcenterDatatables() {
     const httpParams = new HttpParams().set('apptable', 'm_center');
-  return this.http.get(`/datatables`, { params: httpParams });
+    return this.http.get(`/datatables`, { params: httpParams });
   }
 
   /**
@@ -203,9 +195,10 @@ export class CentersService {
    * @returns {Observable<any>} Center data.
    */
   getGroupStaffData(centerId: string): Observable<any> {
-    const httpParams = new HttpParams().set('groupOrCenter', 'centers')
-                                      .set('staffInSelectedOfficeOnly', 'true')
-                                      .set('template', 'true');
+    const httpParams = new HttpParams()
+      .set('groupOrCenter', 'centers')
+      .set('staffInSelectedOfficeOnly', 'true')
+      .set('template', 'true');
     return this.http.get(`/groups/${centerId}`, { params: httpParams });
   }
 
@@ -216,7 +209,7 @@ export class CentersService {
   getCentersData(centerId: string, associations: string, template?: string) {
     let httpParams = new HttpParams().set('associations', associations);
     httpParams = template ? httpParams.set('template', template) : httpParams;
-    return this.http.get(`/centers/${centerId}`, {params: httpParams});
+    return this.http.get(`/centers/${centerId}`, { params: httpParams });
   }
 
   getMeetingsTemplate(centerId: any, calendarId: any): Observable<any> {
@@ -226,7 +219,7 @@ export class CentersService {
 
   assignCenterAttendance(centerId: any, calendarId: any, data: any): Observable<any> {
     const httpParams = new HttpParams().set('calenderId', calendarId);
-    return this.http.post(`/centers/${centerId}/meetings`, data, {params: httpParams});
+    return this.http.post(`/centers/${centerId}/meetings`, data, { params: httpParams });
   }
 
   getCalendarTemplate(centerId: any): Observable<any> {
@@ -252,12 +245,21 @@ export class CentersService {
    * @param {object} centerId CenterId.
    * @returns {Observable<any>}
    */
-  getStaffAssignmentHistoryData(reportName: any, centerId: any, tenantIdentifier: string, locale: string): Observable<any> {
+  getStaffAssignmentHistoryData(
+    reportName: any,
+    centerId: any,
+    tenantIdentifier: string,
+    locale: string
+  ): Observable<any> {
     const httpParams = new HttpParams()
       .set('tenantIdentifier', tenantIdentifier)
       .set('locale', locale)
       .set('R_centerId', centerId);
-    return this.http.get(`/runreports/${reportName}`, { responseType: 'arraybuffer', observe: 'response', params: httpParams });
+    return this.http.get(`/runreports/${reportName}`, {
+      responseType: 'arraybuffer',
+      observe: 'response',
+      params: httpParams
+    });
   }
 
   /**
@@ -265,8 +267,7 @@ export class CentersService {
    * @returns {Observable<any>} Center data and template.
    */
   getCenterAndTemplateData(centerId: string): Observable<any> {
-    const httpParams = new HttpParams().set('staffInSelectedOfficeOnly', 'true')
-                                       .set('template', 'true');
+    const httpParams = new HttpParams().set('staffInSelectedOfficeOnly', 'true').set('template', 'true');
     return this.http.get(`/centers/${centerId}`, { params: httpParams });
   }
 
@@ -279,4 +280,15 @@ export class CentersService {
     return this.http.put(`/groups/${centerId}`, data);
   }
 
+  getAllMeetingFallCenters(
+    officeId: number,
+    staffId: number,
+    meetingDate: string,
+    dateFormat: string,
+    locale: string
+  ): Observable<any> {
+    return this.http.get(
+      `/centers?dateFormat=${dateFormat}&locale=${locale}&meetingDate=${meetingDate}&officeId=${officeId}&staffId=${staffId}`
+    );
+  }
 }

@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings Account Unassign Staff Component
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-savings-account-unassign-staff',
   templateUrl: './savings-account-unassign-staff.component.html',
-  styleUrls: ['./savings-account-unassign-staff.component.scss']
+  styleUrls: ['./savings-account-unassign-staff.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class SavingsAccountUnassignStaffComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +45,7 @@ export class SavingsAccountUnassignStaffComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private savingsService: SavingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.snapshot.params['savingAccountId'];
   }
 
@@ -57,7 +62,10 @@ export class SavingsAccountUnassignStaffComponent implements OnInit {
    */
   createSavingsUnassignStaffForm() {
     this.savingsUnassignStaffForm = this.formBuilder.group({
-      'unassignedDate': ['', Validators.required]
+      unassignedDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -82,5 +90,4 @@ export class SavingsAccountUnassignStaffComponent implements OnInit {
       this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

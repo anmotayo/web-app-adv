@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { SystemService } from '../../system.service';
  * Account Number Preference data resolver.
  */
 @Injectable()
-export class AccountNumberPreferenceResolver implements Resolve<Object> {
-
-  /**
-   * @param {SystemService} systemService System service.
-   */
-  constructor(private systemService: SystemService) {}
+export class AccountNumberPreferenceResolver {
+  private systemService = inject(SystemService);
 
   /**
    * Returns the Account Number Preference data.
@@ -27,5 +23,4 @@ export class AccountNumberPreferenceResolver implements Resolve<Object> {
     const accountNumberPreferenceId = route.paramMap.get('id');
     return this.systemService.getAccountNumberPreference(accountNumberPreferenceId);
   }
-
 }

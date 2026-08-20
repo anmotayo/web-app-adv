@@ -46,9 +46,7 @@ import { PipesModule } from 'app/pipes/pipes.module';
     SharedModule,
     DirectivesModule,
     AccountingRoutingModule,
-    PipesModule
-  ],
-  declarations: [
+    PipesModule,
     AccountingComponent,
     FrequentPostingsComponent,
     CreateJournalEntryComponent,
@@ -78,4 +76,4 @@ import { PipesModule } from 'app/pipes/pipes.module';
     ViewProvisioningJournalEntriesComponent
   ]
 })
-export class AccountingModule { }
+export class AccountingModule {}

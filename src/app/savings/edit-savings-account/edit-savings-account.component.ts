@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 /** Custom Components */
@@ -11,6 +11,10 @@ import { SavingsAccountChargesStepComponent } from '../savings-account-stepper/s
 import { SavingsService } from '../savings.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { SavingsAccountPreviewStepComponent } from '../savings-account-stepper/savings-account-preview-step/savings-account-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Savings Account Component
@@ -18,9 +22,26 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-edit-savings-account',
   templateUrl: './edit-savings-account.component.html',
-  styleUrls: ['./edit-savings-account.component.scss']
+  styleUrls: ['./edit-savings-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    SavingsAccountDetailsStepComponent,
+    SavingsAccountTermsStepComponent,
+    SavingsAccountChargesStepComponent,
+    SavingsAccountPreviewStepComponent
+  ]
 })
 export class EditSavingsAccountComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
 
   /** Savings Account Template */
   savingsAccountAndTemplate: any;
@@ -28,11 +49,14 @@ export class EditSavingsAccountComponent {
   savingsAccountProductTemplate: any;
 
   /** Savings Account Details Step */
-  @ViewChild(SavingsAccountDetailsStepComponent, { static: true }) savingsAccountDetailsStep: SavingsAccountDetailsStepComponent;
+  @ViewChild(SavingsAccountDetailsStepComponent, { static: true })
+  savingsAccountDetailsStep: SavingsAccountDetailsStepComponent;
   /** Savings Account Terms Step */
-  @ViewChild(SavingsAccountTermsStepComponent, { static: true }) savingsAccountTermsStep: SavingsAccountTermsStepComponent;
+  @ViewChild(SavingsAccountTermsStepComponent, { static: true })
+  savingsAccountTermsStep: SavingsAccountTermsStepComponent;
   /** Savings Account Charges Step */
-  @ViewChild(SavingsAccountChargesStepComponent, { static: true }) savingsAccountChargesStep: SavingsAccountChargesStepComponent;
+  @ViewChild(SavingsAccountChargesStepComponent, { static: true })
+  savingsAccountChargesStep: SavingsAccountChargesStepComponent;
 
   /**
    * Fetches savings account template from `resolve`
@@ -42,12 +66,7 @@ export class EditSavingsAccountComponent {
    * @param {SavingsService} savingsService Savings Service
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private savingsService: SavingsService,
-              private settingsService: SettingsService
-              ) {
+  constructor() {
     this.route.data.subscribe((data: { savingsAccountAndTemplate: any }) => {
       this.savingsAccountAndTemplate = data.savingsAccountAndTemplate;
     });
@@ -82,11 +101,9 @@ export class EditSavingsAccountComponent {
     return (
       this.savingsAccountDetailsForm.valid &&
       this.savingsAccountTermsForm.valid &&
-      (
-        !this.savingsAccountDetailsForm.pristine ||
+      (!this.savingsAccountDetailsForm.pristine ||
         !this.savingsAccountTermsForm.pristine ||
-        !this.savingsAccountChargesStep.pristine
-      )
+        !this.savingsAccountChargesStep.pristine)
     );
   }
 
@@ -128,9 +145,10 @@ export class EditSavingsAccountComponent {
     } else {
       savingsAccount.groupId = this.savingsAccountAndTemplate.groupId;
     }
-    this.savingsService.updateSavingsAccount(this.savingsAccountAndTemplate.id, savingsAccount).subscribe((response: any) => {
-      this.router.navigate(['../'], { relativeTo: this.route });
-    });
+    this.savingsService
+      .updateSavingsAccount(this.savingsAccountAndTemplate.id, savingsAccount)
+      .subscribe((response: any) => {
+        this.router.navigate(['../'], { relativeTo: this.route });
+      });
   }
-
 }

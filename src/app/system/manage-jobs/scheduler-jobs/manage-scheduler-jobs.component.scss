@@ -1,3 +1,8 @@
+.container {
+  min-width: 84rem;
+  width: 84rem;
+}
+
 table {
   width: 100%;
 
@@ -26,14 +31,18 @@ table {
   color: #ffa726;
 }
 
+.job-error {
+  background-color: #f7dbb7;
+}
+
 .suspend {
   background: #32cd32;
-  color: #ffffff;
+  color: #fff;
 }
 
 .activate {
   background: #f44366;
-  color: #ffffff;
+  color: #fff;
 }
 
 .space-top {

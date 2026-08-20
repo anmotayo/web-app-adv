@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** rxjs Imports */
 import { of } from 'rxjs';
@@ -11,6 +23,8 @@ import { of } from 'rxjs';
 /** Custom Services */
 import { PopoverService } from '../../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../../configuration-wizard/configuration-wizard.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Manage Data Tables component.
@@ -18,14 +32,39 @@ import { ConfigurationWizardService } from '../../configuration-wizard/configura
 @Component({
   selector: 'mifosx-manage-data-tables',
   templateUrl: './manage-data-tables.component.html',
-  styleUrls: ['./manage-data-tables.component.scss']
+  styleUrls: ['./manage-data-tables.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ManageDataTablesComponent implements OnInit, AfterViewInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /** Data table data. */
   dataTableData: any;
   /** Columns to be displayed in manage data tables table. */
-  displayedColumns: string[] = ['registeredTableName', 'applicationTableName', 'entitySubType'];
+  displayedColumns: string[] = [
+    'registeredTableName',
+    'applicationTableName',
+    'entitySubType'
+  ];
   /** Data source for manage data tables table. */
   dataSource: MatTableDataSource<any>;
 
@@ -50,11 +89,8 @@ export class ManageDataTablesComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) {
-    this.route.data.subscribe(( data: { dataTables: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { dataTables: any }) => {
       this.dataTableData = data.dataTables;
     });
   }
@@ -90,7 +126,12 @@ export class ManageDataTablesComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -100,12 +141,12 @@ export class ManageDataTablesComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     if (this.configurationWizardService.showDatatablesPage === true) {
       setTimeout(() => {
-          this.showPopover(this.templateCreateDatatableRef, this.createDatatableRef.nativeElement, 'bottom', true);
+        this.showPopover(this.templateCreateDatatableRef, this.createDatatableRef.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showDatatablesList === true) {
       setTimeout(() => {
-          this.showPopover(this.templateDatatablesList, this.datatablesList.nativeElement, 'top', true);
+        this.showPopover(this.templateDatatablesList, this.datatablesList.nativeElement, 'top', true);
       });
     }
   }

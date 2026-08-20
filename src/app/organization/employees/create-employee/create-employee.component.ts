@@ -1,7 +1,7 @@
 /** Angular Imports */
-import { Component, OnInit , TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { OrganizationService } from '../../organization.service';
@@ -13,6 +13,8 @@ import { ConfigurationWizardService } from '../../../configuration-wizard/config
 
 /** Custom Dialog Component */
 import { ContinueSetupDialogComponent } from '../../../configuration-wizard/continue-setup-dialog/continue-setup-dialog.component';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create employee component.
@@ -20,9 +22,22 @@ import { ContinueSetupDialogComponent } from '../../../configuration-wizard/cont
 @Component({
   selector: 'mifosx-create-employee',
   templateUrl: './create-employee.component.html',
-  styleUrls: ['./create-employee.component.scss']
+  styleUrls: ['./create-employee.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class CreateEmployeeComponent implements OnInit, AfterViewInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private organizationService = inject(OrganizationService);
+  private settingsService = inject(SettingsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
+  dialog = inject(MatDialog);
 
   /** Minimum joining date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -50,15 +65,7 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
    * @param {PopoverService} popoverService PopoverService.
    * @param {MatDialog} dialog MatDialog.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private organizationService: OrganizationService,
-              private settingsService: SettingsService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService,
-              public dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { offices: any }) => {
       this.officeData = data.offices;
     });
@@ -77,12 +84,35 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
    */
   createEmployeeForm() {
     this.employeeForm = this.formBuilder.group({
-      'officeId': ['', Validators.required],
-      'firstname': ['', [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'lastname': ['', [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'isLoanOfficer': [false],
-      'mobileNo': [''],
-      'joiningDate': ['', Validators.required],
+      officeId: [
+        '',
+        Validators.required
+      ],
+      firstname: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      lastname: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      isLoanOfficer: [false],
+      mobileNo: [
+        '',
+        [
+          Validators.pattern(/^\+?[0-9. ()-]{0,25}$/)
+        ]
+      ],
+      joiningDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -120,7 +150,12 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -130,7 +165,7 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     if (this.configurationWizardService.showEmployeeForm === true) {
       setTimeout(() => {
-          this.showPopover(this.templateCreateEmployeeForm, this.createEmployeeFormRef.nativeElement, 'right', true);
+        this.showPopover(this.templateCreateEmployeeForm, this.createEmployeeFormRef.nativeElement, 'right', true);
       });
     }
   }
@@ -160,7 +195,7 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
     const continueSetupDialogRef = this.dialog.open(ContinueSetupDialogComponent, {
       data: {
         stepName: 'employee'
-      },
+      }
     });
     continueSetupDialogRef.afterClosed().subscribe((response: { step: number }) => {
       if (response.step === 1) {
@@ -178,5 +213,4 @@ export class CreateEmployeeComponent implements OnInit, AfterViewInit {
       }
     });
   }
-
 }

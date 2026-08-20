@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /** Custom Components */
@@ -15,21 +15,52 @@ import { ShareProductAccountingStepComponent } from '../share-product-stepper/sh
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Accounting } from 'app/core/utils/accounting';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { ShareProductPreviewStepComponent } from '../share-product-stepper/share-product-preview-step/share-product-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-create-share-product',
   templateUrl: './create-share-product.component.html',
-  styleUrls: ['./create-share-product.component.scss']
+  styleUrls: ['./create-share-product.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    ShareProductDetailsStepComponent,
+    ShareProductCurrencyStepComponent,
+    ShareProductTermsStepComponent,
+    ShareProductSettingsStepComponent,
+    ShareProductMarketPriceStepComponent,
+    ShareProductChargesStepComponent,
+    ShareProductAccountingStepComponent,
+    ShareProductPreviewStepComponent
+  ]
 })
-export class CreateShareProductComponent implements OnInit {
+export class CreateShareProductComponent {
+  private route = inject(ActivatedRoute);
+  private productsService = inject(ProductsService);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private accounting = inject(Accounting);
 
-  @ViewChild(ShareProductDetailsStepComponent, { static: true }) shareProductDetailsStep: ShareProductDetailsStepComponent;
-  @ViewChild(ShareProductCurrencyStepComponent, { static: true }) shareProductCurrencyStep: ShareProductCurrencyStepComponent;
+  @ViewChild(ShareProductDetailsStepComponent, { static: true })
+  shareProductDetailsStep: ShareProductDetailsStepComponent;
+  @ViewChild(ShareProductCurrencyStepComponent, { static: true })
+  shareProductCurrencyStep: ShareProductCurrencyStepComponent;
   @ViewChild(ShareProductTermsStepComponent, { static: true }) shareProductTermsStep: ShareProductTermsStepComponent;
-  @ViewChild(ShareProductSettingsStepComponent, { static: true }) shareProductSettingsStep: ShareProductSettingsStepComponent;
-  @ViewChild(ShareProductMarketPriceStepComponent, { static: true }) shareProductMarketPriceStep: ShareProductMarketPriceStepComponent;
-  @ViewChild(ShareProductChargesStepComponent, { static: true }) shareProductChargesStep: ShareProductChargesStepComponent;
-  @ViewChild(ShareProductAccountingStepComponent, { static: true }) shareProductAccountingStep: ShareProductAccountingStepComponent;
+  @ViewChild(ShareProductSettingsStepComponent, { static: true })
+  shareProductSettingsStep: ShareProductSettingsStepComponent;
+  @ViewChild(ShareProductMarketPriceStepComponent, { static: true })
+  shareProductMarketPriceStep: ShareProductMarketPriceStepComponent;
+  @ViewChild(ShareProductChargesStepComponent, { static: true })
+  shareProductChargesStep: ShareProductChargesStepComponent;
+  @ViewChild(ShareProductAccountingStepComponent, { static: true })
+  shareProductAccountingStep: ShareProductAccountingStepComponent;
 
   shareProductsTemplate: any;
   accountingRuleData: string[] = [];
@@ -41,18 +72,11 @@ export class CreateShareProductComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    */
 
-  constructor(private route: ActivatedRoute,
-              private productsService: ProductsService,
-              private router: Router,
-              private settingsService: SettingsService,
-              private accounting: Accounting) {
+  constructor() {
     this.route.data.subscribe((data: { shareProductsTemplate: any }) => {
       this.shareProductsTemplate = data.shareProductsTemplate;
     });
     this.accountingRuleData = this.accounting.getAccountingRulesForShares();
-  }
-
-  ngOnInit() {
   }
 
   get shareProductDetailsForm() {
@@ -109,10 +133,14 @@ export class CreateShareProductComponent implements OnInit {
       chargesSelected: this.shareProduct.chargesSelected.map((charge: any) => ({ id: charge.id })),
       locale: this.settingsService.language.code // locale required for digitsAfterDecimal
     };
-    this.productsService.createShareProduct(shareProduct)
-      .subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.productsService.createShareProduct(shareProduct).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

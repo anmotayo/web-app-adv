@@ -1,12 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Add Recurring Deposits Charge component.
@@ -15,9 +22,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-add-charge-recurring-deposits-account',
   templateUrl: './add-charge-recurring-deposits-account.component.html',
-  styleUrls: ['./add-charge-recurring-deposits-account.component.scss']
+  styleUrls: ['./add-charge-recurring-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AddChargeRecurringDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
 
   /** Minimum Due Date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -40,14 +56,7 @@ export class AddChargeRecurringDepositsAccountComponent implements OnInit {
    * @param {Dates} dateUtils Date Utils
    * @param {SavingsService} savingsService Savings Service
    */
-  constructor(
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private savingsService: SavingsService,
-    private settingsService: SettingsService
-  ) {
+  constructor() {
     this.route.data.subscribe((data: { recurringDepositsAccountActionData: any }) => {
       this.savingsChargeOptions = data.recurringDepositsAccountActionData.chargeOptions;
     });
@@ -64,7 +73,7 @@ export class AddChargeRecurringDepositsAccountComponent implements OnInit {
   }
 
   buildDependencies() {
-    this.recurringDepositsChargeForm.controls.chargeId.valueChanges.subscribe(chargeId => {
+    this.recurringDepositsChargeForm.controls.chargeId.valueChanges.subscribe((chargeId) => {
       this.savingsService.getChargeTemplate(chargeId).subscribe((data: any) => {
         this.chargeDetails = data;
         const chargeTimeType = data.chargeTimeType.id;
@@ -85,14 +94,17 @@ export class AddChargeRecurringDepositsAccountComponent implements OnInit {
           this.recurringDepositsChargeForm.removeControl('feeOnMonthDay');
         }
         if (chargeTimeType.value === 'Monthly Fee') {
-          this.recurringDepositsChargeForm.addControl('feeInterval', new UntypedFormControl(data.feeInterval, Validators.required));
+          this.recurringDepositsChargeForm.addControl(
+            'feeInterval',
+            new UntypedFormControl(data.feeInterval, Validators.required)
+          );
         } else {
           this.recurringDepositsChargeForm.removeControl('feeInterval');
         }
         this.recurringDepositsChargeForm.patchValue({
-          'amount': data.amount,
-          'chargeCalculationType': data.chargeCalculationType.id,
-          'chargeTimeType': data.chargeTimeType.id
+          amount: data.amount,
+          chargeCalculationType: data.chargeCalculationType.id,
+          chargeTimeType: data.chargeTimeType.id
         });
       });
     });
@@ -103,10 +115,16 @@ export class AddChargeRecurringDepositsAccountComponent implements OnInit {
    */
   createRecurringDepositsChargeForm() {
     this.recurringDepositsChargeForm = this.formBuilder.group({
-      'chargeId': ['', Validators.required],
-      'amount': ['', Validators.required],
-      'chargeCalculationType': [{ value: '', disabled: true }],
-      'chargeTimeType': [{ value: '', disabled: true }]
+      chargeId: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ],
+      chargeCalculationType: [{ value: '', disabled: true }],
+      chargeTimeType: [{ value: '', disabled: true }]
     });
   }
 
@@ -140,5 +158,4 @@ export class AddChargeRecurringDepositsAccountComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

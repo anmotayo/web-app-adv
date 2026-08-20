@@ -1,11 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit, Renderer2, ViewChild, ElementRef, SecurityContext } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Renderer2, ViewChild, ElementRef, SecurityContext, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ClientsService } from 'app/clients/clients.service';
 import { DomSanitizer } from '@angular/platform-browser';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Client Screen Reports Component.
@@ -13,9 +15,18 @@ import { DomSanitizer } from '@angular/platform-browser';
 @Component({
   selector: 'mifosx-client-screen-reports',
   templateUrl: './client-screen-reports.component.html',
-  styleUrls: ['./client-screen-reports.component.scss']
+  styleUrls: ['./client-screen-reports.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
 export class ClientScreenReportsComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private clientsService = inject(ClientsService);
+  private route = inject(ActivatedRoute);
+  private sanitizer = inject(DomSanitizer);
+  private renderer = inject(Renderer2);
 
   /** Client Screen Reportform. */
   clientScreenReportForm: UntypedFormGroup;
@@ -37,11 +48,7 @@ export class ClientScreenReportsComponent implements OnInit {
    * @param {DomSanitizer} sanitizer DOM Sanitizer
    * @param {Renderer2} renderer Renderer 2
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private clientsService: ClientsService,
-              private route: ActivatedRoute,
-              private sanitizer: DomSanitizer,
-              private renderer: Renderer2) {
+  constructor() {
     this.route.data.subscribe((data: { clientActionData: any }) => {
       this.templatesData = data.clientActionData;
     });
@@ -60,7 +67,7 @@ export class ClientScreenReportsComponent implements OnInit {
    */
   createClientScreenReportForm() {
     this.clientScreenReportForm = this.formBuilder.group({
-      'templateId': ['']
+      templateId: ['']
     });
   }
 
@@ -87,5 +94,4 @@ export class ClientScreenReportsComponent implements OnInit {
       this.renderer.setProperty(this.screenReportRef.nativeElement, 'innerHTML', this.template);
     });
   }
-
 }

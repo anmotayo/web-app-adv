@@ -40,9 +40,7 @@ import { GeneralTabComponent } from './shares-account-view/general-tab/general-t
     SharedModule,
     PipesModule,
     DirectivesModule,
-    SharesRoutingModule
-  ],
-  declarations: [
+    SharesRoutingModule,
     SharesAccountViewComponent,
     TransactionsTabComponent,
     DividendsTabComponent,
@@ -67,6 +65,6 @@ import { GeneralTabComponent } from './shares-account-view/general-tab/general-t
     RejectShareDialogComponent,
     GeneralTabComponent
   ],
-  providers: [ ]
+  providers: []
 })
-export class SharesModule { }
+export class SharesModule {}

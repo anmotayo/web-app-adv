@@ -1,9 +1,16 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormArray, Validators, FormControl } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormArray,
+  Validators,
+  FormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, moveItemInArray, CdkDropList, CdkDrag } from '@angular/cdk/drag-drop';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
@@ -13,6 +20,12 @@ import { CancelDialogComponent } from '../../../shared/cancel-dialog/cancel-dial
 
 /** Survey Models */
 import { Survey, QuestionData, ResponseData } from './../survey.model';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatDivider } from '@angular/material/divider';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit survey component.
@@ -20,9 +33,24 @@ import { Survey, QuestionData, ResponseData } from './../survey.model';
 @Component({
   selector: 'mifosx-edit-survey',
   templateUrl: './edit-survey.component.html',
-  styleUrls: ['./edit-survey.component.scss']
+  styleUrls: ['./edit-survey.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize,
+    CdkDropList,
+    CdkDrag,
+    FaIconComponent,
+    MatDivider,
+    MatIconButton,
+    MatTooltip
+  ]
 })
-export class EditSurveyComponent implements OnInit {
+export class EditSurveyComponent {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
 
   /** Survey form. */
   surveyForm: UntypedFormGroup;
@@ -34,21 +62,11 @@ export class EditSurveyComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router,
-              public dialog: MatDialog) {
-                this.createSurveyForm();
-                this.route.data.subscribe((data: { survey: any }) => {
-                  this.prepareSurveyForm(data.survey);
-                });
-              }
-
-  /**
-   * Fills the survey form.
-   */
-  ngOnInit() {
+  constructor() {
+    this.createSurveyForm();
+    this.route.data.subscribe((data: { survey: any }) => {
+      this.prepareSurveyForm(data.survey);
+    });
   }
 
   /**
@@ -56,11 +74,11 @@ export class EditSurveyComponent implements OnInit {
    * and prepares the survey form.
    */
   prepareSurveyForm(survey: Survey) {
-      this.surveyForm.get('key').setValue(survey.key);
-      this.surveyForm.get('name').setValue(survey.name);
-      this.surveyForm.get('countryCode').setValue(survey.countryCode);
-      this.surveyForm.get('description').setValue(survey.description);
-      this.prepareQuestionDatas(this.questionDatas, survey.questionDatas);
+    this.surveyForm.get('key').setValue(survey.key);
+    this.surveyForm.get('name').setValue(survey.name);
+    this.surveyForm.get('countryCode').setValue(survey.countryCode);
+    this.surveyForm.get('description').setValue(survey.description);
+    this.prepareQuestionDatas(this.questionDatas, survey.questionDatas);
   }
 
   /**
@@ -74,7 +92,7 @@ export class EditSurveyComponent implements OnInit {
       questionForm.get('text').setValue(questionData.text);
       questionForm.get('description').setValue(questionData.description);
       // questionForm.get('responseDatas').setValue([]);
-      this.prepareResponseDatas((<UntypedFormArray>questionForm.get('responseDatas')), questionData.responseDatas, idx);
+      this.prepareResponseDatas(<UntypedFormArray>questionForm.get('responseDatas'), questionData.responseDatas, idx);
     });
   }
 
@@ -98,11 +116,23 @@ export class EditSurveyComponent implements OnInit {
    */
   createSurveyForm() {
     this.surveyForm = this.formBuilder.group({
-      'key': ['', Validators.required],
-      'name': ['', Validators.required],
-      'countryCode': ['', [Validators.required, Validators.pattern('^\\s*([A-Za-z]{2})?\\s*$')]],
-      'description': [''],
-      'questionDatas': this.formBuilder.array([])
+      key: [
+        '',
+        Validators.required
+      ],
+      name: [
+        '',
+        Validators.required
+      ],
+      countryCode: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^\\s*([A-Za-z]{2})?\\s*$')
+        ]
+      ],
+      description: [''],
+      questionDatas: this.formBuilder.array([])
     });
   }
 
@@ -120,7 +150,11 @@ export class EditSurveyComponent implements OnInit {
    * @returns {FormArray} Responses form array.
    */
   getResponseDatas(questionIndex: number): UntypedFormArray {
-    return this.surveyForm.get(['questionDatas', questionIndex, 'responseDatas']) as UntypedFormArray;
+    return this.surveyForm.get([
+      'questionDatas',
+      questionIndex,
+      'responseDatas'
+    ]) as UntypedFormArray;
   }
 
   /**
@@ -129,11 +163,17 @@ export class EditSurveyComponent implements OnInit {
    */
   createQuestionForm(): UntypedFormGroup {
     return this.formBuilder.group({
-      'key': ['', Validators.required],
-      'text': ['', Validators.required],
-      'description': [''],
-      'responseDatas': this.formBuilder.array([this.createResponseForm()]),
-      'sequenceNo': ['']
+      key: [
+        '',
+        Validators.required
+      ],
+      text: [
+        '',
+        Validators.required
+      ],
+      description: [''],
+      responseDatas: this.formBuilder.array([this.createResponseForm()]),
+      sequenceNo: ['']
     });
   }
 
@@ -160,9 +200,18 @@ export class EditSurveyComponent implements OnInit {
    */
   createResponseForm(): UntypedFormGroup {
     return this.formBuilder.group({
-      'text': ['', Validators.required],
-      'value': ['', [Validators.required, Validators.pattern('^\\s*[-]?\\d{0,4}\\s*$')]],
-      'sequenceNo': ['']
+      text: [
+        '',
+        Validators.required
+      ],
+      value: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^\\s*[-]?\\d{0,4}\\s*$')
+        ]
+      ],
+      sequenceNo: ['']
     });
   }
 
@@ -190,9 +239,15 @@ export class EditSurveyComponent implements OnInit {
    */
   updateSequenceNumber() {
     for (let questionIndex = 0; questionIndex < this.questionDatas.length; questionIndex++) {
-      this.questionDatas.at(questionIndex).get('sequenceNo').setValue(questionIndex + 1);
+      this.questionDatas
+        .at(questionIndex)
+        .get('sequenceNo')
+        .setValue(questionIndex + 1);
       for (let responseIndex = 0; responseIndex < this.getResponseDatas(questionIndex).length; responseIndex++) {
-        this.getResponseDatas(questionIndex).at(responseIndex).get('sequenceNo').setValue(responseIndex + 1);
+        this.getResponseDatas(questionIndex)
+          .at(responseIndex)
+          .get('sequenceNo')
+          .setValue(responseIndex + 1);
       }
     }
   }
@@ -233,9 +288,10 @@ export class EditSurveyComponent implements OnInit {
     this.surveyForm.patchValue({
       countryCode: this.surveyForm.value.countryCode.toUpperCase()
     });
-    this.systemService.editSurvey(this.route.snapshot.paramMap.get('id'), this.surveyForm.value).subscribe((response: any) => {
-      this.router.navigate(['../'], { relativeTo: this.route });
-    });
+    this.systemService
+      .editSurvey(this.route.snapshot.paramMap.get('id'), this.surveyForm.value)
+      .subscribe((response: any) => {
+        this.router.navigate(['../'], { relativeTo: this.route });
+      });
   }
-
 }

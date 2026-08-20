@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { CentersService } from 'app/centers/centers.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Activate Center Component
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-activate-center',
   templateUrl: './activate-center.component.html',
-  styleUrls: ['./activate-center.component.scss']
+  styleUrls: ['./activate-center.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class ActivateCenterComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private centersService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +45,7 @@ export class ActivateCenterComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private centersService: CentersService,
-              private settingsService: SettingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.centerId = this.route.parent.snapshot.params['centerId'];
   }
 
@@ -57,7 +62,10 @@ export class ActivateCenterComponent implements OnInit {
    */
   createActivateCenterForm() {
     this.activateCenterForm = this.formBuilder.group({
-      'activationDate': [new Date(), Validators.required]
+      activationDate: [
+        new Date(),
+        Validators.required
+      ]
     });
   }
 
@@ -82,5 +90,4 @@ export class ActivateCenterComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

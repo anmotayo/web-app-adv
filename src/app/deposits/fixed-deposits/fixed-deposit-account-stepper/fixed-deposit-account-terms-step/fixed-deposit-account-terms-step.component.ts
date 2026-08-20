@@ -1,8 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators} from '@angular/forms';
+import { Component, OnInit, Input, OnChanges, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { SettingsService } from 'app/settings/settings.service';
 import { Currency } from 'app/shared/models/general.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { MatDivider } from '@angular/material/divider';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Fixed Deposits Terms Step
@@ -10,9 +15,19 @@ import { Currency } from 'app/shared/models/general.model';
 @Component({
   selector: 'mifosx-fixed-deposit-account-terms-step',
   templateUrl: './fixed-deposit-account-terms-step.component.html',
-  styleUrls: ['./fixed-deposit-account-terms-step.component.scss']
+  styleUrls: ['./fixed-deposit-account-terms-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    MatDivider,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges {
+  private formBuilder = inject(UntypedFormBuilder);
+  private settingsService = inject(SettingsService);
 
   /** Fixed deposits account template */
   @Input() fixedDepositsAccountTemplate: any;
@@ -33,7 +48,7 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
   interestCalculationTypeData: any;
   /** Interest Calculation Days in Year Data */
   interestCalculationDaysInYearTypeData: any;
-   /** Period Frequency Type Data */
+  /** Period Frequency Type Data */
   periodFrequencyTypeData: any;
   currency: Currency | null = null;
 
@@ -41,8 +56,7 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
    * @param {FormBuilder} formBuilder Form Builder
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private settingsService: SettingsService) {
+  constructor() {
     this.createFixedDepositsAccountTermsForm();
   }
 
@@ -57,15 +71,16 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
     this.maxDate = this.settingsService.businessDate;
     if (this.fixedDepositsAccountTemplate.id) {
       this.fixedDepositAccountTermsForm.patchValue({
-        'interestCompoundingPeriodType': this.fixedDepositsAccountTemplate.interestCompoundingPeriodType.id,
-        'interestPostingPeriodType': this.fixedDepositsAccountTemplate.interestPostingPeriodType.id,
-        'interestCalculationType': this.fixedDepositsAccountTemplate.interestCalculationType.id,
-        'interestCalculationDaysInYearType': this.fixedDepositsAccountTemplate.interestCalculationDaysInYearType.id,
-        'depositAmount': this.fixedDepositsAccountTemplate.depositAmount ? this.fixedDepositsAccountTemplate.depositAmount : 0,
-        'depositPeriod': this.fixedDepositsAccountTemplate.depositPeriod,
-        'depositPeriodFrequencyId': this.fixedDepositsAccountTemplate.depositPeriodFrequency.id,
+        interestCompoundingPeriodType: this.fixedDepositsAccountTemplate.interestCompoundingPeriodType.id,
+        interestPostingPeriodType: this.fixedDepositsAccountTemplate.interestPostingPeriodType.id,
+        interestCalculationType: this.fixedDepositsAccountTemplate.interestCalculationType.id,
+        interestCalculationDaysInYearType: this.fixedDepositsAccountTemplate.interestCalculationDaysInYearType.id,
+        depositAmount: this.fixedDepositsAccountTemplate.depositAmount
+          ? this.fixedDepositsAccountTemplate.depositAmount
+          : 0,
+        depositPeriod: this.fixedDepositsAccountTemplate.depositPeriod,
+        depositPeriodFrequencyId: this.fixedDepositsAccountTemplate.depositPeriodFrequency.id
       });
-      console.log(this.fixedDepositAccountTermsForm.value);
     }
   }
 
@@ -74,13 +89,34 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
    */
   createFixedDepositsAccountTermsForm() {
     this.fixedDepositAccountTermsForm = this.formBuilder.group({
-      'interestCompoundingPeriodType': ['', Validators.required],
-      'interestPostingPeriodType': ['', Validators.required],
-      'interestCalculationType': ['', Validators.required],
-      'interestCalculationDaysInYearType': ['', Validators.required],
-      'depositAmount': [0, Validators.required],
-      'depositPeriod': ['', Validators.required],
-      'depositPeriodFrequencyId': ['', Validators.required]
+      interestCompoundingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestPostingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationDaysInYearType: [
+        '',
+        Validators.required
+      ],
+      depositAmount: [
+        0,
+        Validators.required
+      ],
+      depositPeriod: [
+        '',
+        Validators.required
+      ],
+      depositPeriodFrequencyId: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -88,20 +124,23 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
    * Sets all select dropdown options.
    */
   setOptions() {
-    this.interestCompoundingPeriodTypeData = this.fixedDepositsAccountProductTemplate.interestCompoundingPeriodTypeOptions;
+    this.interestCompoundingPeriodTypeData =
+      this.fixedDepositsAccountProductTemplate.interestCompoundingPeriodTypeOptions;
     this.interestPostingPeriodTypeData = this.fixedDepositsAccountProductTemplate.interestPostingPeriodTypeOptions;
     this.interestCalculationTypeData = this.fixedDepositsAccountProductTemplate.interestCalculationTypeOptions;
-    this.interestCalculationDaysInYearTypeData = this.fixedDepositsAccountProductTemplate.interestCalculationDaysInYearTypeOptions;
+    this.interestCalculationDaysInYearTypeData =
+      this.fixedDepositsAccountProductTemplate.interestCalculationDaysInYearTypeOptions;
     this.periodFrequencyTypeData = this.fixedDepositsAccountProductTemplate.periodFrequencyTypeOptions;
     if (!this.fixedDepositsAccountTemplate.id) {
       this.fixedDepositAccountTermsForm.patchValue({
-        'interestCompoundingPeriodType': this.fixedDepositsAccountProductTemplate.interestCompoundingPeriodType.id,
-        'interestPostingPeriodType': this.fixedDepositsAccountProductTemplate.interestPostingPeriodType.id,
-        'interestCalculationType': this.fixedDepositsAccountProductTemplate.interestCalculationType.id,
-        'interestCalculationDaysInYearType': this.fixedDepositsAccountProductTemplate.interestCalculationDaysInYearType.id,
-        'depositAmount': this.fixedDepositsAccountProductTemplate.depositAmount,
-        'depositPeriod': this.fixedDepositsAccountProductTemplate.minDepositTerm,
-        'depositPeriodFrequencyId': this.fixedDepositsAccountProductTemplate.minDepositTermType.id,
+        interestCompoundingPeriodType: this.fixedDepositsAccountProductTemplate.interestCompoundingPeriodType.id,
+        interestPostingPeriodType: this.fixedDepositsAccountProductTemplate.interestPostingPeriodType.id,
+        interestCalculationType: this.fixedDepositsAccountProductTemplate.interestCalculationType.id,
+        interestCalculationDaysInYearType:
+          this.fixedDepositsAccountProductTemplate.interestCalculationDaysInYearType.id,
+        depositAmount: this.fixedDepositsAccountProductTemplate.depositAmount,
+        depositPeriod: this.fixedDepositsAccountProductTemplate.minDepositTerm,
+        depositPeriodFrequencyId: this.fixedDepositsAccountProductTemplate.minDepositTermType.id
       });
     }
   }
@@ -118,5 +157,4 @@ export class FixedDepositAccountTermsStepComponent implements OnInit, OnChanges 
     }
     return fixedDepositAccountTerms;
   }
-
 }

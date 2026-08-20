@@ -12,8 +12,6 @@ import { RunReportComponent } from './run-report/run-report.component';
 import { TableAndSmsComponent } from './run-report/table-and-sms/table-and-sms.component';
 import { ChartComponent } from './run-report/chart/chart.component';
 import { PentahoComponent } from './run-report/pentaho/pentaho.component';
-import { XBRLComponent } from './xbrl/xbrl.component';
-import { XBRLReportComponent } from './xbrl-report/xbrl-report.component';
 
 /**
  * Reports Module
@@ -23,17 +21,13 @@ import { XBRLReportComponent } from './xbrl-report/xbrl-report.component';
 @NgModule({
   imports: [
     SharedModule,
-    ReportsRoutingModule
-  ],
-  declarations: [
+    ReportsRoutingModule,
     ReportsComponent,
     RunReportComponent,
     TableAndSmsComponent,
     ChartComponent,
-    PentahoComponent,
-    XBRLComponent,
-    XBRLReportComponent
+    PentahoComponent
   ],
-  providers: [ DecimalPipe ]
+  providers: [DecimalPipe]
 })
-export class ReportsModule { }
+export class ReportsModule {}

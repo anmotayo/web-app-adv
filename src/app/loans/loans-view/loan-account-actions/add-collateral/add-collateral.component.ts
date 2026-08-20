@@ -1,10 +1,12 @@
 /** Angular Imports. */
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services. */
 import { LoansService } from 'app/loans/loans.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Add Collateral component.
@@ -12,9 +14,17 @@ import { LoansService } from 'app/loans/loans.service';
 @Component({
   selector: 'mifosx-add-collateral',
   templateUrl: './add-collateral.component.html',
-  styleUrls: ['./add-collateral.component.scss']
+  styleUrls: ['./add-collateral.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class AddCollateralComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private loanService = inject(LoansService);
 
   @Input() dataObject: any;
 
@@ -22,18 +32,6 @@ export class AddCollateralComponent implements OnInit {
   collateralForm: UntypedFormGroup;
   /** Loan Id. */
   loanId: string;
-
-  /**
-   * Retrieve data from `Resolver`.
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {Router} router Router.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {LoansService} LoansService loans service.
-   */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private router: Router,
-              private route: ActivatedRoute,
-              private loanService: LoansService ) { }
 
   ngOnInit() {
     this.createAddCollateralForm();
@@ -44,9 +42,15 @@ export class AddCollateralComponent implements OnInit {
    */
   createAddCollateralForm() {
     this.collateralForm = this.formBuilder.group({
-      'collateralTypeId': ['', Validators.required],
-      'value': ['', Validators.required],
-      'description': ['']
+      collateralTypeId: [
+        '',
+        Validators.required
+      ],
+      value: [
+        '',
+        Validators.required
+      ],
+      description: ['']
     });
   }
 
@@ -56,7 +60,7 @@ export class AddCollateralComponent implements OnInit {
   submit() {
     const collateralTypeId = this.collateralForm.value.collateralTypeId;
     this.collateralForm.patchValue({
-      'collateralTypeId': collateralTypeId
+      collateralTypeId: collateralTypeId
     });
     const loanId = this.route.snapshot.params['loanId'];
     const collateralForm = this.collateralForm.value;
@@ -65,5 +69,4 @@ export class AddCollateralComponent implements OnInit {
       this.router.navigate(['../../loan-collateral'], { relativeTo: this.route });
     });
   }
-
 }

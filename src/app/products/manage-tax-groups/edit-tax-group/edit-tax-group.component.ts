@@ -1,8 +1,8 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
@@ -16,6 +16,24 @@ import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.componen
 import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicker-base';
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FindPipe } from '../../../pipes/find.pipe';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Tax Group component.
@@ -23,9 +41,35 @@ import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
 @Component({
   selector: 'mifosx-edit-tax-group',
   templateUrl: './edit-tax-group.component.html',
-  styleUrls: ['./edit-tax-group.component.scss']
+  styleUrls: ['./edit-tax-group.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FindPipe,
+    DateFormatPipe
+  ]
 })
 export class EditTaxGroupComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
 
   /** Minimum start date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -41,7 +85,11 @@ export class EditTaxGroupComponent implements OnInit {
   taxComponentOptions: any;
 
   /** Tax Component Displayed Columns */
-  displayedColumns: string[] = ['name', 'startDate', 'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'startDate',
+    'actions'
+  ];
 
   /**
    * Retrieves the tax Group template data from `resolve`.
@@ -54,14 +102,7 @@ export class EditTaxGroupComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    * @param {TranslateService} translateService translate Service.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private productsService: ProductsService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              public dialog: MatDialog,
-              private settingsService: SettingsService,
-              private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { taxGroup: any }) => {
       this.taxGroupData = data.taxGroup;
       this.taxComponentOptions = this.taxGroupData.taxComponents;
@@ -79,7 +120,10 @@ export class EditTaxGroupComponent implements OnInit {
    */
   createTaxGroupForm() {
     this.taxGroupForm = this.formBuilder.group({
-      'name': [this.taxGroupData.name, Validators.required]
+      name: [
+        this.taxGroupData.name,
+        Validators.required
+      ]
     });
   }
 
@@ -141,13 +185,15 @@ export class EditTaxGroupComponent implements OnInit {
       })
     ];
     if (!taxComponent.isNew) {
-      formfields.push(new DatepickerBase({
-        controlName: 'endDate',
-        label: 'End Date',
-        minDate: this.minDate,
-        maxDate: this.maxDate,
-        order: 3
-      }));
+      formfields.push(
+        new DatepickerBase({
+          controlName: 'endDate',
+          label: 'End Date',
+          minDate: this.minDate,
+          maxDate: this.maxDate,
+          order: 3
+        })
+      );
     }
     const data = {
       title: 'Edit Tax Component',
@@ -220,5 +266,4 @@ export class EditTaxGroupComponent implements OnInit {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

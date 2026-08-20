@@ -1,12 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { LoansService } from '../../../loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Add Loan Charge component.
@@ -14,9 +21,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-add-loan-charge',
   templateUrl: './add-loan-charge.component.html',
-  styleUrls: ['./add-loan-charge.component.scss']
+  styleUrls: ['./add-loan-charge.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AddLoanChargeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private loansService = inject(LoansService);
+  private settingsService = inject(SettingsService);
 
   /** Minimum Due Date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -51,12 +67,7 @@ export class AddLoanChargeComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private loansService: LoansService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { actionButtonData: any }) => {
       this.loanChargeOptions = data.actionButtonData.chargeOptions;
     });
@@ -69,8 +80,8 @@ export class AddLoanChargeComponent implements OnInit {
   ngOnInit() {
     this.maxDate = this.settingsService.maxFutureDate;
     this.createLoanChargeForm();
-    this.loanChargeForm.controls.chargeId.valueChanges.subscribe(chargeId => {
-      const chargeDetails = this.loanChargeOptions.find(option => {
+    this.loanChargeForm.controls.chargeId.valueChanges.subscribe((chargeId) => {
+      const chargeDetails = this.loanChargeOptions.find((option) => {
         return option.id === chargeId;
       });
       if (chargeDetails.chargeTimeType.id === 2) {
@@ -79,9 +90,9 @@ export class AddLoanChargeComponent implements OnInit {
         this.loanChargeForm.removeControl('dueDate');
       }
       this.loanChargeForm.patchValue({
-        'amount': chargeDetails.amount,
-        'chargeCalculation': chargeDetails.chargeCalculationType.value,
-        'chargeTime': chargeDetails.chargeTimeType.value
+        amount: chargeDetails.amount,
+        chargeCalculation: chargeDetails.chargeCalculationType.value,
+        chargeTime: chargeDetails.chargeTimeType.value
       });
     });
   }
@@ -91,10 +102,16 @@ export class AddLoanChargeComponent implements OnInit {
    */
   createLoanChargeForm() {
     this.loanChargeForm = this.formBuilder.group({
-      'chargeId': ['', Validators.required],
-      'amount': ['', Validators.required],
-      'chargeCalculation': [{ value: '', disabled: true }],
-      'chargeTime': [{ value: '', disabled: true }]
+      chargeId: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ],
+      chargeCalculation: [{ value: '', disabled: true }],
+      chargeTime: [{ value: '', disabled: true }]
     });
   }
 
@@ -111,7 +128,7 @@ export class AddLoanChargeComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.loansService.createLoanCharge(this.loanId, 'charges', data).subscribe(res => {
+    this.loansService.createLoanCharge(this.loanId, 'charges', data).subscribe((res) => {
       this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }

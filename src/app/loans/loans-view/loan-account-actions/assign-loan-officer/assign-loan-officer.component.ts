@@ -1,18 +1,28 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LoansService } from 'app/loans/loans.service';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-assign-loan-officer',
   templateUrl: './assign-loan-officer.component.html',
-  styleUrls: ['./assign-loan-officer.component.scss']
+  styleUrls: ['./assign-loan-officer.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AssignLoanOfficerComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** Loan Id */
@@ -32,14 +42,9 @@ export class AssignLoanOfficerComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+  }
 
   /**
    * Creates the assign officer form.
@@ -55,8 +60,14 @@ export class AssignLoanOfficerComponent implements OnInit {
    */
   createassignOfficerForm() {
     this.assignOfficerForm = this.formBuilder.group({
-      'toLoanOfficerId': ['', Validators.required],
-      'assignmentDate': [new Date(), Validators.required]
+      toLoanOfficerId: [
+        '',
+        Validators.required
+      ],
+      assignmentDate: [
+        new Date(),
+        Validators.required
+      ]
     });
   }
 
@@ -74,10 +85,8 @@ export class AssignLoanOfficerComponent implements OnInit {
       locale
     };
     data.fromLoanOfficerId = this.dataObject.loanOfficerId || '';
-    this.loanService.loanActionButtons(this.loanId, 'assignLoanOfficer', data)
-      .subscribe((response: any) => {
-        this.router.navigate([`../../general`], { relativeTo: this.route });
+    this.loanService.loanActionButtons(this.loanId, 'assignLoanOfficer', data).subscribe((response: any) => {
+      this.router.navigate([`../../general`], { relativeTo: this.route });
     });
   }
-
 }

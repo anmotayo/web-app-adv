@@ -1,10 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { OrganizationService } from 'app/organization/organization.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Payment Type component.
@@ -12,9 +15,18 @@ import { OrganizationService } from 'app/organization/organization.service';
 @Component({
   selector: 'mifosx-edit-payment-type',
   templateUrl: './edit-payment-type.component.html',
-  styleUrls: ['./edit-payment-type.component.scss']
+  styleUrls: ['./edit-payment-type.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize,
+    MatCheckbox
+  ]
 })
 export class EditPaymentTypeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private organizationService = inject(OrganizationService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   /** Payment Type form. */
   paymentTypeForm: UntypedFormGroup;
@@ -28,11 +40,8 @@ export class EditPaymentTypeComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private organizationService: OrganizationService,
-              private router: Router,
-              private route: ActivatedRoute) {
-    this.route.data.subscribe(( data: { paymentType: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { paymentType: any }) => {
       this.paymentTypeData = data.paymentType;
     });
   }
@@ -49,10 +58,19 @@ export class EditPaymentTypeComponent implements OnInit {
    */
   createPaymentTypeForm() {
     this.paymentTypeForm = this.formBuilder.group({
-      'name': [this.paymentTypeData.name, Validators.required],
-      'description': [this.paymentTypeData.description],
-      'isCashPayment': [this.paymentTypeData.isCashPayment],
-      'position': [this.paymentTypeData.position, Validators.required],
+      name: [
+        this.paymentTypeData.name,
+        Validators.required
+      ],
+      description: [this.paymentTypeData.description],
+      isCashPayment: [this.paymentTypeData.isCashPayment],
+      position: [
+        this.paymentTypeData.position,
+        [
+          Validators.required,
+          Validators.min(1)
+        ]
+      ]
     });
   }
 
@@ -62,9 +80,8 @@ export class EditPaymentTypeComponent implements OnInit {
    */
   submit() {
     const paymentType = this.paymentTypeForm.value;
-    this.organizationService.updatePaymentType(this.paymentTypeData.id, paymentType).subscribe(response => {
+    this.organizationService.updatePaymentType(this.paymentTypeData.id, paymentType).subscribe((response) => {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

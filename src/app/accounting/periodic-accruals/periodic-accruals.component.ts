@@ -1,21 +1,33 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../accounting.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Periodic accruals component.
  */
 @Component({
   selector: 'mifosx-periodic-accruals',
   templateUrl: './periodic-accruals.component.html',
-  styleUrls: ['./periodic-accruals.component.scss']
+  styleUrls: ['./periodic-accruals.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
 export class PeriodicAccrualsComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum accrue date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -23,30 +35,6 @@ export class PeriodicAccrualsComponent implements OnInit {
   maxDate = new Date();
   /** Periodic accruals form. */
   periodicAccrualsForm: UntypedFormGroup;
-  /** Entry type filter data. */
-  productTypeOptions = [
-    {
-      name: 'Loans',
-      value: 'loans'
-    },
-    {
-      name: 'Savings',
-      value: 'savings'
-    }
-  ];
-  /**
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {AccountingService} accountingService Accounting Service.
-   * @param {SettingsService} settingsService Settings Service.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {Router} router Router for navigation.
-   */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private accountingService: AccountingService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router) { }
 
   /**
    * Creates periodic accruals form.
@@ -61,8 +49,10 @@ export class PeriodicAccrualsComponent implements OnInit {
    */
   createPeriodicAccrualsForm() {
     this.periodicAccrualsForm = this.formBuilder.group({
-      'tillDate': ['', Validators.required],
-      'productType': ['loans', Validators.required]
+      tillDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -72,17 +62,14 @@ export class PeriodicAccrualsComponent implements OnInit {
    */
   submit() {
     const periodicAccruals = this.periodicAccrualsForm.value;
-    const productType = periodicAccruals['productType'];
-    delete periodicAccruals['productType'];
     // TODO: Update once language and date settings are setup
     periodicAccruals.locale = this.settingsService.language.code;
     periodicAccruals.dateFormat = this.settingsService.dateFormat;
     if (periodicAccruals.tillDate instanceof Date) {
       periodicAccruals.tillDate = this.dateUtils.formatDate(periodicAccruals.tillDate, this.settingsService.dateFormat);
     }
-    this.accountingService.executePeriodicAccrualsForProduct(productType, periodicAccruals).subscribe(() => {
+    this.accountingService.executePeriodicAccruals(periodicAccruals).subscribe(() => {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

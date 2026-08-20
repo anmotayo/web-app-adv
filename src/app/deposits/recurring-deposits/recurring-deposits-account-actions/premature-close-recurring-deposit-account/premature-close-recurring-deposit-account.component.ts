@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { RecurringDepositsService } from '../../recurring-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Premature Close Recurring Deposits Account Component
@@ -15,9 +16,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-premature-close-recurring-deposit-account',
   templateUrl: './premature-close-recurring-deposit-account.component.html',
-  styleUrls: ['./premature-close-recurring-deposit-account.component.scss']
+  styleUrls: ['./premature-close-recurring-deposit-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class PrematureCloseRecurringDepositAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private recurringDepositsService = inject(RecurringDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -36,12 +46,7 @@ export class PrematureCloseRecurringDepositAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private recurringDepositsService: RecurringDepositsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService, ) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['recurringDepositAccountId'];
   }
 
@@ -58,7 +63,10 @@ export class PrematureCloseRecurringDepositAccountComponent implements OnInit {
    */
   createprematureCloseRecurringDepositsAccountForm() {
     this.prematureCloseRecurringDepositsAccountForm = this.formBuilder.group({
-      'closedOnDate': ['', Validators.required]
+      closedOnDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -72,16 +80,20 @@ export class PrematureCloseRecurringDepositAccountComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const prevClosedOnDate: Date = this.prematureCloseRecurringDepositsAccountForm.value.closedOnDate;
     if (prematureCloseRecurringDepositsAccountFormData.closedOnDate instanceof Date) {
-      prematureCloseRecurringDepositsAccountFormData.closedOnDate = this.dateUtils.formatDate(prevClosedOnDate, dateFormat);
+      prematureCloseRecurringDepositsAccountFormData.closedOnDate = this.dateUtils.formatDate(
+        prevClosedOnDate,
+        dateFormat
+      );
     }
     const data = {
       ...prematureCloseRecurringDepositsAccountFormData,
       dateFormat,
       locale
     };
-    this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, 'prematureClose', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.recurringDepositsService
+      .executeRecurringDepositsAccountCommand(this.accountId, 'prematureClose', data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

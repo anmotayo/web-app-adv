@@ -1,20 +1,31 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Currency } from 'app/shared/models/general.model';
+import { CurrencyPipe } from '@angular/common';
+import { ExternalIdentifierComponent } from '../../../../shared/external-identifier/external-identifier.component';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-general-tab',
   templateUrl: './general-tab.component.html',
-  styleUrls: ['./general-tab.component.scss']
+  styleUrls: ['./general-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    ExternalIdentifierComponent,
+    CurrencyPipe,
+    DateFormatPipe
+  ]
 })
-export class GeneralTabComponent implements OnInit {
+export class GeneralTabComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   fixedDepositsAccountData: any;
   entityType: string;
   currency: Currency;
 
-  constructor(private route: ActivatedRoute,
-    private router: Router) {
+  constructor() {
     this.route.parent.data.subscribe((data: { fixedDepositsAccountData: any }) => {
       this.fixedDepositsAccountData = data.fixedDepositsAccountData;
       this.currency = this.fixedDepositsAccountData.currency;
@@ -27,8 +38,4 @@ export class GeneralTabComponent implements OnInit {
       this.entityType = 'Center';
     }
   }
-
-  ngOnInit(): void {
-  }
-
 }

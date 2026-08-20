@@ -1,13 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ProductsService } from '../../products.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
 import { TranslateService } from '@ngx-translate/core';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit tax component.
@@ -15,9 +16,19 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-edit-tax-component',
   templateUrl: './edit-tax-component.component.html',
-  styleUrls: ['./edit-tax-component.component.scss']
+  styleUrls: ['./edit-tax-component.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditTaxComponentComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -37,13 +48,7 @@ export class EditTaxComponentComponent implements OnInit {
    * @param {Dates} dateUtils Date Utils to format date.
    * @param {SettingsService} settingsService Settings Service.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private productsService: ProductsService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private settingsService: SettingsService,
-              private translateService: TranslateService) {
+  constructor() {
     this.route.data.subscribe((data: { taxComponent: any }) => {
       this.taxComponentData = data.taxComponent;
     });
@@ -62,12 +67,33 @@ export class EditTaxComponentComponent implements OnInit {
    * Edit tax component form.
    */
   editTaxComponent() {
+    const creditAccountTypeValue = this.taxComponentData?.creditAccountType?.value
+      ? this.translateService.instant(`labels.inputs.accounting.${this.taxComponentData.creditAccountType.value}`)
+      : null;
+
+    const creditAccountName = this.taxComponentData?.creditAccount?.name ?? null;
+
     this.taxComponentForm = this.formBuilder.group({
-      'name': [this.taxComponentData.name, [Validators.required]],
-      'percentage': [this.taxComponentData.percentage, [Validators.required, Validators.pattern('^(0*[1-9][0-9]*(\\.[0-9]+)?|0+\\.[0-9]*[1-9][0-9]*)$'), Validators.max(100)]],
-      'startDate': [this.taxComponentData.startDate && new Date(this.taxComponentData.startDate)],
-      'creditAccountType': [{ value: this.translateService.instant('labels.inputs.accounting.' + this.taxComponentData.creditAccountType.value), disabled: true }],
-      'creditAccount': [{ value: this.taxComponentData.creditAccount.name, disabled: true }]
+      name: [
+        this.taxComponentData.name,
+        [Validators.required]
+      ],
+      percentage: [
+        this.taxComponentData.percentage,
+        [
+          Validators.required,
+          Validators.pattern('^(0*[1-9][0-9]*(\\.[0-9]+)?|0+\\.[0-9]*[1-9][0-9]*)$'),
+          Validators.max(100)
+        ]
+      ],
+      startDate: [this.taxComponentData.startDate && new Date(this.taxComponentData.startDate)],
+      creditAccountType: [
+        {
+          value: creditAccountTypeValue,
+          disabled: true
+        }
+      ],
+      creditAccount: [{ value: creditAccountName, disabled: true }]
     });
   }
 
@@ -89,8 +115,13 @@ export class EditTaxComponentComponent implements OnInit {
       locale
     };
     this.productsService.updateTaxComponent(this.taxComponentData.id, data).subscribe((response: any) => {
-      this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

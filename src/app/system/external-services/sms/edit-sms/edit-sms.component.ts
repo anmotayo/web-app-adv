@@ -1,10 +1,11 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SystemService } from 'app/system/system.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit SMS Configuration Component.
@@ -12,9 +13,16 @@ import { SystemService } from 'app/system/system.service';
 @Component({
   selector: 'mifosx-edit-sms',
   templateUrl: './edit-sms.component.html',
-  styleUrls: ['./edit-sms.component.scss']
+  styleUrls: ['./edit-sms.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditSMSComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** SMS Configuration data */
   smsConfigurationData: any;
@@ -28,10 +36,7 @@ export class EditSMSComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { smsConfiguration: any }) => {
       this.smsConfigurationData = data.smsConfiguration;
     });
@@ -49,10 +54,22 @@ export class EditSMSComponent implements OnInit {
    */
   setSMSConfigurationForm() {
     this.smsConfigurationForm = this.formBuilder.group({
-      'host_name': [this.smsConfigurationData[0].value, Validators.required],
-      'port_number': [this.smsConfigurationData[1].value, Validators.required],
-      'end_point': [this.smsConfigurationData[2].value, Validators.required],
-      'tenant_app_key': [this.smsConfigurationData[3].value, Validators.required]
+      host_name: [
+        this.smsConfigurationData[0].value,
+        Validators.required
+      ],
+      port_number: [
+        this.smsConfigurationData[1].value,
+        Validators.required
+      ],
+      end_point: [
+        this.smsConfigurationData[2].value,
+        Validators.required
+      ],
+      tenant_app_key: [
+        this.smsConfigurationData[3].value,
+        Validators.required
+      ]
     });
   }
 
@@ -67,5 +84,4 @@ export class EditSMSComponent implements OnInit {
         this.router.navigate(['../'], { relativeTo: this.route });
       });
   }
-
 }

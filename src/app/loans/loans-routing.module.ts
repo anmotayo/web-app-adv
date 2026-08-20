@@ -28,6 +28,7 @@ import { ViewRecieptComponent } from './loans-view/transactions/view-reciept/vie
 import { ExportTransactionsComponent } from './loans-view/transactions/export-transactions/export-transactions.component';
 import { GlimAccountComponent } from './glim-account/glim-account.component';
 import { CreateGlimAccountComponent } from './glim-account/create-glim-account/create-glim-account.component';
+import { LoanBuyDownFeesTabComponent } from './loans-view/loan-buy-down-fees-tab/loan-buy-down-fees-tab.component';
 
 /** Custom Resolvers */
 import { LoanDetailsResolver } from './common-resolvers/loan-details.resolver';
@@ -60,6 +61,11 @@ import { ExternalAssetOwnerActiveTransferResolver } from './common-resolvers/ext
 import { LoanCollateralsResolver } from './common-resolvers/loan-collaterals.resolver';
 import { LoanDelinquencyDataResolver } from './common-resolvers/loan-delinquency-data.resolver';
 import { LoanDelinquencyActionsResolver } from './common-resolvers/loan-delinquency-actions.resolver';
+import { LoanTermVariationsTabComponent } from './loans-view/loan-term-variations-tab/loan-term-variations-tab.component';
+import { LoanTermVariationsResolver } from './common-resolvers/loan-term-variations.resolver';
+import { LoanDeferredIncomeTabComponent } from './loans-view/loan-deferred-income-tab/loan-deferred-income-tab.component';
+import { LoanDeferredIncomeDataResolver } from './common-resolvers/loan-deferred-income-data.resolver';
+import { LoanBuyDownFeesDataResolver } from './common-resolvers/loan-buy-down-fees-data.resolver';
 
 /** Loans Route. */
 const routes: Routes = [
@@ -97,7 +103,7 @@ const routes: Routes = [
             resolve: {
               loanDetailsData: LoanDetailsResolver,
               loanDatatables: LoanDatatablesResolver
-            },
+            }
           },
           {
             path: 'accountdetail',
@@ -107,12 +113,12 @@ const routes: Routes = [
           {
             path: 'original-schedule',
             component: OriginalScheduleTabComponent,
-            data: { title: 'Original Schedule', breadcrumb: 'Original Schedule', routeParamBreadcrumb: false },
+            data: { title: 'Original Schedule', breadcrumb: 'Original Schedule', routeParamBreadcrumb: false }
           },
           {
             path: 'repayment-schedule',
             component: RepaymentScheduleTabComponent,
-            data: { title: 'Repayment Schedule', breadcrumb: 'Repayment Schedule', routeParamBreadcrumb: false },
+            data: { title: 'Repayment Schedule', breadcrumb: 'Repayment Schedule', routeParamBreadcrumb: false }
           },
           {
             path: 'transactions',
@@ -121,11 +127,23 @@ const routes: Routes = [
               {
                 path: '',
                 component: TransactionsTabComponent
-
               },
               {
                 path: 'export',
                 component: ExportTransactionsComponent
+              }
+            ]
+          },
+          {
+            path: 'deferred-income',
+            data: { title: 'Loans Deferred Income', breadcrumb: 'Deferred income', routeParamBreadcrumb: false },
+            resolve: {
+              loanDeferredIncomeData: LoanDeferredIncomeDataResolver
+            },
+            children: [
+              {
+                path: '',
+                component: LoanDeferredIncomeTabComponent
               }
             ]
           },
@@ -141,7 +159,7 @@ const routes: Routes = [
               {
                 path: '',
                 component: LoanDelinquencyTagsTabComponent
-              },
+              }
             ]
           },
           {
@@ -160,15 +178,28 @@ const routes: Routes = [
           {
             path: 'loan-collateral',
             component: LoanCollateralTabComponent,
-            data: { title: 'Loan Collateral Details', breadcrumb: 'Loan Collateral Details', routeParamBreadcrumb: false },
+            data: {
+              title: 'Loan Collateral Details',
+              breadcrumb: 'Loan Collateral Details',
+              routeParamBreadcrumb: false
+            },
             resolve: {
               loanCollaterals: LoanCollateralsResolver
             }
           },
           {
+            path: 'term-variations',
+            component: LoanTermVariationsTabComponent,
+            data: { title: 'Loan Term Variations', breadcrumb: 'Loan Term Variations', routeParamBreadcrumb: false },
+            resolve: {
+              loanDetailsData: LoanDetailsResolver,
+              interestPausesData: LoanTermVariationsResolver
+            }
+          },
+          {
             path: 'loan-tranche-details',
             component: LoanTrancheDetailsComponent,
-            data: { title: 'Loan Tranche Details', breadcrumb: 'Loan Tranche Details', routeParamBreadcrumb: false },
+            data: { title: 'Loan Tranche Details', breadcrumb: 'Loan Tranche Details', routeParamBreadcrumb: false }
           },
           {
             path: 'overdue-charges',
@@ -178,12 +209,16 @@ const routes: Routes = [
           {
             path: 'floating-interest-rates',
             component: FloatingInterestRatesComponent,
-            data: { title: 'Floating Interest Rates', breadcrumb: 'Floating Interest Rates', routeParamBreadcrumb: false },
+            data: {
+              title: 'Floating Interest Rates',
+              breadcrumb: 'Floating Interest Rates',
+              routeParamBreadcrumb: false
+            }
           },
           {
             path: 'charges',
             data: { title: 'Loans Account Charges', breadcrumb: 'Charges', routeParamBreadcrumb: false },
-            component: ChargesTabComponent,
+            component: ChargesTabComponent
           },
           {
             path: 'loan-documents',
@@ -191,7 +226,7 @@ const routes: Routes = [
             data: { title: 'Loan Documents', breadcrumb: 'Loan Documents', routeParamBreadcrumb: false },
             resolve: {
               loanDocuments: LoanDocumentsResolver
-            },
+            }
           },
           {
             path: 'notes',
@@ -199,7 +234,7 @@ const routes: Routes = [
             data: { title: 'Notes', breadcrumb: 'Notes', routeParamBreadcrumb: false },
             resolve: {
               loanNotes: LoanNotesResolver
-            },
+            }
           },
           {
             path: 'standing-instruction',
@@ -217,16 +252,26 @@ const routes: Routes = [
           },
           {
             path: 'datatables',
-            children: [{
-              path: ':datatableName',
-              component: DatatableTabComponent,
-              data: { title: 'Data Table View', routeParamBreadcrumb: 'datatableName' },
-              resolve: {
-                loanDatatable: LoanDatatableResolver
+            children: [
+              {
+                path: ':datatableName',
+                component: DatatableTabComponent,
+                data: { title: 'Data Table View', routeParamBreadcrumb: 'datatableName' },
+                resolve: {
+                  loanDatatable: LoanDatatableResolver
+                }
               }
-            }]
+            ]
           },
-        ],
+          {
+            path: 'buy-down-fees',
+            component: LoanBuyDownFeesTabComponent,
+            data: { title: 'Buy Down Fees', breadcrumb: 'Buy Down Fees', routeParamBreadcrumb: false },
+            resolve: {
+              loanBuyDownFeesData: LoanBuyDownFeesDataResolver
+            }
+          }
+        ]
       },
       {
         path: ':loanId/transactions/:id',
@@ -275,7 +320,8 @@ const routes: Routes = [
         children: [
           {
             path: '',
-            redirectTo: '../charges', pathMatch: 'prefix'
+            redirectTo: '../charges',
+            pathMatch: 'prefix'
           },
           {
             path: ':id',
@@ -302,13 +348,13 @@ const routes: Routes = [
         component: LoanAccountActionsComponent,
         data: { title: 'Loan Account Actions', breadcrumb: 'action', routeParamBreadcrumb: 'action' },
         resolve: {
-          actionButtonData: LoanActionButtonResolver,
-          loanDetailsData: LoanDetailsResolver
+          actionButtonData: LoanActionButtonResolver
         }
       },
       {
         path: ':loanId/transfer-funds',
-        loadChildren: () => import('../account-transfers/account-transfers.module').then(m => m.AccountTransfersModule)
+        loadChildren: () =>
+          import('../account-transfers/account-transfers.module').then((m) => m.AccountTransfersModule)
       },
       {
         path: 'edit-loans-account',
@@ -317,21 +363,21 @@ const routes: Routes = [
         resolve: {
           loansAccountAndTemplate: LoansAccountAndTemplateResolver
         }
-      },
+      }
     ]
   },
   {
     path: 'glim-account',
+    data: { title: 'Loans', breadcrumb: 'Loans', routeParamBreadcrumb: false },
     children: [
       {
         path: 'create',
-        data: { title: 'Create GLIM Application', breadcrumb: 'Create GLIM Application' },
+        data: { title: 'Create GLIM Application', breadcrumb: 'Create GLIM Application', routeParamBreadcrumb: false },
         component: CreateGlimAccountComponent,
         resolve: {
           loansAccountTemplate: GLIMLoanTemplateResolver,
-          gsimData: GSIMAccountsResolver,
-          groupsData: GroupViewResolver,
-        },
+          groupsData: GroupViewResolver
+        }
       },
       {
         path: ':glimId',
@@ -340,7 +386,7 @@ const routes: Routes = [
         resolve: {
           glimData: GLIMViewResolver,
           groupsData: GroupAccountsResolver
-        },
+        }
       }
     ]
   }
@@ -369,8 +415,10 @@ const routes: Routes = [
     GSIMAccountsResolver,
     GLIMLoanTemplateResolver,
     ExternalAssetOwnerResolver,
-    LoanDelinquencyDataResolver
+    LoanDelinquencyDataResolver,
+    LoanTermVariationsResolver,
+    LoanDeferredIncomeDataResolver,
+    LoanBuyDownFeesDataResolver
   ]
 })
-
-export class LoansRoutingModule { }
+export class LoansRoutingModule {}

@@ -1,9 +1,20 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { DecimalPipe } from '@angular/common';
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
-import { MatCheckboxChange } from '@angular/material/checkbox';
+import { DecimalPipe, NgClass } from '@angular/common';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { MatCheckboxChange as MatCheckboxChange, MatCheckbox } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTable } from '@angular/material/table';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { Datatables } from 'app/core/utils/datatables';
 import { Dates } from 'app/core/utils/dates';
@@ -15,13 +26,40 @@ import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.componen
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SystemService } from 'app/system/system.service';
 import * as _ from 'lodash';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-datatable-multi-row',
   templateUrl: './datatable-multi-row.component.html',
-  styleUrls: ['./datatable-multi-row.component.scss']
+  styleUrls: ['./datatable-multi-row.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatCheckbox,
+    NgClass,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow
+  ]
 })
 export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges {
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private systemService = inject(SystemService);
+  private settingsService = inject(SettingsService);
+  private dialog = inject(MatDialog);
+  private datatables = inject(Datatables);
+  private dateFormat = inject(DateFormatPipe);
+  private dateTimeFormat = inject(DatetimeFormatPipe);
+  private numberFormat = inject(DecimalPipe);
 
   SELECT_NAME_FIELD = 'select';
   /** Data Object */
@@ -45,25 +83,6 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
 
   /** Data Table Reference */
   @ViewChild('dataTable') dataTableRef: MatTable<Element>;
-
-  /**
-   * Fetches center Id from parent route params.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {Dates} dateUtils Date Utils.
-   * @param {SystemService} systemService system Service.
-   * @param {SettingsService} settingsService Settings Service.
-   * @param {MatDialog} dialog Mat Dialog.
-   * @param {Datatables} datatables Datatable utils
-   */
-  constructor(private route: ActivatedRoute,
-              private dateUtils: Dates,
-              private systemService: SystemService,
-              private settingsService: SettingsService,
-              private dialog: MatDialog,
-              private datatables: Datatables,
-              private dateFormat: DateFormatPipe,
-              private dateTimeFormat: DatetimeFormatPipe,
-              private numberFormat: DecimalPipe) { }
 
   /**
    * Fetches data table name from route params.
@@ -117,7 +136,7 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
       }
       this.isSelected = false;
       this.isLoading = false;
-     });
+    });
   }
 
   /**
@@ -127,7 +146,11 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
     let dataTableEntryObject: any = { locale: this.settingsService.language.code };
     const dateTransformColumns: string[] = [];
     const columns = this.datatables.filterSystemColumns(this.dataObject.columnHeaders);
-    const formfields: FormfieldBase[] = this.datatables.getFormfields(columns, dateTransformColumns, dataTableEntryObject);
+    const formfields: FormfieldBase[] = this.datatables.getFormfields(
+      columns,
+      dateTransformColumns,
+      dataTableEntryObject
+    );
     const data = {
       title: 'Add ' + this.datatableName + ' for ' + this.entityType,
       formfields: formfields
@@ -136,12 +159,17 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
     addDialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         dateTransformColumns.forEach((column) => {
-          response.data.value[column] = this.dateUtils.formatDate(response.data.value[column], dataTableEntryObject.dateFormat);
+          response.data.value[column] = this.dateUtils.formatDate(
+            response.data.value[column],
+            dataTableEntryObject.dateFormat
+          );
         });
         dataTableEntryObject = { ...response.data.value, ...dataTableEntryObject };
-        this.systemService.addEntityDatatableEntry(this.entityId, this.datatableName, dataTableEntryObject).subscribe((result: any) => {
-          this.getData();
-        });
+        this.systemService
+          .addEntityDatatableEntry(this.entityId, this.datatableName, dataTableEntryObject)
+          .subscribe((result: any) => {
+            this.getData();
+          });
       }
     });
   }
@@ -179,14 +207,14 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
                 this.datatableData.splice(index, 1);
                 this.dataTableRef.renderRows();
                 this.selection = new SelectionModel(true, []);
-                this.isSelected = (this.selection.selected.length > 0);
+                this.isSelected = this.selection.selected.length > 0;
               }
             });
           });
         });
       } else {
         this.selection = new SelectionModel(true, []);
-        this.isSelected = (this.selection.selected.length > 0);
+        this.isSelected = this.selection.selected.length > 0;
       }
     });
   }
@@ -207,6 +235,11 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
             if (typeof value === 'number') {
               value = this.numberFormat.transform(value);
             }
+          } else if (columnDisplayType === 'CODELOOKUP') {
+            if (columnHeader.columnValues && value !== null && value !== undefined) {
+              const codeValue = columnHeader.columnValues.find((cv: any) => cv.id === value);
+              value = codeValue ? codeValue.value : value;
+            }
           }
           return true;
         }
@@ -219,11 +252,11 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected;
-    return (this.datatableData.length === numSelected);
+    return this.datatableData.length === numSelected;
   }
 
   isAnySelected() {
-    return (this.selection.selected && this.selection.selected.length > 0);
+    return this.selection.selected && this.selection.selected.length > 0;
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
@@ -233,12 +266,12 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
     } else {
       this.selection = new SelectionModel(true, []);
     }
-    this.isSelected = (this.selection.selected.length > 0);
+    this.isSelected = this.selection.selected.length > 0;
   }
 
   itemToggle(data: any): void {
     this.selection.toggle(data);
-    this.isSelected = (this.selection.selected.length > 0);
+    this.isSelected = this.selection.selected.length > 0;
   }
 
   /** The label for the checkbox on the passed row */
@@ -259,5 +292,4 @@ export class DatatableMultiRowComponent implements OnInit, OnDestroy, OnChanges 
   getInputName(attr: string): string {
     return this.datatables.getName(attr);
   }
-
 }

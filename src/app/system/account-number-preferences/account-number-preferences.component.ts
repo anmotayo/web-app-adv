@@ -1,9 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Account Number Preferences Component.
@@ -11,9 +25,27 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-account-number-preferences',
   templateUrl: './account-number-preferences.component.html',
-  styleUrls: ['./account-number-preferences.component.scss']
+  styleUrls: ['./account-number-preferences.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class AccountNumberPreferencesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** Account Number Preferences data. */
   accountNumberPreferencesData: any;
@@ -31,7 +63,7 @@ export class AccountNumberPreferencesComponent implements OnInit {
    * Retrieves the account number preferences data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { accountNumberPreferences: any }) => {
       this.accountNumberPreferencesData = data.accountNumberPreferences;
     });
@@ -54,7 +86,8 @@ export class AccountNumberPreferencesComponent implements OnInit {
       return accountNumberPreference.accountType.value;
     };
     this.dataSource.sort = this.sort;
-    this.dataSource.filterPredicate = (data: any, filter: string) => data.accountType.value.toLowerCase().indexOf(filter) !== -1;
+    this.dataSource.filterPredicate = (data: any, filter: string) =>
+      data.accountType.value.toLowerCase().indexOf(filter) !== -1;
   }
 
   /**

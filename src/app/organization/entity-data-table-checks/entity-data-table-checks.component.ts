@@ -1,16 +1,31 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { OrganizationService } from '../organization.service';
 
 /** Custom Components */
 import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Entity Data Table Checks component.
@@ -18,14 +33,42 @@ import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.
 @Component({
   selector: 'mifosx-entity-data-table-checks',
   templateUrl: './entity-data-table-checks.component.html',
-  styleUrls: ['./entity-data-table-checks.component.scss']
+  styleUrls: ['./entity-data-table-checks.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class EntityDataTableChecksComponent implements OnInit {
+  private organizationService = inject(OrganizationService);
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
 
   /** Entity Data Table Checks data. */
   entityDataTableChecksData: any;
   /** Columns to be displayed in entity data table checks table. */
-  displayedColumns: string[] = ['entity', 'productName', 'datatableName', 'status', 'systemDefined', 'actions'];
+  displayedColumns: string[] = [
+    'entity',
+    'productName',
+    'datatableName',
+    'status',
+    'systemDefined',
+    'actions'
+  ];
   /** Data source for entity data table checks table. */
   dataSource: MatTableDataSource<any>;
   /** Corresponding values for Entity */
@@ -59,10 +102,8 @@ export class EntityDataTableChecksComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private organizationService: OrganizationService,
-              private route: ActivatedRoute,
-              private dialog: MatDialog) {
-    this.route.data.subscribe(( data: { entityDataTableChecks: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { entityDataTableChecks: any }) => {
       this.entityDataTableChecksData = data.entityDataTableChecks.pageItems;
     });
   }
@@ -83,17 +124,18 @@ export class EntityDataTableChecksComponent implements OnInit {
     this.setEntity();
   }
 
-  /**
-   * Sets Entity to its corresponding values
-   */
   setEntity() {
-    for (let i = 0; i < this.dataSource.data.length; i++) {
-      for (let j = 0; j < this.entityValues.length; j++) {
-        if (this.entityValues[j].code === this.dataSource.data[i].entity) {
-          this.dataSource.data[i].entity = this.entityValues[j].value;
-        }
+    const entityMap = new Map<string, string>();
+    this.entityValues.forEach((entity: any) => {
+      entityMap.set(entity.code, entity.value);
+    });
+
+    this.dataSource.data.forEach((item: any) => {
+      const entityValue = entityMap.get(item.entity);
+      if (entityValue) {
+        item.entity = entityValue;
       }
-    }
+    });
   }
 
   /**
@@ -105,8 +147,10 @@ export class EntityDataTableChecksComponent implements OnInit {
     this.dataSource.sort = this.sort;
     this.dataSource.sortingDataAccessor = (item, property) => {
       switch (property) {
-        case 'status': return item.status.value;
-        default: return item[property];
+        case 'status':
+          return item.status.value;
+        default:
+          return item[property];
       }
     };
   }
@@ -121,13 +165,13 @@ export class EntityDataTableChecksComponent implements OnInit {
     });
     deleteEntityDataTableCheckDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.organizationService.deleteEntityDataTableCheck(entityDataTableCheckId)
-          .subscribe(() => {
-            this.entityDataTableChecksData = this.entityDataTableChecksData.filter((entityDataTableChecks: any) => entityDataTableChecks.id !== entityDataTableCheckId);
-            this.dataSource.data = this.entityDataTableChecksData;
-          });
+        this.organizationService.deleteEntityDataTableCheck(entityDataTableCheckId).subscribe(() => {
+          this.entityDataTableChecksData = this.entityDataTableChecksData.filter(
+            (entityDataTableChecks: any) => entityDataTableChecks.id !== entityDataTableCheckId
+          );
+          this.dataSource.data = this.entityDataTableChecksData;
+        });
       }
     });
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { OrganizationService } from 'app/organization/organization.service';
  * Holiday data template resolver.
  */
 @Injectable()
-export class HolidayTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class HolidayTemplateResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the holiday data.
@@ -26,5 +22,4 @@ export class HolidayTemplateResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.organizationService.getHolidayTemplate();
   }
-
 }

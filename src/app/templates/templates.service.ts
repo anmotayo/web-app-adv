@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
@@ -12,11 +12,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class TemplatesService {
-
-  /**
-   * @param {HttpClient} http Http Client to send requests.
-   */
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
 
   /**
    * @returns {Observable<any>} Templates data
@@ -53,7 +49,7 @@ export class TemplatesService {
    * @param templateId Template Id.
    * @returns {Observable<any>}.
    */
-  createTemplate(templateData: any): Observable<any>  {
+  createTemplate(templateData: any): Observable<any> {
     return this.http.post(`/templates`, templateData);
   }
 
@@ -62,7 +58,7 @@ export class TemplatesService {
    * @param templateId Template Id.
    * @returns {Observable<any>}.
    */
-  updateTemplate(templateData: any, templateId: any): Observable<any>  {
+  updateTemplate(templateData: any, templateId: any): Observable<any> {
     return this.http.put(`/templates/${templateId}`, templateData);
   }
 
@@ -73,5 +69,4 @@ export class TemplatesService {
   deleteTemplate(templateId: string): Observable<any> {
     return this.http.delete(`/templates/${templateId}`);
   }
-
 }

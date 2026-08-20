@@ -1,6 +1,15 @@
 /** Angular Imports */
-import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogTitle,
+  MatDialogContent,
+  MatDialogActions,
+  MatDialogClose
+} from '@angular/material/dialog';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Enable dialog component.
@@ -8,18 +17,17 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 @Component({
   selector: 'mifosx-enable-dialog',
   templateUrl: './enable-dialog.component.html',
-  styleUrls: ['./enable-dialog.component.scss']
+  styleUrls: ['./enable-dialog.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDialogTitle,
+    CdkScrollable,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose
+  ]
 })
-export class EnableDialogComponent implements OnInit {
-
-  /**
-   * @param {MatDialogRef} dialogRef Component reference to dialog.
-   * @param {any} data Provides a enableContext.
-   */
-  constructor(public dialogRef: MatDialogRef<EnableDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any) { }
-
-  ngOnInit() {
-  }
-
+export class EnableDialogComponent {
+  dialogRef = inject<MatDialogRef<EnableDialogComponent>>(MatDialogRef);
+  data = inject(MAT_DIALOG_DATA);
 }

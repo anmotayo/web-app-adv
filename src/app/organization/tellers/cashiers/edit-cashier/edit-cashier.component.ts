@@ -1,12 +1,14 @@
 /** Angular Imports. */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services. */
 import { OrganizationService } from 'app/organization/organization.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Cashier component.
@@ -14,9 +16,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-edit-cashier',
   templateUrl: './edit-cashier.component.html',
-  styleUrls: ['./edit-cashier.component.scss']
+  styleUrls: ['./edit-cashier.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class EditCashierComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private organizationService = inject(OrganizationService);
+  private settingsService = inject(SettingsService);
 
   /** Cashier Data. */
   cashierData: any = new Object();
@@ -38,16 +50,13 @@ export class EditCashierComponent implements OnInit {
    * @param {OrganizationService} organizationService Organization Service.
    * @param {SettingsService} settingsService Settings Service.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private organizationService: OrganizationService,
-              private settingsService: SettingsService ) {
-    this.route.data.subscribe((data: { cashier: any, cashierTemplate: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { cashier: any; cashierTemplate: any }) => {
       this.cashierData.data = data.cashier;
       this.cashierData.template = data.cashierTemplate;
-      this.isStaffId = this.cashierData.template.staffOptions.some((element: any) => element.id === this.cashierData.data.staffId);
+      this.isStaffId = this.cashierData.template.staffOptions.some(
+        (element: any) => element.id === this.cashierData.data.staffId
+      );
     });
   }
 
@@ -61,11 +70,20 @@ export class EditCashierComponent implements OnInit {
    */
   setEditChargeForm() {
     this.editCashierForm = this.formBuilder.group({
-      'staffId': [{value: this.cashierData.data.staffId, disabled: true}],
-      'description': [this.cashierData.data.description],
-      'startDate': [this.cashierData.data.startDate && new Date(this.cashierData.data.startDate), Validators.required],
-      'endDate': [this.cashierData.data.endDate && new Date(this.cashierData.data.endDate), Validators.required],
-      'isFullDay': [this.cashierData.data.isFullDay, Validators.required]
+      staffId: [{ value: this.cashierData.data.staffId, disabled: true }],
+      description: [this.cashierData.data.description],
+      startDate: [
+        this.cashierData.data.startDate && new Date(this.cashierData.data.startDate),
+        Validators.required
+      ],
+      endDate: [
+        this.cashierData.data.endDate && new Date(this.cashierData.data.endDate),
+        Validators.required
+      ],
+      isFullDay: [
+        this.cashierData.data.isFullDay,
+        Validators.required
+      ]
     });
   }
 
@@ -90,9 +108,10 @@ export class EditCashierComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.organizationService.updateCashier(this.cashierData.data.tellerId, this.cashierData.data.id, data).subscribe((response: any) => {
-      this.router.navigate(['../'], {relativeTo: this.route});
-    });
+    this.organizationService
+      .updateCashier(this.cashierData.data.tellerId, this.cashierData.data.id, data)
+      .subscribe((response: any) => {
+        this.router.navigate(['../'], { relativeTo: this.route });
+      });
   }
-
 }

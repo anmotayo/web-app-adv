@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from '../../products.service';
  * Share products data resolver.
  */
 @Injectable()
-export class DividendsResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class DividendsResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the share products data.
@@ -27,5 +23,4 @@ export class DividendsResolver implements Resolve<Object> {
     const id = route.paramMap.get('productId');
     return this.productsService.getDividends(id);
   }
-
 }

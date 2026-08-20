@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { AccountingService } from '../accounting.service';
  * Provisioning entries data resolver.
  */
 @Injectable()
-export class ProvisioningEntriesResolver implements Resolve<Object> {
-
-  /**
-   * @param {AccountingService} accountingService Accounting service.
-   */
-  constructor(private accountingService: AccountingService) {}
+export class ProvisioningEntriesResolver {
+  private accountingService = inject(AccountingService);
 
   /**
    * Returns the provisioning entries data.
@@ -26,5 +21,4 @@ export class ProvisioningEntriesResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.accountingService.getProvisioningEntries();
   }
-
 }

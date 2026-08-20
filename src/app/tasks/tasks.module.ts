@@ -23,9 +23,7 @@ import { ViewCheckerInboxComponent } from './view-checker-inbox/view-checker-inb
     SharedModule,
     TasksRoutingModule,
     DirectivesModule,
-    PipesModule
-  ],
-  declarations: [
+    PipesModule,
     CheckerInboxAndTasksComponent,
     CheckerInboxComponent,
     ClientApprovalComponent,
@@ -34,6 +32,6 @@ import { ViewCheckerInboxComponent } from './view-checker-inbox/view-checker-inb
     RescheduleLoanComponent,
     ViewCheckerInboxComponent
   ],
-  providers: [ ]
+  providers: []
 })
-export class TasksModule { }
+export class TasksModule {}

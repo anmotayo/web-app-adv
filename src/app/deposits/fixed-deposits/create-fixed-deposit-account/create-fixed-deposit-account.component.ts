@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /** Custom Services */
@@ -12,6 +12,11 @@ import { FixedDepositAccountTermsStepComponent } from '../fixed-deposit-account-
 import { FixedDepositAccountSettingsStepComponent } from '../fixed-deposit-account-stepper/fixed-deposit-account-settings-step/fixed-deposit-account-settings-step.component';
 import { FixedDepositAccountChargesStepComponent } from '../fixed-deposit-account-stepper/fixed-deposit-account-charges-step/fixed-deposit-account-charges-step.component';
 import { Dates } from 'app/core/utils/dates';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FixedDepositAccountInterestRateChartStepComponent } from '../fixed-deposit-account-stepper/fixed-deposit-account-interest-rate-chart-step/fixed-deposit-account-interest-rate-chart-step.component';
+import { FixedDepositAccountPreviewStepComponent } from '../fixed-deposit-account-stepper/fixed-deposit-account-preview-step/fixed-deposit-account-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Fixed Deposit Account Component
@@ -19,18 +24,41 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-fixed-deposit-account',
   templateUrl: './create-fixed-deposit-account.component.html',
-  styleUrls: ['./create-fixed-deposit-account.component.scss']
+  styleUrls: ['./create-fixed-deposit-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    FixedDepositAccountDetailsStepComponent,
+    FixedDepositAccountTermsStepComponent,
+    FixedDepositAccountSettingsStepComponent,
+    FixedDepositAccountInterestRateChartStepComponent,
+    FixedDepositAccountChargesStepComponent,
+    FixedDepositAccountPreviewStepComponent
+  ]
 })
 export class CreateFixedDepositAccountComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private fixedDepositsService = inject(FixedDepositsService);
+  private settingsService = inject(SettingsService);
 
   /** Fixed Deposits Account Details Step */
-  @ViewChild(FixedDepositAccountDetailsStepComponent, { static: true }) fixedDepositsAccountDetailsStep: FixedDepositAccountDetailsStepComponent;
+  @ViewChild(FixedDepositAccountDetailsStepComponent, { static: true })
+  fixedDepositsAccountDetailsStep: FixedDepositAccountDetailsStepComponent;
   /** Fixed Deposits Account Terms Step */
-  @ViewChild(FixedDepositAccountTermsStepComponent, { static: true }) fixedDepositAccountTermsStep: FixedDepositAccountTermsStepComponent;
+  @ViewChild(FixedDepositAccountTermsStepComponent, { static: true })
+  fixedDepositAccountTermsStep: FixedDepositAccountTermsStepComponent;
   /** Fixed Deposits Account Settings Step */
-  @ViewChild(FixedDepositAccountSettingsStepComponent, { static: true }) fixedDepositAccountSettingsStep: FixedDepositAccountSettingsStepComponent;
+  @ViewChild(FixedDepositAccountSettingsStepComponent, { static: true })
+  fixedDepositAccountSettingsStep: FixedDepositAccountSettingsStepComponent;
   /** Fixed Deposits Account Charges Step */
-  @ViewChild(FixedDepositAccountChargesStepComponent, { static: true }) fixedDepositAccountChargesStep: FixedDepositAccountChargesStepComponent;
+  @ViewChild(FixedDepositAccountChargesStepComponent, { static: true })
+  fixedDepositAccountChargesStep: FixedDepositAccountChargesStepComponent;
 
   /** Fixed Deposits Account Template */
   fixedDepositsAccountTemplate: any;
@@ -45,11 +73,7 @@ export class CreateFixedDepositAccountComponent {
    * @param {FixedDepositsService} fixedDepositsService Fixed Deposits Service
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private dateUtils: Dates,
-              private fixedDepositsService: FixedDepositsService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { fixedDepositsAccountTemplate: any }) => {
       this.fixedDepositsAccountTemplate = data.fixedDepositsAccountTemplate;
     });
@@ -103,7 +127,7 @@ export class CreateFixedDepositAccountComponent {
       ...this.fixedDepositsAccountDetailsStep.fixedDepositAccountDetails,
       ...this.fixedDepositAccountTermsStep.fixedDepositAccountTerms,
       ...this.fixedDepositAccountSettingsStep.fixedDepositAccountSettings,
-      ...this.fixedDepositAccountChargesStep.fixedDepositAccountCharges,
+      ...this.fixedDepositAccountChargesStep.fixedDepositAccountCharges
     };
   }
 
@@ -121,18 +145,24 @@ export class CreateFixedDepositAccountComponent {
         chargeId: charge.id,
         amount: charge.amount,
         dueDate: charge.dueDate && this.dateUtils.formatDate(charge.dueDate, dateFormat),
-        feeOnMonthDay: charge.feeOnMonthDay && this.dateUtils.formatDate([2000].concat(charge.feeOnMonthDay), monthDayFormat),
+        feeOnMonthDay:
+          charge.feeOnMonthDay && this.dateUtils.formatDate([2000].concat(charge.feeOnMonthDay), monthDayFormat),
         feeInterval: charge.feeInterval
       })),
       submittedOnDate: this.dateUtils.formatDate(this.fixedDepositAccount.submittedOnDate, dateFormat),
-      charts: [{chartSlabs: this.fixedDepositsAccountProductTemplate.accountChart.chartSlabs}],
+      charts: [{ chartSlabs: this.fixedDepositsAccountProductTemplate.accountChart.chartSlabs }],
       dateFormat,
       monthDayFormat,
       locale
     };
     this.fixedDepositsService.createFixedDepositAccount(fixedDepositAccount).subscribe((response: any) => {
-      this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

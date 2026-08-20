@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /** Custom Components */
@@ -15,21 +15,53 @@ import { FixedDepositProductAccountingStepComponent } from '../fixed-deposit-pro
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Accounting } from 'app/core/utils/accounting';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FixedDepositProductPreviewStepComponent } from '../fixed-deposit-product-stepper/fixed-deposit-product-preview-step/fixed-deposit-product-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-create-fixed-deposit-product',
   templateUrl: './create-fixed-deposit-product.component.html',
-  styleUrls: ['./create-fixed-deposit-product.component.scss']
+  styleUrls: ['./create-fixed-deposit-product.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    FixedDepositProductDetailsStepComponent,
+    FixedDepositProductCurrencyStepComponent,
+    FixedDepositProductTermsStepComponent,
+    FixedDepositProductSettingsStepComponent,
+    FixedDepositProductInterestRateChartStepComponent,
+    FixedDepositProductChargesStepComponent,
+    FixedDepositProductAccountingStepComponent,
+    FixedDepositProductPreviewStepComponent
+  ]
 })
-export class CreateFixedDepositProductComponent implements OnInit {
+export class CreateFixedDepositProductComponent {
+  private route = inject(ActivatedRoute);
+  private productsService = inject(ProductsService);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private accounting = inject(Accounting);
 
-  @ViewChild(FixedDepositProductDetailsStepComponent, { static: true }) fixedDepositProductDetailsStep: FixedDepositProductDetailsStepComponent;
-  @ViewChild(FixedDepositProductCurrencyStepComponent, { static: true }) fixedDepositProductCurrencyStep: FixedDepositProductCurrencyStepComponent;
-  @ViewChild(FixedDepositProductTermsStepComponent, { static: true }) fixedDepositProductTermsStep: FixedDepositProductTermsStepComponent;
-  @ViewChild(FixedDepositProductSettingsStepComponent, { static: true }) fixedDepositProductSettingsStep: FixedDepositProductSettingsStepComponent;
-  @ViewChild(FixedDepositProductInterestRateChartStepComponent, { static: true }) fixedDepositProductInterestRateChartStep: FixedDepositProductInterestRateChartStepComponent;
-  @ViewChild(FixedDepositProductChargesStepComponent, { static: true }) fixedDepositProductChargesStep: FixedDepositProductChargesStepComponent;
-  @ViewChild(FixedDepositProductAccountingStepComponent, { static: true }) fixedDepositProductAccountingStep: FixedDepositProductAccountingStepComponent;
+  @ViewChild(FixedDepositProductDetailsStepComponent, { static: true })
+  fixedDepositProductDetailsStep: FixedDepositProductDetailsStepComponent;
+  @ViewChild(FixedDepositProductCurrencyStepComponent, { static: true })
+  fixedDepositProductCurrencyStep: FixedDepositProductCurrencyStepComponent;
+  @ViewChild(FixedDepositProductTermsStepComponent, { static: true })
+  fixedDepositProductTermsStep: FixedDepositProductTermsStepComponent;
+  @ViewChild(FixedDepositProductSettingsStepComponent, { static: true })
+  fixedDepositProductSettingsStep: FixedDepositProductSettingsStepComponent;
+  @ViewChild(FixedDepositProductInterestRateChartStepComponent, { static: true })
+  fixedDepositProductInterestRateChartStep: FixedDepositProductInterestRateChartStepComponent;
+  @ViewChild(FixedDepositProductChargesStepComponent, { static: true })
+  fixedDepositProductChargesStep: FixedDepositProductChargesStepComponent;
+  @ViewChild(FixedDepositProductAccountingStepComponent, { static: true })
+  fixedDepositProductAccountingStep: FixedDepositProductAccountingStepComponent;
 
   fixedDepositProductsTemplate: any;
   accountingRuleData: string[] = [];
@@ -41,18 +73,11 @@ export class CreateFixedDepositProductComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service.
    */
 
-  constructor(private route: ActivatedRoute,
-              private productsService: ProductsService,
-              private router: Router,
-              private settingsService: SettingsService,
-              private accounting: Accounting) {
+  constructor() {
     this.route.data.subscribe((data: { fixedDepositProductsTemplate: any }) => {
       this.fixedDepositProductsTemplate = data.fixedDepositProductsTemplate;
     });
     this.accountingRuleData = this.accounting.getAccountingRulesForSavings();
-  }
-
-  ngOnInit() {
   }
 
   get fixedDepositProductDetailsForm() {
@@ -110,10 +135,14 @@ export class CreateFixedDepositProductComponent implements OnInit {
       locale: this.settingsService.language.code // locale required for depositAmount
     };
     delete fixedDepositProduct.advancedAccountingRules;
-    this.productsService.createFixedDepositProduct(fixedDepositProduct)
-      .subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.productsService.createFixedDepositProduct(fixedDepositProduct).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

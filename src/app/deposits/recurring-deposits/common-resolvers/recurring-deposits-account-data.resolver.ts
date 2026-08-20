@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { RecurringDepositsService } from '../recurring-deposits.service';
  * RecurringDeposits Account data resolver.
  */
 @Injectable()
-export class RecurringDepositsAccountDataResolver implements Resolve<Object> {
-
-  /**
-   * @param {RecurringDepositsService} RecurringDepositsService RecurringDeposits service.
-   */
-  constructor(private recurringDepositsService: RecurringDepositsService) { }
+export class RecurringDepositsAccountDataResolver {
+  private recurringDepositsService = inject(RecurringDepositsService);
 
   /**
    * Returns the RecurringDeposits Account data.
@@ -28,5 +24,4 @@ export class RecurringDepositsAccountDataResolver implements Resolve<Object> {
     const recurringDepositAccountId = route.parent.paramMap.get('recurringDepositAccountId');
     return this.recurringDepositsService.getRecurringDepositsAccountData(recurringDepositAccountId);
   }
-
 }

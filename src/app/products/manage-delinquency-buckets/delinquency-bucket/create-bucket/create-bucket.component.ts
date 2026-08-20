@@ -1,20 +1,61 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ProductsService } from 'app/products/products.service';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.component';
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FindPipe } from '../../../../pipes/find.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-create-bucket',
   templateUrl: './create-bucket.component.html',
-  styleUrls: ['./create-bucket.component.scss']
+  styleUrls: ['./create-bucket.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FindPipe
+  ]
 })
 export class CreateBucketComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
+
   /** Delinquency Bucket form. */
   bucketForm: UntypedFormGroup;
   /** Delinquency Bucket template data. */
@@ -26,18 +67,19 @@ export class CreateBucketComponent implements OnInit {
   delinquencyRangesIds: any;
 
   /** Delinquency Range Displayed Columns */
-  displayedColumns: string[] = ['classification', 'minimumAgeDays', 'maximumAgeDays', 'actions'];
+  displayedColumns: string[] = [
+    'classification',
+    'minimumAgeDays',
+    'maximumAgeDays',
+    'actions'
+  ];
 
-  constructor(private formBuilder: UntypedFormBuilder,
-    private productsService: ProductsService,
-    private router: Router,
-    private route: ActivatedRoute,
-    public dialog: MatDialog,
-    private translateService: TranslateService) {
-      this.route.data.subscribe((data: { delinquencyRanges: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { delinquencyRanges: any }) => {
       this.delinquencyRangesData = data.delinquencyRanges;
       this.delinquencyRangesData = this.delinquencyRangesData.sort(
-        (objA: { minimumAgeDays: number; }, objB: { minimumAgeDays: number; }) => objA.minimumAgeDays - objB.minimumAgeDays,
+        (objA: { minimumAgeDays: number }, objB: { minimumAgeDays: number }) =>
+          objA.minimumAgeDays - objB.minimumAgeDays
       );
     });
   }
@@ -53,7 +95,10 @@ export class CreateBucketComponent implements OnInit {
    */
   setupForm(): void {
     this.bucketForm = this.formBuilder.group({
-      'name': ['', Validators.required]
+      name: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -64,7 +109,7 @@ export class CreateBucketComponent implements OnInit {
     let delinquencyRanges = this.delinquencyRangesData;
     if (this.delinquencyRangesIds.length > 0) {
       delinquencyRanges = this.delinquencyRangesData.filter((item: any) => {
-        return (this.delinquencyRangesIds.indexOf(item.id) < 0);
+        return this.delinquencyRangesIds.indexOf(item.id) < 0;
       });
     }
     const formfields: FormfieldBase[] = [
@@ -92,9 +137,9 @@ export class CreateBucketComponent implements OnInit {
   /**
    * Delete particular Delinquency Range in Delinquency Bucket
    */
-   deleteDelinquencyRange(index: number) {
+  deleteDelinquencyRange(index: number) {
     const dialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext: this.translateService.instant('labels.text.this')}
+      data: { deleteContext: this.translateService.instant('labels.text.this') }
     });
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
@@ -111,7 +156,9 @@ export class CreateBucketComponent implements OnInit {
    */
   submit() {
     const ranges: any = [];
-    this.rangesDataSource.forEach((item: any) => { ranges.push(item.rangeId); });
+    this.rangesDataSource.forEach((item: any) => {
+      ranges.push(item.rangeId);
+    });
     if (ranges.length > 0) {
       const data = {
         ...this.bucketForm.value,
@@ -119,7 +166,13 @@ export class CreateBucketComponent implements OnInit {
       };
 
       this.productsService.createDelinquencyBucket(data).subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
+        this.router.navigate(
+          [
+            '../',
+            response.resourceId
+          ],
+          { relativeTo: this.route }
+        );
       });
     }
   }

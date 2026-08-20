@@ -1,13 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../../accounting.service';
 
 /** Custom Validators */
 import { oneOfTheFieldsIsRequiredValidator } from '../one-of-the-fields-is-required.validator';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create accounting rule component.
@@ -15,9 +21,22 @@ import { oneOfTheFieldsIsRequiredValidator } from '../one-of-the-fields-is-requi
 @Component({
   selector: 'mifosx-create-rule',
   templateUrl: './create-rule.component.html',
-  styleUrls: ['./create-rule.component.scss']
+  styleUrls: ['./create-rule.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatRadioGroup,
+    MatRadioButton,
+    MatCheckbox,
+    CdkTextareaAutosize
+  ]
 })
 export class CreateRuleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
+  private translateService = inject(TranslateService);
 
   /** Accounting rule form. */
   accountingRuleForm: UntypedFormGroup;
@@ -30,17 +49,7 @@ export class CreateRuleComponent implements OnInit {
   /** Credit tag data. */
   creditTagData: any;
 
-  /**
-   * Retrieves the offices, gl accounts, debit tags and credit tags data from `resolve`.
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {AccountingService} accountingService Accounting Service.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {Router} router Router for navigation.
-   */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private accountingService: AccountingService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { accountingRulesTemplate: any }) => {
       this.officeData = data.accountingRulesTemplate.allowedOffices;
       this.glAccountData = data.accountingRulesTemplate.allowedAccounts;
@@ -61,19 +70,28 @@ export class CreateRuleComponent implements OnInit {
    * Creates accounting rule form.
    */
   createAccountingRuleForm() {
-    this.accountingRuleForm = this.formBuilder.group({
-      'name': ['', Validators.required],
-      'officeId': ['', Validators.required],
-      'debitRuleType': ['fixedAccount'],
-      'accountToDebit': [''],
-      'debitTags': [''],
-      'allowMultipleDebitEntries': [''],
-      'creditRuleType': ['fixedAccount'],
-      'accountToCredit': [''],
-      'creditTags': [''],
-      'allowMultipleCreditEntries': [''],
-      'description': ['']
-    }, { validator: oneOfTheFieldsIsRequiredValidator });
+    this.accountingRuleForm = this.formBuilder.group(
+      {
+        name: [
+          '',
+          Validators.required
+        ],
+        officeId: [
+          '',
+          Validators.required
+        ],
+        debitRuleType: ['fixedAccount'],
+        accountToDebit: [''],
+        debitTags: [''],
+        allowMultipleDebitEntries: [''],
+        creditRuleType: ['fixedAccount'],
+        accountToCredit: [''],
+        creditTags: [''],
+        allowMultipleCreditEntries: [''],
+        description: ['']
+      },
+      { validator: oneOfTheFieldsIsRequiredValidator }
+    );
   }
 
   /**
@@ -120,9 +138,42 @@ export class CreateRuleComponent implements OnInit {
     }
     delete accountingRule.debitRuleType;
     delete accountingRule.creditRuleType;
-    this.accountingService.createAccountingRule(accountingRule).subscribe((response: any) => {
-      this.router.navigate(['../view', response.resourceId], { relativeTo: this.route });
+    this.accountingService.createAccountingRule(accountingRule).subscribe({
+      next: (response: any) => {
+        this.router.navigate(
+          [
+            '../view',
+            response.resourceId
+          ],
+          { relativeTo: this.route }
+        );
+      },
+      error: (err) => {
+        const duplicateMsg = this.translateService.instant('errors.accountingRule.duplicateName');
+        if (
+          err?.error?.defaultUserMessage?.includes('Duplicate entry') ||
+          (typeof err?.error?.message === 'string' && err.error.message.includes('Duplicate entry')) ||
+          (typeof err?.error === 'string' && err.error.includes('Duplicate entry'))
+        ) {
+          this.snackBar.open(duplicateMsg, 'Close', {
+            duration: 7000,
+            verticalPosition: 'top',
+            horizontalPosition: 'right',
+            panelClass: 'custom-snackbar-top-right'
+          });
+        } else {
+          this.snackBar.open(
+            err?.error?.defaultUserMessage || err?.error?.message || 'An error occurred. Please try again.',
+            'Close',
+            {
+              duration: 7000,
+              verticalPosition: 'top',
+              horizontalPosition: 'right',
+              panelClass: 'custom-snackbar-top-right'
+            }
+          );
+        }
+      }
     });
   }
-
 }

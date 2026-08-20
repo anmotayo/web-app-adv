@@ -1,10 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Undo Approval Savings Account Component
@@ -12,9 +14,17 @@ import { SavingsService } from 'app/savings/savings.service';
 @Component({
   selector: 'mifosx-undo-approval-savings-account',
   templateUrl: './undo-approval-savings-account.component.html',
-  styleUrls: ['./undo-approval-savings-account.component.scss']
+  styleUrls: ['./undo-approval-savings-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class UndoApprovalSavingsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Undo Approval Savings Account form. */
   undoApprovalSavingsAccountForm: UntypedFormGroup;
@@ -27,10 +37,7 @@ export class UndoApprovalSavingsAccountComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private savingsService: SavingsService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.accountId = this.route.snapshot.params['savingAccountId'];
   }
 
@@ -46,7 +53,7 @@ export class UndoApprovalSavingsAccountComponent implements OnInit {
    */
   createUndoApprovalSavingsAccountForm() {
     this.undoApprovalSavingsAccountForm = this.formBuilder.group({
-      'note': ['']
+      note: ['']
     });
   }
 
@@ -56,11 +63,10 @@ export class UndoApprovalSavingsAccountComponent implements OnInit {
    */
   submit() {
     const data = {
-      ...this.undoApprovalSavingsAccountForm.value,
+      ...this.undoApprovalSavingsAccountForm.value
     };
     this.savingsService.executeSavingsAccountCommand(this.accountId, 'undoapproval', data).subscribe(() => {
       this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

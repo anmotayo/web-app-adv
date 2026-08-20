@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { SystemService } from '../../system.service';
  * Notification Configuration data resolver.
  */
 @Injectable()
-export class NotificationConfigurationResolver implements Resolve<Object> {
-
-  /**
-   * @param {SystemService} systemService System service.
-   */
-  constructor(private systemService: SystemService) {}
+export class NotificationConfigurationResolver {
+  private systemService = inject(SystemService);
 
   /**
    * Returns the Notification Configuration data.
@@ -26,5 +21,4 @@ export class NotificationConfigurationResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.systemService.getExternalConfiguration('NOTIFICATION');
   }
-
 }

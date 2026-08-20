@@ -1,15 +1,30 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 
 /** Custom Services */
 import { TranslateService } from '@ngx-translate/core';
 import { ProductsService } from 'app/products/products.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { NgClass } from '@angular/common';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View product mix component.
@@ -17,9 +32,32 @@ import { ProductsService } from 'app/products/products.service';
 @Component({
   selector: 'mifosx-view-product-mix',
   templateUrl: './view-product-mix.component.html',
-  styleUrls: ['./view-product-mix.component.scss']
+  styleUrls: ['./view-product-mix.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    NgClass,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ViewProductMixComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+  private productsService = inject(ProductsService);
+  private router = inject(Router);
+  private translateService = inject(TranslateService);
 
   /** Product mix data. */
   productMixData: any;
@@ -46,11 +84,7 @@ export class ViewProductMixComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private route: ActivatedRoute,
-              private dialog: MatDialog,
-              private productsService: ProductsService,
-              private router: Router,
-              private translateService: TranslateService ) {
+  constructor() {
     this.route.data.subscribe((data: { productMix: any }) => {
       this.productMixData = data.productMix;
     });
@@ -87,14 +121,18 @@ export class ViewProductMixComponent implements OnInit {
    */
   delete() {
     const deleteProductMixDialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext: this.translateService.instant('labels.dialogContext.the productmix component with id') + ' ' + this.productMixData.productId}
+      data: {
+        deleteContext:
+          this.translateService.instant('labels.dialogContext.the productmix component with id') +
+          ' ' +
+          this.productMixData.productId
+      }
     });
     deleteProductMixDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.productsService.deleteProductMix(this.productMixData.productId)
-          .subscribe(() => {
-            this.router.navigate(['../'], { relativeTo: this.route });
-          });
+        this.productsService.deleteProductMix(this.productMixData.productId).subscribe(() => {
+          this.router.navigate(['../'], { relativeTo: this.route });
+        });
       }
     });
   }

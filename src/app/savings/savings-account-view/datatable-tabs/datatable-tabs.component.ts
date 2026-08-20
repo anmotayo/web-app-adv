@@ -1,6 +1,8 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { EntityDatatableTabComponent } from '../../../shared/tabs/entity-datatable-tab/entity-datatable-tab.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings Datatable Tabs Component
@@ -8,9 +10,15 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-datatable-tabs',
   templateUrl: './datatable-tabs.component.html',
-  styleUrls: ['./datatable-tabs.component.scss']
+  styleUrls: ['./datatable-tabs.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    EntityDatatableTabComponent
+  ]
 })
 export class DatatableTabsComponent {
+  private route = inject(ActivatedRoute);
+
   entityId: string;
   /** Savings Datatable */
   entityDatatable: any;
@@ -21,7 +29,7 @@ export class DatatableTabsComponent {
    * Fetches Savings and datatables data from `resolve`
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.entityId = this.route.parent.parent.snapshot.paramMap.get('savingAccountId');
 
     this.route.data.subscribe((data: { savingsDatatable: any }) => {
@@ -29,5 +37,4 @@ export class DatatableTabsComponent {
       this.multiRowDatatableFlag = this.entityDatatable.columnHeaders[0].columnName === 'id' ? true : false;
     });
   }
-
 }

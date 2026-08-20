@@ -1,11 +1,12 @@
 /** Angular Imports */
-import { Component, OnChanges, Input } from '@angular/core';
+import { Component, OnChanges, Input, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 /** Custom Services */
 import { ReportsService } from '../../reports.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { ProgressBarService } from 'app/core/progress-bar/progress-bar.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Pentaho Component
@@ -13,9 +14,16 @@ import { ProgressBarService } from 'app/core/progress-bar/progress-bar.service';
 @Component({
   selector: 'mifosx-pentaho',
   templateUrl: './pentaho.component.html',
-  styleUrls: ['./pentaho.component.scss']
+  styleUrls: ['./pentaho.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class PentahoComponent implements OnChanges {
+  private sanitizer = inject(DomSanitizer);
+  private reportsService = inject(ReportsService);
+  private settingsService = inject(SettingsService);
+  private progressBarService = inject(ProgressBarService);
 
   /** Run Report Data */
   @Input() dataObject: any;
@@ -26,16 +34,6 @@ export class PentahoComponent implements OnChanges {
   pentahoUrl: any;
 
   /**
-   * @param {DomSanitizer} sanitizer DOM Sanitizer
-   * @param {ReportsService} reportsService Reports Service
-   * @param {SettingsService} settingsService Settings Service
-   */
-  constructor(private sanitizer: DomSanitizer,
-              private reportsService: ReportsService,
-              private settingsService: SettingsService,
-              private progressBarService: ProgressBarService) { }
-
-  /**
    * Fetches run report data post changes in run report form.
    */
   ngOnChanges() {
@@ -44,15 +42,21 @@ export class PentahoComponent implements OnChanges {
   }
 
   getRunReportData() {
-    this.reportsService.getPentahoRunReportData(this.dataObject.report.name, this.dataObject.formData, 'default', this.settingsService.language.code, this.settingsService.dateFormat)
-      .subscribe( (res: any) => {
+    this.reportsService
+      .getPentahoRunReportData(
+        this.dataObject.report.name,
+        this.dataObject.formData,
+        'default',
+        this.settingsService.language.code,
+        this.settingsService.dateFormat
+      )
+      .subscribe((res: any) => {
         const contentType = res.headers.get('Content-Type');
-        const file = new Blob([res.body], {type: contentType});
+        const file = new Blob([res.body], { type: contentType });
         const filecontent = URL.createObjectURL(file);
         this.pentahoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(filecontent);
         this.hideOutput = false;
         this.progressBarService.decrease();
       });
   }
-
 }

@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Post Interest Savings Account Component
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-post-interest-as-on-savings-account',
   templateUrl: './post-interest-as-on-savings-account.component.html',
-  styleUrls: ['./post-interest-as-on-savings-account.component.scss']
+  styleUrls: ['./post-interest-as-on-savings-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class PostInterestAsOnSavingsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +45,7 @@ export class PostInterestAsOnSavingsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private savingsService: SavingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.snapshot.params['savingAccountId'];
   }
 
@@ -57,7 +62,10 @@ export class PostInterestAsOnSavingsAccountComponent implements OnInit {
    */
   createPostInterestSavingsAccountForm() {
     this.postInterestSavingsAccountForm = this.formBuilder.group({
-      'transactionDate': ['', Validators.required]
+      transactionDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -79,9 +87,10 @@ export class PostInterestAsOnSavingsAccountComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.savingsService.executeSavingsAccountTransactionsCommand(this.accountId, 'postInterestAsOn', data).subscribe(() => {
-      this.router.navigate(['../../transactions'], { relativeTo: this.route });
-    });
+    this.savingsService
+      .executeSavingsAccountTransactionsCommand(this.accountId, 'postInterestAsOn', data)
+      .subscribe(() => {
+        this.router.navigate(['../../transactions'], { relativeTo: this.route });
+      });
   }
-
 }

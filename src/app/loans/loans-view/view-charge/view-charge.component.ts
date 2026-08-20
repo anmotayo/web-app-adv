@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Services */
@@ -18,6 +18,11 @@ import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
 import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicker-base';
 import { Dates } from 'app/core/utils/dates';
 import { TranslateService } from '@ngx-translate/core';
+import { NgClass } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View Charge Component.
@@ -25,9 +30,23 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-view-charge',
   templateUrl: './view-charge.component.html',
-  styleUrls: ['./view-charge.component.scss']
+  styleUrls: ['./view-charge.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    NgClass,
+    DateFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class ViewChargeComponent {
+  private loansService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private translateService = inject(TranslateService);
+  dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
 
   /** Charge data. */
   chargeData: any;
@@ -45,16 +64,10 @@ export class ViewChargeComponent {
    * @param {Dates} dateUtils Date Utils.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private loansService: LoansService,
-    private route: ActivatedRoute,
-    private dateUtils: Dates,
-    private router: Router,
-    private translateService: TranslateService,
-    public dialog: MatDialog,
-    private settingsService: SettingsService) {
-    this.route.data.subscribe((data: { loansAccountCharge: any, loanDetailsData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { loansAccountCharge: any; loanDetailsData: any }) => {
       this.chargeData = data.loansAccountCharge;
-      this.allowPayCharge = (this.chargeData.chargePayable && !this.chargeData.paid);
+      this.allowPayCharge = this.chargeData.chargePayable && !this.chargeData.paid;
       this.allowWaive = !this.chargeData.chargeTimeType.waived;
       this.loansAccountData = data.loanDetailsData;
     });
@@ -89,7 +102,8 @@ export class ViewChargeComponent {
           dateFormat,
           locale
         };
-        this.loansService.executeLoansAccountChargesCommand(this.chargeData.loanId, 'pay', dataObject, this.chargeData.id)
+        this.loansService
+          .executeLoansAccountChargesCommand(this.chargeData.loanId, 'pay', dataObject, this.chargeData.id)
           .subscribe(() => {
             this.reload();
           });
@@ -101,10 +115,19 @@ export class ViewChargeComponent {
    * Waive's the charge
    */
   waiveCharge() {
-    const waiveChargeDialogRef = this.dialog.open(ConfirmationDialogComponent, { data: { heading: this.translateService.instant('labels.heading.Waive Charge'), dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want to waive charge with id:')` ${this.chargeData.id}`, type: 'Basic' } });
+    const waiveChargeDialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        heading: this.translateService.instant('labels.heading.Waive Charge'),
+        dialogContext: this.translateService.instant(
+          'labels.dialogContext.Are you sure you want to waive charge with id:'
+        )` ${this.chargeData.id}`,
+        type: 'Basic'
+      }
+    });
     waiveChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.loansService.executeLoansAccountChargesCommand(this.chargeData.loanId, 'waive', {}, this.chargeData.id)
+        this.loansService
+          .executeLoansAccountChargesCommand(this.chargeData.loanId, 'waive', {}, this.chargeData.id)
           .subscribe(() => {
             this.reload();
           });
@@ -151,7 +174,8 @@ export class ViewChargeComponent {
           dateFormat,
           locale
         };
-        this.loansService.editLoansAccountCharge(this.loansAccountData.id, dataObject, this.chargeData.id)
+        this.loansService
+          .editLoansAccountCharge(this.loansAccountData.id, dataObject, this.chargeData.id)
           .subscribe(() => {
             this.reload();
           });
@@ -168,10 +192,9 @@ export class ViewChargeComponent {
     });
     deleteChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.loansService.deleteLoansAccountCharge(this.loansAccountData.id, this.chargeData.id)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.loansService.deleteLoansAccountCharge(this.loansAccountData.id, this.chargeData.id).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -191,8 +214,8 @@ export class ViewChargeComponent {
   private reload() {
     const clientId = this.loansAccountData.clientId;
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/clients/${clientId}/loans-accounts`, { skipLocationChange: true })
+    this.router
+      .navigateByUrl(`/clients/${clientId}/loans-accounts`, { skipLocationChange: true })
       .then(() => this.router.navigate([url]));
   }
-
 }

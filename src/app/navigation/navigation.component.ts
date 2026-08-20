@@ -1,7 +1,7 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { NavigationService } from './navigation.service';
@@ -12,6 +12,7 @@ import { StaffNavigationComponent } from './staff-navigation/staff-navigation.co
 import { CenterNavigationComponent } from './center-navigation/center-navigation.component';
 import { GroupNavigationComponent } from './group-navigation/group-navigation.component';
 import { ClientNavigationComponent } from './client-navigation/client-navigation.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Navigation component.
@@ -19,9 +20,20 @@ import { ClientNavigationComponent } from './client-navigation/client-navigation
 @Component({
   selector: 'mifosx-navigation',
   templateUrl: './navigation.component.html',
-  styleUrls: ['./navigation.component.scss']
+  styleUrls: ['./navigation.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    OfficeNavigationComponent,
+    StaffNavigationComponent,
+    CenterNavigationComponent,
+    GroupNavigationComponent,
+    ClientNavigationComponent
+  ]
 })
 export class NavigationComponent implements OnInit {
+  private navigationService = inject(NavigationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Navigation Components */
   @ViewChild(OfficeNavigationComponent) officeNavigationComponent: OfficeNavigationComponent;
@@ -66,9 +78,7 @@ export class NavigationComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private navigationService: NavigationService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { offices: any }) => {
       this.officeData = data.offices;
     });
@@ -89,7 +99,7 @@ export class NavigationComponent implements OnInit {
    * Sets the office selector
    */
   setOfficeSelector() {
-    this.officeSelector.valueChanges.subscribe(officeId => {
+    this.officeSelector.valueChanges.subscribe((officeId) => {
       this.employeeSelector.reset(null, { emitEvent: false });
       this.centerSelector.reset(null, { emitEvent: false });
       this.groupSelector.reset(null, { emitEvent: false });
@@ -115,7 +125,7 @@ export class NavigationComponent implements OnInit {
    * Sets the employee selector
    */
   setEmployeeSelector() {
-    this.employeeSelector.valueChanges.subscribe(employeeId => {
+    this.employeeSelector.valueChanges.subscribe((employeeId) => {
       if (employeeId) {
         this.centerSelector.reset(null, { emitEvent: false });
         this.groupSelector.reset(null, { emitEvent: false });
@@ -141,7 +151,7 @@ export class NavigationComponent implements OnInit {
    * Sets the center selector
    */
   setCenterSelector() {
-    this.centerSelector.valueChanges.subscribe(centerId => {
+    this.centerSelector.valueChanges.subscribe((centerId) => {
       if (centerId) {
         this.groupSelector.reset(null, { emitEvent: false });
         this.clientSelector.reset(null, { emitEvent: false });
@@ -173,7 +183,7 @@ export class NavigationComponent implements OnInit {
    * Sets the group selector
    */
   setGroupSelector() {
-    this.groupSelector.valueChanges.subscribe(groupId => {
+    this.groupSelector.valueChanges.subscribe((groupId) => {
       if (groupId) {
         this.clientSelector.reset(null, { emitEvent: false });
         this.clientData = null;
@@ -199,7 +209,7 @@ export class NavigationComponent implements OnInit {
    * Sets the client selector
    */
   setClientSelector() {
-    this.clientSelector.valueChanges.subscribe(clientId => {
+    this.clientSelector.valueChanges.subscribe((clientId) => {
       if (clientId) {
         this.selectedItemAccounts = null;
         this.navigationService.getClient(clientId).subscribe((client: any) => {
@@ -212,5 +222,4 @@ export class NavigationComponent implements OnInit {
       }
     });
   }
-
 }

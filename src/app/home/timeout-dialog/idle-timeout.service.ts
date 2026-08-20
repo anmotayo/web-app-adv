@@ -1,29 +1,69 @@
 import { Injectable } from '@angular/core';
-import { environment } from 'environments/environment';
-import { interval, merge, fromEvent, Observable} from 'rxjs';
-import { takeUntil, repeat, map} from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+import { fromEvent, merge, Subject, timer, Observable, Subscription } from 'rxjs';
+import { switchMap, takeUntil, tap, map } from 'rxjs/operators';
 
 /**
  *  Idle timeout service used to track idle user
  */
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class IdleTimeoutService {
+  // max timeout for an idle user
+  private readonly timeoutDelay = environment.session.timeout.idleTimeout || 300000;
+  private timeout$ = new Subject<void>();
+  private resetTimer$ = new Subject<void>();
+  private active = false;
+  private timerSubscription?: Subscription;
+  private userActionsSubscription?: Subscription;
 
-    // max timeout for an idle user
-    readonly timeoutDelay = environment.session.timeout.idleTimeout || 300000; // 5 minutes
+  // observable timeout
+  readonly $onSessionTimeout: Observable<void>;
 
-    // observable timeout
-    readonly $onSessionTimeout: Observable<void>;
+  constructor() {
+    this.$onSessionTimeout = this.timeout$.asObservable();
 
-    constructor() {
-        const events = ['mousemove', 'keydown', 'wheel', 'mousedown', 'scroll'];
-        const $signal = merge(...events.map(eventName => fromEvent(document, eventName)));
-        this.$onSessionTimeout = interval(this.timeoutDelay).pipe(
-            takeUntil($signal),
-            map(() => undefined),
-            repeat()
-        );
+    this.resetTimer$.subscribe(() => {
+      this.timerSubscription?.unsubscribe();
+      this.timerSubscription = timer(this.timeoutDelay).subscribe(() => {
+        this.timeout$.next();
+        this.stop();
+      });
+    });
+  }
+
+  start() {
+    if (!this.active) {
+      this.active = true;
+      this.reset();
+
+      // Subscribe to user actions only when active
+      const events = [
+        'mousemove',
+        'keydown',
+        'wheel',
+        'mousedown',
+        'scroll'
+      ];
+      const userActions$ = merge(...events.map((e) => fromEvent(document, e)));
+      this.userActionsSubscription = userActions$.subscribe(() => {
+        this.reset();
+      });
     }
+  }
+
+  stop() {
+    if (this.active) {
+      this.active = false;
+      this.timerSubscription?.unsubscribe();
+      this.userActionsSubscription?.unsubscribe();
+    }
+  }
+
+  reset() {
+    if (this.active) {
+      this.resetTimer$.next();
+    }
+  }
 }

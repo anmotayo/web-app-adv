@@ -1,8 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * SMS Configuration Component.
@@ -10,14 +24,34 @@ import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'mifosx-sms',
   templateUrl: './sms.component.html',
-  styleUrls: ['./sms.component.scss']
+  styleUrls: ['./sms.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow
+  ]
 })
 export class SMSComponent implements OnInit {
+  private route = inject(ActivatedRoute);
 
   /** SMS configuration data. */
   smsConfigurationData: any;
   /** Columns to be displayed in SMS configuration table. */
-  displayedColumns: string[] = ['name', 'value'];
+  displayedColumns: string[] = [
+    'name',
+    'value'
+  ];
   /** Data source for SMS configuration table. */
   dataSource: MatTableDataSource<any>;
 
@@ -28,11 +62,11 @@ export class SMSComponent implements OnInit {
    * Retrieves the SMS configuration data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
-    this.route.data.subscribe((data: {smsConfiguration: any}) => {
+  constructor() {
+    this.route.data.subscribe((data: { smsConfiguration: any }) => {
       this.smsConfigurationData = data.smsConfiguration;
     });
-   }
+  }
 
   /**
    * Sets the SMS Configuration table.
@@ -48,5 +82,4 @@ export class SMSComponent implements OnInit {
     this.dataSource = new MatTableDataSource(this.smsConfigurationData);
     this.dataSource.sort = this.sort;
   }
-
 }

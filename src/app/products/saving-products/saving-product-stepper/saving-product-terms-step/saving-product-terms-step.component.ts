@@ -1,13 +1,24 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { TooltipPosition } from '@angular/material/tooltip';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-saving-product-terms-step',
   templateUrl: './saving-product-terms-step.component.html',
-  styleUrls: ['./saving-product-terms-step.component.scss']
+  styleUrls: ['./saving-product-terms-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTooltip,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class SavingProductTermsStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
 
   @Input() savingProductsTemplate: any;
 
@@ -18,7 +29,7 @@ export class SavingProductTermsStepComponent implements OnInit {
   interestCalculationTypeData: any;
   interestCalculationDaysInYearTypeData: any;
 
-  constructor(private formBuilder: UntypedFormBuilder) {
+  constructor() {
     this.createSavingProductTermsForm();
   }
 
@@ -29,26 +40,43 @@ export class SavingProductTermsStepComponent implements OnInit {
     this.interestCalculationDaysInYearTypeData = this.savingProductsTemplate.interestCalculationDaysInYearTypeOptions;
 
     this.savingProductTermsForm.patchValue({
-      'nominalAnnualInterestRate': this.savingProductsTemplate.nominalAnnualInterestRate,
-      'interestCompoundingPeriodType': this.savingProductsTemplate.interestCompoundingPeriodType.id,
-      'interestPostingPeriodType': this.savingProductsTemplate.interestPostingPeriodType.id,
-      'interestCalculationType': this.savingProductsTemplate.interestCalculationType.id,
-      'interestCalculationDaysInYearType': this.savingProductsTemplate.interestCalculationDaysInYearType.id
+      nominalAnnualInterestRate: this.savingProductsTemplate.nominalAnnualInterestRate,
+      interestCompoundingPeriodType: this.savingProductsTemplate.interestCompoundingPeriodType.id,
+      interestPostingPeriodType: this.savingProductsTemplate.interestPostingPeriodType.id,
+      interestCalculationType: this.savingProductsTemplate.interestCalculationType.id,
+      interestCalculationDaysInYearType: this.savingProductsTemplate.interestCalculationDaysInYearType.id
     });
   }
 
   createSavingProductTermsForm() {
     this.savingProductTermsForm = this.formBuilder.group({
-      'nominalAnnualInterestRate': ['', Validators.required],
-      'interestCompoundingPeriodType': ['', Validators.required],
-      'interestPostingPeriodType': ['', Validators.required],
-      'interestCalculationType': ['', Validators.required],
-      'interestCalculationDaysInYearType': ['', Validators.required]
+      nominalAnnualInterestRate: [
+        '',
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+      interestCompoundingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestPostingPeriodType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationType: [
+        '',
+        Validators.required
+      ],
+      interestCalculationDaysInYearType: [
+        '',
+        Validators.required
+      ]
     });
   }
 
   get savingProductTerms() {
     return this.savingProductTermsForm.value;
   }
-
 }

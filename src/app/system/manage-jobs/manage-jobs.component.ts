@@ -1,22 +1,31 @@
-import { Component, OnInit } from '@angular/core';
-import { MatTabChangeEvent } from '@angular/material/tabs';
+import { Component, inject } from '@angular/core';
+import { MatTabChangeEvent, MatTabGroup, MatTab } from '@angular/material/tabs';
 import { SystemService } from '../system.service';
 import { TranslateService } from '@ngx-translate/core';
+import { ManageSchedulerJobsComponent } from './scheduler-jobs/manage-scheduler-jobs.component';
+import { WorkflowJobsComponent } from './workflow-jobs/workflow-jobs.component';
+import { CobWorkflowComponent } from './cob-workflow/cob-workflow.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-manage-jobs',
   templateUrl: './manage-jobs.component.html',
-  styleUrls: ['./manage-jobs.component.scss']
+  styleUrls: ['./manage-jobs.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTabGroup,
+    MatTab,
+    ManageSchedulerJobsComponent,
+    WorkflowJobsComponent,
+    CobWorkflowComponent
+  ]
 })
-export class ManageJobsComponent implements OnInit {
+export class ManageJobsComponent {
+  private systemService = inject(SystemService);
+  private translateService = inject(TranslateService);
+
   /** Process running flag */
   isCatchUpRunning = true;
-
-  constructor(private systemService: SystemService,
-    private translateService: TranslateService) { }
-
-  ngOnInit(): void {
-  }
 
   onJobTabChange(event: MatTabChangeEvent) {
     if (event.index === 2) {
@@ -29,5 +38,4 @@ export class ManageJobsComponent implements OnInit {
   title(label: string) {
     return this.translateService.instant('labels.inputs.' + label);
   }
-
 }

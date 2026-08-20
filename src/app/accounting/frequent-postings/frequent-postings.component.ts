@@ -1,21 +1,43 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormArray } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormArray,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../accounting.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Frequent Postings component.
  */
 @Component({
   selector: 'mifosx-frequent-postings',
   templateUrl: './frequent-postings.component.html',
-  styleUrls: ['./frequent-postings.component.scss']
+  styleUrls: ['./frequent-postings.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    FaIconComponent,
+    CdkTextareaAutosize
+  ]
 })
 export class FrequentPostingsComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum transaction date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -48,23 +70,13 @@ export class FrequentPostingsComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private accountingService: AccountingService,
-              private settingsService: SettingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router) {
-    this.route.data.subscribe((data: {
-        offices: any,
-        accountingRules: any,
-        currencies: any,
-        paymentTypes: any
-      }) => {
-        this.officeData = data.offices;
-        this.accountingRuleData = data.accountingRules;
-        this.currencyData = data.currencies.selectedCurrencyOptions;
-        this.paymentTypeData = data.paymentTypes;
-      });
+  constructor() {
+    this.route.data.subscribe((data: { offices: any; accountingRules: any; currencies: any; paymentTypes: any }) => {
+      this.officeData = data.offices;
+      this.accountingRuleData = data.accountingRules;
+      this.currencyData = data.currencies.selectedCurrencyOptions;
+      this.paymentTypeData = data.paymentTypes;
+    });
   }
 
   /**
@@ -81,20 +93,32 @@ export class FrequentPostingsComponent implements OnInit {
    */
   createFrequentPostingsForm() {
     this.frequentPostingsForm = this.formBuilder.group({
-      'officeId': ['', Validators.required],
-      'accountingRule': ['', Validators.required],
-      'currencyCode': ['', Validators.required],
-      'debits': this.formBuilder.array([]),
-      'credits': this.formBuilder.array([]),
-      'referenceNumber': [''],
-      'transactionDate': ['', Validators.required],
-      'paymentTypeId': [''],
-      'accountNumber': [''],
-      'checkNumber': [''],
-      'routingCode': [''],
-      'receiptNumber': [''],
-      'bankNumber': [''],
-      'comments': ['']
+      officeId: [
+        '',
+        Validators.required
+      ],
+      accountingRule: [
+        '',
+        Validators.required
+      ],
+      currencyCode: [
+        '',
+        Validators.required
+      ],
+      debits: this.formBuilder.array([]),
+      credits: this.formBuilder.array([]),
+      referenceNumber: [''],
+      transactionDate: [
+        '',
+        Validators.required
+      ],
+      paymentTypeId: [''],
+      accountNumber: [''],
+      checkNumber: [''],
+      routingCode: [''],
+      receiptNumber: [''],
+      bankNumber: [''],
+      comments: ['']
     });
   }
 
@@ -102,7 +126,7 @@ export class FrequentPostingsComponent implements OnInit {
    * Sets the affected gl entry form array.
    */
   setAffectedGLEntryForm() {
-    this.frequentPostingsForm.get('accountingRule').valueChanges.subscribe(accountingRule => {
+    this.frequentPostingsForm.get('accountingRule').valueChanges.subscribe((accountingRule) => {
       while (this.debits.length) {
         this.debits.removeAt(0);
       }
@@ -124,8 +148,14 @@ export class FrequentPostingsComponent implements OnInit {
    */
   createAffectedGLEntryForm(): UntypedFormGroup {
     return this.formBuilder.group({
-      'glAccountId': ['', Validators.required],
-      'amount': ['', Validators.required]
+      glAccountId: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -173,11 +203,19 @@ export class FrequentPostingsComponent implements OnInit {
     journalEntry.locale = this.settingsService.language.code;
     journalEntry.dateFormat = this.settingsService.dateFormat;
     if (journalEntry.transactionDate instanceof Date) {
-      journalEntry.transactionDate = this.dateUtils.formatDate(journalEntry.transactionDate, this.settingsService.dateFormat);
+      journalEntry.transactionDate = this.dateUtils.formatDate(
+        journalEntry.transactionDate,
+        this.settingsService.dateFormat
+      );
     }
-    this.accountingService.createJournalEntry(journalEntry).subscribe(response => {
-      this.router.navigate(['../transactions/view', response.transactionId], { relativeTo: this.route });
+    this.accountingService.createJournalEntry(journalEntry).subscribe((response) => {
+      this.router.navigate(
+        [
+          '../transactions/view',
+          response.transactionId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

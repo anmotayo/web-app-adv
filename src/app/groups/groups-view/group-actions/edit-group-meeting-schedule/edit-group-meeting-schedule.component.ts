@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { GroupsService } from 'app/groups/groups.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Group Meetings Schedule Component
@@ -14,9 +16,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-edit-group-meeting-schedule',
   templateUrl: './edit-group-meeting-schedule.component.html',
-  styleUrls: ['./edit-group-meeting-schedule.component.scss']
+  styleUrls: ['./edit-group-meeting-schedule.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    DateFormatPipe
+  ]
 })
 export class EditGroupMeetingScheduleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private groupsService = inject(GroupsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -42,12 +54,7 @@ export class EditGroupMeetingScheduleComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService SettingsService
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private groupsService: GroupsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { groupActionData: any }) => {
       this.calendarTemplate = data.groupActionData;
       this.nextMeetingDates = this.calendarTemplate.nextTenRecurringDates;
@@ -66,8 +73,14 @@ export class EditGroupMeetingScheduleComponent implements OnInit {
    */
   createEditMeetingScheduleForm() {
     this.groupEditMeetingScheduleForm = this.formBuilder.group({
-      'presentMeetingDate': ['', Validators.required],
-      'newMeetingDate': ['', Validators.required]
+      presentMeetingDate: [
+        '',
+        Validators.required
+      ],
+      newMeetingDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -97,5 +110,4 @@ export class EditGroupMeetingScheduleComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

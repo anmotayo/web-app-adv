@@ -7,6 +7,7 @@ import { Observable, Subscriber } from 'rxjs';
 
 /** Custom Services */
 import { HttpCacheService } from './http-cache.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Caches HTTP requests.
@@ -14,10 +15,10 @@ import { HttpCacheService } from './http-cache.service';
  */
 @Injectable()
 export class CacheInterceptor implements HttpInterceptor {
-
   private forceUpdate = false;
 
-  constructor(private httpCacheService: HttpCacheService) { }
+  // eslint-disable-next-line @angular-eslint/prefer-inject
+  constructor(private httpCacheService: HttpCacheService) {}
 
   /**
    * Configures interceptor options
@@ -44,19 +45,17 @@ export class CacheInterceptor implements HttpInterceptor {
         subscriber.next(new HttpResponse(cachedData as Object));
         subscriber.complete();
       } else {
-        next.handle(request)
-          .subscribe(
-            event => {
-              if (event instanceof HttpResponse) {
-                this.httpCacheService.setCacheData(request.urlWithParams, event);
-              }
-              subscriber.next(event);
-            },
-            error => subscriber.error(error),
-            () => subscriber.complete()
-          );
+        next.handle(request).subscribe(
+          (event) => {
+            if (environment.httpCacheEnabled && event instanceof HttpResponse) {
+              this.httpCacheService.setCacheData(request.urlWithParams, event);
+            }
+            subscriber.next(event);
+          },
+          (error) => subscriber.error(error),
+          () => subscriber.complete()
+        );
       }
     });
   }
-
 }

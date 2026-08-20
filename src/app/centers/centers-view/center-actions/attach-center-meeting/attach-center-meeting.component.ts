@@ -1,12 +1,20 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { CentersService } from 'app/centers/centers.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Center Meetings Component
@@ -14,9 +22,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-attach-center-meeting',
   templateUrl: './attach-center-meeting.component.html',
-  styleUrls: ['./attach-center-meeting.component.scss']
+  styleUrls: ['./attach-center-meeting.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class AttachCenterMeetingComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private centersService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -44,12 +62,7 @@ export class AttachCenterMeetingComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private centersService: CentersService,
-              private settingsService: SettingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { centersActionData: any }) => {
       this.calendarTemplate = data.centersActionData;
       this.frequencyOptions = this.calendarTemplate.frequencyOptions;
@@ -69,8 +82,11 @@ export class AttachCenterMeetingComponent implements OnInit {
    */
   createCenterMeetingForm() {
     this.centerMeetingForm = this.formBuilder.group({
-      'startDate': ['', Validators.required],
-      'repeating': [false]
+      startDate: [
+        '',
+        Validators.required
+      ],
+      repeating: [false]
     });
   }
 
@@ -86,23 +102,49 @@ export class AttachCenterMeetingComponent implements OnInit {
           this.centerMeetingForm.removeControl('repeatsOnDay');
           switch (frequency) {
             case 1: // Daily
-              this.repetitionIntervals = ['1', '2', '3'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3'
+              ];
+              break;
             case 2: // Weekly
-              this.repetitionIntervals = ['1', '2', '3'];
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3'
+              ];
               this.centerMeetingForm.addControl('repeatsOnDay', new UntypedFormControl('', Validators.required));
-            break;
+              break;
             case 3: // Monthly
-              this.repetitionIntervals = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                '10',
+                '11'
+              ];
+              break;
             case 4: // Yearly
-              this.repetitionIntervals = ['1', '2', '3', '4', '5'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3',
+                '4',
+                '5'
+              ];
+              break;
           }
         });
         this.centerMeetingForm.patchValue({
-          'frequency': 1,
-          'interval': '1'
+          frequency: 1,
+          interval: '1'
         });
       } else {
         this.centerMeetingForm.removeControl('frequency');
@@ -132,8 +174,7 @@ export class AttachCenterMeetingComponent implements OnInit {
       locale
     };
     this.centersService.createCenterMeeting(this.centerId, data).subscribe((response: any) => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
+      this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }
-
 }

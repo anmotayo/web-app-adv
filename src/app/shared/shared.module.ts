@@ -36,7 +36,7 @@ import { EntityDatatableTabComponent } from './tabs/entity-datatable-tab/entity-
 import { DatatableSingleRowComponent } from './tabs/entity-datatable-tab/datatable-single-row/datatable-single-row.component';
 import { DatatableMultiRowComponent } from './tabs/entity-datatable-tab/datatable-multi-row/datatable-multi-row.component';
 import { SvgIconComponent } from './svg-icon/svg-icon.component';
-import { NgxMatDatetimePickerModule, NgxMatNativeDateModule } from '@angular-material-components/datetime-picker';
+// import { NgxMatDatetimePickerModule, NgxMatNativeDateModule } from '@angular-material-components/datetime-picker';
 import { ViewJournalEntryComponent } from './accounting/view-journal-entry/view-journal-entry.component';
 import { ViewJournalEntryTransactionComponent } from './accounting/view-journal-entry-transaction/view-journal-entry-transaction.component';
 import { AccountNumberComponent } from './account-number/account-number.component';
@@ -50,6 +50,8 @@ import { ThemeToggleComponent } from './theme-toggle/theme-toggle.component';
 import { LongTextComponent } from './long-text/long-text.component';
 import { DropdownComponent } from './dropdown/dropdown.component';
 import { InputAmountComponent } from './input-amount/input-amount.component';
+import { InputPasswordComponent } from './input-password/input-password.component';
+import { DatetimePickerStubComponent } from './datetime-picker-stub/datetime-picker-stub.component'; // import Datetime Picker Stub
 
 /**
  * Shared Module
@@ -65,10 +67,8 @@ import { InputAmountComponent } from './input-amount/input-amount.component';
     TranslateModule,
     PipesModule,
     DirectivesModule,
-    NgxMatDatetimePickerModule,
-    NgxMatNativeDateModule
-  ],
-  declarations: [
+    // NgxMatDatetimePickerModule,
+    // NgxMatNativeDateModule
     FormfieldComponent,
     FormDialogComponent,
     DeleteDialogComponent,
@@ -106,7 +106,9 @@ import { InputAmountComponent } from './input-amount/input-amount.component';
     ThemeToggleComponent,
     LongTextComponent,
     DropdownComponent,
-    InputAmountComponent
+    InputAmountComponent,
+    InputPasswordComponent,
+    DatetimePickerStubComponent // temporarily added stub for datetime picker
   ],
   exports: [
     FileUploadComponent,
@@ -141,7 +143,8 @@ import { InputAmountComponent } from './input-amount/input-amount.component';
     ThemeToggleComponent,
     LongTextComponent,
     DropdownComponent,
-    InputAmountComponent
+    InputAmountComponent,
+    DatetimePickerStubComponent // Export stub for datetime picker
   ]
 })
-export class SharedModule { }
+export class SharedModule {}

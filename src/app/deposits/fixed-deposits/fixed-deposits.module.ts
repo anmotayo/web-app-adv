@@ -46,7 +46,11 @@ import { FixedDepositsCashTransactionComponent } from './fixed-deposits-account-
  * All components related to fixed deposits functions should be declared here.
  */
 @NgModule({
-  declarations: [
+  imports: [
+    SharedModule,
+    PipesModule,
+    DirectivesModule,
+    FixedDepositsRoutingModule,
     FixedDepositAccountViewComponent,
     TransactionsTabComponent,
     ChargesTabComponent,
@@ -79,12 +83,6 @@ import { FixedDepositsCashTransactionComponent } from './fixed-deposits-account-
     GeneralTabComponent,
     FixedDepositsCashTransactionComponent
   ],
-  imports: [
-    SharedModule,
-    PipesModule,
-    DirectivesModule,
-    FixedDepositsRoutingModule
-  ],
-  providers: [ ]
+  providers: []
 })
-export class FixedDepositsModule { }
+export class FixedDepositsModule {}

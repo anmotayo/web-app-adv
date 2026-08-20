@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 
 /** Angular Font Awesome Imports */
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
@@ -39,6 +39,7 @@ import {
   faEyeSlash,
   faFile,
   faFileAlt,
+  faFilePdf,
   faFileUpload,
   faFileWord,
   faFillDrip,
@@ -111,7 +112,8 @@ import {
   faCalendarCheck,
   faPause,
   faReceipt,
-  faTableCells
+  faTableCells,
+  faSave
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -123,8 +125,9 @@ import {
   exports: [FontAwesomeModule]
 })
 export class IconsModule {
+  constructor() {
+    const library = inject(FaIconLibrary);
 
-  constructor(library: FaIconLibrary) {
     library.addIcons(
       faAnchor,
       faArchive,
@@ -164,6 +167,7 @@ export class IconsModule {
       faEyeSlash,
       faFile,
       faFileAlt,
+      faFilePdf,
       faFileUpload,
       faFileWord,
       faFileExcel,
@@ -236,8 +240,8 @@ export class IconsModule {
       faBars,
       faUndo,
       faReceipt,
-      faTableCells
+      faTableCells,
+      faSave
     );
   }
-
 }

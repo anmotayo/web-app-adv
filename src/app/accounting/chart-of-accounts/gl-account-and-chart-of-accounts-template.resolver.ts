@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -13,12 +13,8 @@ import { AccountingService } from '../accounting.service';
  * GL Account and chart of accounts template data resolver.
  */
 @Injectable()
-export class GlAccountAndChartOfAccountsTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {AccountingService} accountingService Accounting service.
-   */
-  constructor(private accountingService: AccountingService) {}
+export class GlAccountAndChartOfAccountsTemplateResolver {
+  private accountingService = inject(AccountingService);
 
   /**
    * Returns the gl account and chart of accounts template data.
@@ -31,16 +27,21 @@ export class GlAccountAndChartOfAccountsTemplateResolver implements Resolve<Obje
       map((glAccountData: any) => {
         let accountOptions = [];
         switch (glAccountData.type.value) {
-          case 'ASSET': accountOptions = glAccountData.assetHeaderAccountOptions;
-          break;
-          case 'EQUITY': accountOptions = glAccountData.equityHeaderAccountOptions;
-          break;
-          case 'EXPENSE': accountOptions = glAccountData.expenseHeaderAccountOptions;
-          break;
-          case 'INCOME': accountOptions = glAccountData.incomeHeaderAccountOptions;
-          break;
-          case 'LIABILITY': accountOptions = glAccountData.liabilityHeaderAccountOptions;
-          break;
+          case 'ASSET':
+            accountOptions = glAccountData.assetHeaderAccountOptions;
+            break;
+          case 'EQUITY':
+            accountOptions = glAccountData.equityHeaderAccountOptions;
+            break;
+          case 'EXPENSE':
+            accountOptions = glAccountData.expenseHeaderAccountOptions;
+            break;
+          case 'INCOME':
+            accountOptions = glAccountData.incomeHeaderAccountOptions;
+            break;
+          case 'LIABILITY':
+            accountOptions = glAccountData.liabilityHeaderAccountOptions;
+            break;
         }
         if (glAccountData.parentId) {
           glAccountData.parent = accountOptions.find((accountOption: any) => {
@@ -51,5 +52,4 @@ export class GlAccountAndChartOfAccountsTemplateResolver implements Resolve<Obje
       })
     );
   }
-
 }

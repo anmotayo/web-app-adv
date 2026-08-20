@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { LoansService } from '../loans.service';
  * GLIM Account data resolver.
  */
 @Injectable()
-export class GLIMViewResolver implements Resolve<Object> {
-
-  /**
-   * @param {LoansService} loansService Loans service.
-   */
-  constructor(private loansService: LoansService) { }
+export class GLIMViewResolver {
+  private loansService = inject(LoansService);
 
   /**
    * Returns the Savings Account data.
@@ -29,5 +25,4 @@ export class GLIMViewResolver implements Resolve<Object> {
     const glimId = route.paramMap.get('glimId');
     return this.loansService.getGLIMAccountData(glimId, groupId);
   }
-
 }

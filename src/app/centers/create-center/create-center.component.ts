@@ -1,13 +1,25 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { GroupsService } from 'app/groups/groups.service';
 import { CentersService } from '../centers.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatNavList, MatListSubheaderCssMatStyler } from '@angular/material/list';
+import { MatLine } from '@angular/material/grid-list';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Center component.
@@ -15,9 +27,25 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-center',
   templateUrl: './create-center.component.html',
-  styleUrls: ['./create-center.component.scss']
+  styleUrls: ['./create-center.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatIconButton,
+    FaIconComponent,
+    MatNavList,
+    MatListSubheaderCssMatStyler,
+    MatLine
+  ]
 })
 export class CreateCenterComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private centerService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  private groupService = inject(GroupsService);
+  private dateUtils = inject(Dates);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -46,13 +74,7 @@ export class CreateCenterComponent implements OnInit {
    * @param {GroupsService} groupService GroupsService.
    * @param {Dates} dateUtils Date Utils to format date.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private centerService: CentersService,
-    private settingsService: SettingsService,
-    private groupService: GroupsService,
-    private dateUtils: Dates) {
+  constructor() {
     this.route.data.subscribe((data: { offices: any }) => {
       this.officeData = data.offices;
     });
@@ -71,12 +93,24 @@ export class CreateCenterComponent implements OnInit {
    */
   createCenterForm() {
     this.centerForm = this.formBuilder.group({
-      'name': ['', [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'officeId': ['', Validators.required],
-      'submittedOnDate': ['', Validators.required],
-      'staffId': [''],
-      'externalId': [''],
-      'active': [''],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      officeId: [
+        '',
+        Validators.required
+      ],
+      submittedOnDate: [
+        '',
+        Validators.required
+      ],
+      staffId: [''],
+      externalId: [''],
+      active: ['']
     });
     this.buildDependencies();
   }
@@ -156,5 +190,4 @@ export class CreateCenterComponent implements OnInit {
       this.router.navigate(['../centers']);
     });
   }
-
 }

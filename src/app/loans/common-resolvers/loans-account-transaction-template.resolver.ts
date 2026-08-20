@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { LoansService } from '../loans.service';
  * Loans Account Transaction Template data resolver.
  */
 @Injectable()
-export class LoansAccountTransactionTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {LoansService} LoansService Loans service.
-   */
-  constructor(private loansService: LoansService) { }
+export class LoansAccountTransactionTemplateResolver {
+  private loansService = inject(LoansService);
 
   /**
    * Returns the Loans Account Transaction Template data.
@@ -29,5 +25,4 @@ export class LoansAccountTransactionTemplateResolver implements Resolve<Object> 
     const transactionId = route.paramMap.get('id');
     return this.loansService.getLoansAccountTransactionTemplate(loanId, transactionId);
   }
-
 }

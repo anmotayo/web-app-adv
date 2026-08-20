@@ -1,16 +1,55 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 
 import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { ChargesFilterPipe } from '../../../../pipes/charges-filter.pipe';
+import { FormatNumberPipe } from '../../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-saving-product-charges-step',
   templateUrl: './saving-product-charges-step.component.html',
-  styleUrls: ['./saving-product-charges-step.component.scss']
+  styleUrls: ['./saving-product-charges-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatStepperPrevious,
+    MatStepperNext,
+    ChargesFilterPipe,
+    FormatNumberPipe
+  ]
 })
 export class SavingProductChargesStepComponent implements OnInit {
+  dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   @Input() savingProductsTemplate: any;
   @Input() currencyCode: UntypedFormControl;
@@ -18,12 +57,15 @@ export class SavingProductChargesStepComponent implements OnInit {
   chargeData: any;
 
   chargesDataSource: {}[];
-  displayedColumns: string[] = ['name', 'chargeCalculationType', 'amount', 'chargeTimeType', 'action'];
+  displayedColumns: string[] = [
+    'name',
+    'chargeCalculationType',
+    'amount',
+    'chargeTimeType',
+    'action'
+  ];
 
   pristine = true;
-
-  constructor(public dialog: MatDialog, private translateService: TranslateService) {
-  }
 
   ngOnInit() {
     this.chargeData = this.savingProductsTemplate.chargeOptions;
@@ -31,7 +73,7 @@ export class SavingProductChargesStepComponent implements OnInit {
     this.chargesDataSource = this.savingProductsTemplate.charges || [];
     this.pristine = true;
 
-    this.currencyCode.valueChanges.subscribe(() => this.chargesDataSource = []);
+    this.currencyCode.valueChanges.subscribe(() => (this.chargesDataSource = []));
   }
 
   addCharge(charge: any) {
@@ -58,5 +100,4 @@ export class SavingProductChargesStepComponent implements OnInit {
       charges: this.chargesDataSource
     };
   }
-
 }

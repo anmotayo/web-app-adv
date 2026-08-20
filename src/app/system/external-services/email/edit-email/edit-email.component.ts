@@ -1,10 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SystemService } from 'app/system/system.service';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Email Configuration Component.
@@ -12,9 +16,19 @@ import { SystemService } from 'app/system/system.service';
 @Component({
   selector: 'mifosx-edit-email',
   templateUrl: './edit-email.component.html',
-  styleUrls: ['./edit-email.component.scss']
+  styleUrls: ['./edit-email.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    FaIconComponent,
+    MatCheckbox
+  ]
 })
 export class EditEmailComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Password input field type. */
   passwordInputType: string;
@@ -30,10 +44,7 @@ export class EditEmailComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { emailConfiguration: any }) => {
       this.emailConfigurationData = data.emailConfiguration;
     });
@@ -52,13 +63,34 @@ export class EditEmailComponent implements OnInit {
    */
   setEmailConfigurationForm() {
     this.emailConfigurationForm = this.formBuilder.group({
-      'username': [this.emailConfigurationData[0].value, Validators.required],
-      'password': [this.emailConfigurationData[1].value, Validators.required],
-      'host': [this.emailConfigurationData[2].value, Validators.required],
-      'port': [this.emailConfigurationData[3].value, Validators.required],
-      'useTLS': [this.emailConfigurationData[4].value, Validators.required],
-      'fromEmail': [this.emailConfigurationData[5].value, Validators.required],
-      'fromName': [this.emailConfigurationData[6].value, Validators.required]
+      username: [
+        this.emailConfigurationData[0].value,
+        Validators.required
+      ],
+      password: [
+        this.emailConfigurationData[1].value,
+        Validators.required
+      ],
+      host: [
+        this.emailConfigurationData[2].value,
+        Validators.required
+      ],
+      port: [
+        this.emailConfigurationData[3].value,
+        Validators.required
+      ],
+      useTLS: [
+        this.emailConfigurationData[4].value,
+        Validators.required
+      ],
+      fromEmail: [
+        this.emailConfigurationData[5].value,
+        Validators.required
+      ],
+      fromName: [
+        this.emailConfigurationData[6].value,
+        Validators.required
+      ]
     });
   }
 
@@ -73,5 +105,4 @@ export class EditEmailComponent implements OnInit {
         this.router.navigate(['../'], { relativeTo: this.route });
       });
   }
-
 }

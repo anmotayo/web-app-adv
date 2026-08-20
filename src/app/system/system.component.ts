@@ -1,17 +1,35 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, TemplateRef, ViewChild, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
-import { PopoverService } from '../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../configuration-wizard/configuration-wizard.service';
+import { PopoverService } from '../configuration-wizard/popover/popover.service';
+import { MatNavList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatLine } from '@angular/material/grid-list';
+import { NgClass } from '@angular/common';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-system',
   templateUrl: './system.component.html',
-  styleUrls: ['./system.component.scss']
+  styleUrls: ['./system.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatNavList,
+    MatListItem,
+    MatIcon,
+    FaIconComponent,
+    MatLine,
+    NgClass
+  ]
 })
-export class SystemComponent implements OnInit, AfterViewInit {
+export class SystemComponent implements AfterViewInit {
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /* Reference of manage datatables */
   @ViewChild('datatables') datatables: ElementRef<any>;
@@ -41,18 +59,9 @@ export class SystemComponent implements OnInit, AfterViewInit {
   @ViewChild('manageReports') manageReports: ElementRef<any>;
   /* Template for popover on manage reports */
   @ViewChild('templateManageReports') templateManageReports: TemplateRef<any>;
-
-  /**
-   * @param {Router} router Router.
-   * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
-   * @param {PopoverService} popoverService PopoverService.
-   */
-  constructor(private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) { }
-
-  ngOnInit() {
-  }
+  // Initialize an array of 15 boolean values, all set to false
+  isDisabled: boolean = true;
+  arrowBooleans: boolean[] = new Array(15).fill(false);
 
   /**
    * Popover function
@@ -60,8 +69,14 @@ export class SystemComponent implements OnInit, AfterViewInit {
    * @param target HTMLElement | ElementRef<any>.
    * @param position String.
    * @param backdrop Boolean.
+   * @param arrowNumber - The index of the boolean value to toggle.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -129,7 +144,7 @@ export class SystemComponent implements OnInit, AfterViewInit {
    */
   nextStepCodes() {
     this.configurationWizardService.showSystemCodes = false;
-    this.configurationWizardService.showSystemCodesPage  = true;
+    this.configurationWizardService.showSystemCodesPage = true;
     this.router.navigate(['/system/codes']);
   }
 
@@ -228,5 +243,10 @@ export class SystemComponent implements OnInit, AfterViewInit {
     this.configurationWizardService.showManageReports = false;
     this.configurationWizardService.showManageFunds = true;
     this.router.navigate(['/organization/manage-funds']);
+  }
+
+  arrowBooleansToggle(arrowNumber: number) {
+    // Toggle the boolean value at the given index
+    this.arrowBooleans[arrowNumber] = !this.arrowBooleans[arrowNumber];
   }
 }

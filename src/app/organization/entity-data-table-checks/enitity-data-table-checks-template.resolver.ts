@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { OrganizationService } from '../organization.service';
  * Entity Data Table Checks data resolver.
  */
 @Injectable()
-export class EntityDataTableChecksTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class EntityDataTableChecksTemplateResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the Entity Data Table Checks data.
@@ -26,5 +21,4 @@ export class EntityDataTableChecksTemplateResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.organizationService.getEntityDataTableChecksTemplate();
   }
-
 }

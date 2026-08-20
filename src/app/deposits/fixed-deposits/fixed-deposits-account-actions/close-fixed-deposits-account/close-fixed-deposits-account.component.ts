@@ -1,12 +1,20 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { FixedDepositsService } from '../../fixed-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Close On Maturity Fixed Deposits Account Component
@@ -14,9 +22,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-close-fixed-deposits-account',
   templateUrl: './close-fixed-deposits-account.component.html',
-  styleUrls: ['./close-fixed-deposits-account.component.scss']
+  styleUrls: ['./close-fixed-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class CloseFixedDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private fixedDepositsService = inject(FixedDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -42,12 +60,7 @@ export class CloseFixedDepositsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private fixedDepositsService: FixedDepositsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { fixedDepositsAccountActionData: any }) => {
       this.savingsAccountsData = data.fixedDepositsAccountActionData.savingsAccounts;
       this.onAccountClosureOptions = data.fixedDepositsAccountActionData.onAccountClosureOptions;
@@ -70,10 +83,16 @@ export class CloseFixedDepositsAccountComponent implements OnInit {
    */
   createCloseOnMaturityAccountForm() {
     this.closeOnMaturityAccountForm = this.formBuilder.group({
-      'closedOnDate': ['', Validators.required],
-      'maturityAmount': [{value: this.maturityAmount, disabled: true}],
-      'onAccountClosureId': ['', Validators.required],
-      'note': ['']
+      closedOnDate: [
+        '',
+        Validators.required
+      ],
+      maturityAmount: [{ value: this.maturityAmount, disabled: true }],
+      onAccountClosureId: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -83,7 +102,10 @@ export class CloseFixedDepositsAccountComponent implements OnInit {
   addTransferDetails() {
     this.closeOnMaturityAccountForm.get('onAccountClosureId').valueChanges.subscribe((id: any) => {
       if (id === 200) {
-        this.closeOnMaturityAccountForm.addControl('toSavingsAccountId', new UntypedFormControl('', Validators.required));
+        this.closeOnMaturityAccountForm.addControl(
+          'toSavingsAccountId',
+          new UntypedFormControl('', Validators.required)
+        );
         this.closeOnMaturityAccountForm.addControl('transferDescription', new UntypedFormControl(''));
       } else {
         this.closeOnMaturityAccountForm.removeControl('toSavingsAccountId');
@@ -113,5 +135,4 @@ export class CloseFixedDepositsAccountComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

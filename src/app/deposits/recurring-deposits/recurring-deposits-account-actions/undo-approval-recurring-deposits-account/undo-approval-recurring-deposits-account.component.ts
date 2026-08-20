@@ -1,10 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { RecurringDepositsService } from '../../recurring-deposits.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Undo Approval Recurring Deposits Account Component
@@ -12,9 +14,17 @@ import { RecurringDepositsService } from '../../recurring-deposits.service';
 @Component({
   selector: 'mifosx-undo-approval-recurring-deposits-account',
   templateUrl: './undo-approval-recurring-deposits-account.component.html',
-  styleUrls: ['./undo-approval-recurring-deposits-account.component.scss']
+  styleUrls: ['./undo-approval-recurring-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class UndoApprovalRecurringDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private recurringDepositsService = inject(RecurringDepositsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Undo Approval Recurring Deposits Account form. */
   undoApprovalRecurringDepositsAccountForm: UntypedFormGroup;
@@ -30,10 +40,7 @@ export class UndoApprovalRecurringDepositsAccountComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private recurringDepositsService: RecurringDepositsService,
-    private route: ActivatedRoute,
-    private router: Router) {
+  constructor() {
     this.undoCommand = 'undoapproval'; // Default command
     this.undoAction = this.route.snapshot.params['name'];
     if (this.undoAction === 'Undo Activation') {
@@ -54,7 +61,7 @@ export class UndoApprovalRecurringDepositsAccountComponent implements OnInit {
    */
   createUndoApprovalRecurringDepositsAccountForm() {
     this.undoApprovalRecurringDepositsAccountForm = this.formBuilder.group({
-      'note': ['']
+      note: ['']
     });
   }
 
@@ -64,17 +71,20 @@ export class UndoApprovalRecurringDepositsAccountComponent implements OnInit {
    */
   submit() {
     const data = {
-      ...this.undoApprovalRecurringDepositsAccountForm.value,
+      ...this.undoApprovalRecurringDepositsAccountForm.value
     };
     if (this.undoAction === 'Undo Activation') {
-      this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, this.undoCommand, data).subscribe(() => {
-        this.router.navigate(['../../'], { relativeTo: this.route });
-      });
+      this.recurringDepositsService
+        .executeRecurringDepositsAccountCommand(this.accountId, this.undoCommand, data)
+        .subscribe(() => {
+          this.router.navigate(['../../'], { relativeTo: this.route });
+        });
     } else {
-      this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, 'undoapproval', data).subscribe(() => {
-        this.router.navigate(['../../'], { relativeTo: this.route });
-      });
+      this.recurringDepositsService
+        .executeRecurringDepositsAccountCommand(this.accountId, 'undoapproval', data)
+        .subscribe(() => {
+          this.router.navigate(['../../'], { relativeTo: this.route });
+        });
     }
   }
-
 }

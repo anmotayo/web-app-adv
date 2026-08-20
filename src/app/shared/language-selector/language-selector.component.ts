@@ -1,10 +1,11 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { TranslateService } from '@ngx-translate/core';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Language selector component.
@@ -15,9 +16,14 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-language-selector',
   templateUrl: './language-selector.component.html',
-  styleUrls: ['./language-selector.component.scss']
+  styleUrls: ['./language-selector.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
-export class LanguageSelectorComponent implements OnInit {
+export class LanguageSelectorComponent {
+  private translateService = inject(TranslateService);
+  private settingsService = inject(SettingsService);
 
   /** Language selector form control. */
   languageSelector = new UntypedFormControl();
@@ -26,19 +32,15 @@ export class LanguageSelectorComponent implements OnInit {
    * Sets the language of the application in the selector on initial setup.
    * @param {TranslateService} translateService Translate Service.
    */
-   constructor(private translateService: TranslateService,
-    private settingsService: SettingsService) {
+  constructor() {
     this.languageSelector.setValue(this.currentLanguage);
-  }
-
-  ngOnInit() {
   }
 
   /**
    * Sets a new language to be used by the application.
    * @param {string} language New language.
    */
-   setLanguage() {
+  setLanguage() {
     this.translateService.use(this.languageSelector.value);
     this.settingsService.setLanguage({ name: '', code: this.languageSelector.value.substring(0, 2) });
   }
@@ -58,5 +60,4 @@ export class LanguageSelectorComponent implements OnInit {
   get languages(): string[] {
     return this.translateService.getLangs();
   }
-
 }

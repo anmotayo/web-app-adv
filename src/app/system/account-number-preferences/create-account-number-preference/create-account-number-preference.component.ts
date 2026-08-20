@@ -1,10 +1,11 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Account Number Preference Component.
@@ -12,9 +13,16 @@ import { SystemService } from '../../system.service';
 @Component({
   selector: 'mifosx-create-account-number-preference',
   templateUrl: './create-account-number-preference.component.html',
-  styleUrls: ['./create-account-number-preference.component.scss']
+  styleUrls: ['./create-account-number-preference.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class CreateAccountNumberPreferenceComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Account Number Preferences Form */
   accountNumberPreferenceForm: UntypedFormGroup;
@@ -30,10 +38,7 @@ export class CreateAccountNumberPreferenceComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { accountNumberPreferencesTemplate: any }) => {
       this.accountNumberPreferencesTemplateData = data.accountNumberPreferencesTemplate;
     });
@@ -52,10 +57,12 @@ export class CreateAccountNumberPreferenceComponent implements OnInit {
    * Subscribes on Form Controls to change Prefix Type data.
    */
   getPrefixTypeValue() {
-    this.accountNumberPreferenceForm.get('accountType').valueChanges
-      .subscribe(accountId => {
-        this.prefixTypeData = this.accountNumberPreferencesTemplateData.prefixTypeOptions[`accountType.${this.accountNumberPreferencesTemplateData.accountTypeOptions.find((accountType: any) => accountType.id === accountId).value.toLowerCase()}`];
-      });
+    this.accountNumberPreferenceForm.get('accountType').valueChanges.subscribe((accountId) => {
+      this.prefixTypeData =
+        this.accountNumberPreferencesTemplateData.prefixTypeOptions[
+          `accountType.${this.accountNumberPreferencesTemplateData.accountTypeOptions.find((accountType: any) => accountType.id === accountId).value.toLowerCase()}`
+        ];
+    });
   }
 
   /**
@@ -63,8 +70,11 @@ export class CreateAccountNumberPreferenceComponent implements OnInit {
    */
   createAccountNumberPreferenceForm() {
     this.accountNumberPreferenceForm = this.formBuilder.group({
-      'accountType': ['', Validators.required],
-      'prefixType': ['']
+      accountType: [
+        '',
+        Validators.required
+      ],
+      prefixType: ['']
     });
   }
 
@@ -77,10 +87,14 @@ export class CreateAccountNumberPreferenceComponent implements OnInit {
     if (accountNumberPreference.prefixType === '') {
       accountNumberPreference.prefixType = undefined;
     }
-    this.systemService.createAccountNumberPreference(accountNumberPreference)
-      .subscribe((response: any) => {
-        this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
-      });
+    this.systemService.createAccountNumberPreference(accountNumberPreference).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

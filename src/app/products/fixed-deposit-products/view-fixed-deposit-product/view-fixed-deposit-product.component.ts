@@ -1,6 +1,8 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLinkActive, RouterLink, RouterOutlet } from '@angular/router';
+import { MatTabNav, MatTabLink, MatTabNavPanel } from '@angular/material/tabs';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Fixed Deposit Product component.
@@ -8,14 +10,22 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-view-fixed-deposit-product',
   templateUrl: './view-fixed-deposit-product.component.html',
-  styleUrls: ['./view-fixed-deposit-product.component.scss']
+  styleUrls: ['./view-fixed-deposit-product.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTabNav,
+    MatTabLink,
+    RouterLinkActive,
+    MatTabNavPanel,
+    RouterOutlet
+  ]
 })
-
-export class ViewFixedDepositProductComponent implements OnInit {
+export class ViewFixedDepositProductComponent {
+  private route = inject(ActivatedRoute);
 
   fixedDepositDatatables: any = [];
 
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { fixedDepositDatatables: any }) => {
       this.fixedDepositDatatables = [];
       data.fixedDepositDatatables.forEach((datatable: any) => {
@@ -25,8 +35,4 @@ export class ViewFixedDepositProductComponent implements OnInit {
       });
     });
   }
-
-  ngOnInit() {
-  }
-
 }

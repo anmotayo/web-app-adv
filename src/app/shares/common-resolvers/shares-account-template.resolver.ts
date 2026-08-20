@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { SharesService } from '../shares.service';
  * Shares Account Template resolver.
  */
 @Injectable()
-export class SharesAccountTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {SharesService} SharesService Shares service.
-   */
-  constructor(private sharesService: SharesService) { }
+export class SharesAccountTemplateResolver {
+  private sharesService = inject(SharesService);
 
   /**
    * Returns the Shares Account Template.
@@ -28,5 +24,4 @@ export class SharesAccountTemplateResolver implements Resolve<Object> {
     const clientId = route.parent.parent.paramMap.get('clientId');
     return this.sharesService.getSharesAccountTemplate(clientId);
   }
-
 }

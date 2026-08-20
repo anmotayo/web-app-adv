@@ -22,7 +22,7 @@ import { GeneralTabComponent } from './shares-account-view/general-tab/general-t
 const routes: Routes = [
   {
     path: '',
-    data: { title: 'Shares', breadcrumb: 'Shares', routeParamBreadcrumb: false },
+    data: { title: 'Shares', breadcrumb: 'Shares', routeParamBreadcrumb: false, addBreadcrumbLink: false },
     children: [
       {
         path: 'create',
@@ -54,7 +54,7 @@ const routes: Routes = [
                 data: { title: 'Shares Account General', breadcrumb: 'General', routeParamBreadcrumb: false },
                 resolve: {
                   sharesAccountData: SharesAccountViewResolver
-                },
+                }
               },
               {
                 path: 'transactions',
@@ -90,7 +90,7 @@ const routes: Routes = [
             }
           }
         ]
-      },
+      }
     ]
   }
 ];
@@ -108,4 +108,4 @@ const routes: Routes = [
     ShareAccountActionsResolver
   ]
 })
-export class SharesRoutingModule { }
+export class SharesRoutingModule {}

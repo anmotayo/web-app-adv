@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormBuilder, UntypedFormGroup, Validators, FormControl } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, FormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { AccountTransfersService } from '../account-transfers.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Standing Instructions
@@ -14,9 +15,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-standing-instructions',
   templateUrl: './create-standing-instructions.component.html',
-  styleUrls: ['./create-standing-instructions.component.scss']
+  styleUrls: ['./create-standing-instructions.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class CreateStandingInstructionsComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private accountTransfersService = inject(AccountTransfersService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
 
   /** Standing Instructions Data */
   standingIntructionsTemplate: any;
@@ -45,7 +55,7 @@ export class CreateStandingInstructionsComponent implements OnInit {
   /** From Account Data */
   fromAccountData: any;
   /** Destination Type Data */
-  destinationTypeData: { id: number; value: string; }[];
+  destinationTypeData: { id: number; value: string }[];
   /** To Office Type Data */
   toOfficeTypeData: any;
   /** To Client Type Data */
@@ -76,12 +86,7 @@ export class CreateStandingInstructionsComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service
    * @param {Dates} dateUtils Date Utils
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private accountTransfersService: AccountTransfersService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates) {
+  constructor() {
     this.route.data.subscribe((data: { standingIntructionsTemplate: any }) => {
       this.standingIntructionsTemplate = data.standingIntructionsTemplate;
       this.setParams();
@@ -113,7 +118,7 @@ export class CreateStandingInstructionsComponent implements OnInit {
     this.createCreateStandingInstructionsForm();
     this.buildDependencies();
     this.createStandingInstructionsForm.patchValue({
-      'applicant': this.standingIntructionsTemplate.fromClient.displayName
+      applicant: this.standingIntructionsTemplate.fromClient.displayName
     });
   }
 
@@ -122,26 +127,83 @@ export class CreateStandingInstructionsComponent implements OnInit {
    */
   createCreateStandingInstructionsForm() {
     this.createStandingInstructionsForm = this.formBuilder.group({
-      'name': ['', Validators.required],
-      'applicant': [{ value: '', disabled: true }],
-      'transferType': ['', Validators.required],
-      'priority': ['', Validators.required],
-      'status': ['', Validators.required],
-      'fromAccountType': ['', Validators.required],
-      'fromAccountId': ['', Validators.required],
-      'destination': ['', Validators.required],
-      'toOfficeId': ['', Validators.required],
-      'toClientId': ['', Validators.required],
-      'toAccountType': ['', Validators.required],
-      'toAccountId': ['', Validators.required],
-      'instructionType': ['', Validators.required],
-      'amount': ['', Validators.required],
-      'validFrom': ['', Validators.required],
-      'validTill': ['', Validators.required],
-      'recurrenceType': ['', Validators.required],
-      'recurrenceInterval': ['', Validators.required],
-      'recurrenceFrequency': ['', Validators.required],
-      'recurrenceOnMonthDay': ['', Validators.required]
+      name: [
+        '',
+        Validators.required
+      ],
+      applicant: [{ value: '', disabled: true }],
+      transferType: [
+        '',
+        Validators.required
+      ],
+      priority: [
+        '',
+        Validators.required
+      ],
+      status: [
+        '',
+        Validators.required
+      ],
+      fromAccountType: [
+        '',
+        Validators.required
+      ],
+      fromAccountId: [
+        '',
+        Validators.required
+      ],
+      destination: [
+        '',
+        Validators.required
+      ],
+      toOfficeId: [
+        '',
+        Validators.required
+      ],
+      toClientId: [
+        '',
+        Validators.required
+      ],
+      toAccountType: [
+        '',
+        Validators.required
+      ],
+      toAccountId: [
+        '',
+        Validators.required
+      ],
+      instructionType: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ],
+      validFrom: [
+        '',
+        Validators.required
+      ],
+      validTill: [
+        '',
+        Validators.required
+      ],
+      recurrenceType: [
+        '',
+        Validators.required
+      ],
+      recurrenceInterval: [
+        '',
+        Validators.required
+      ],
+      recurrenceFrequency: [
+        '',
+        Validators.required
+      ],
+      recurrenceOnMonthDay: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -152,7 +214,10 @@ export class CreateStandingInstructionsComponent implements OnInit {
     this.statusTypeData = this.standingIntructionsTemplate.statusOptions;
     this.fromAccountTypeData = this.standingIntructionsTemplate.fromAccountTypeOptions;
     this.fromAccountData = this.standingIntructionsTemplate.fromAccountOptions;
-    this.destinationTypeData = [{ id: 1, value: 'own account' }, { id: 2, value: 'with in bank' }];
+    this.destinationTypeData = [
+      { id: 1, value: 'own account' },
+      { id: 2, value: 'with in bank' }
+    ];
     this.toOfficeTypeData = this.standingIntructionsTemplate.toOfficeOptions;
     this.toClientTypeData = this.standingIntructionsTemplate.toClientOptions;
     this.toAccountTypeData = this.standingIntructionsTemplate.toAccountTypeOptions;
@@ -170,8 +235,8 @@ export class CreateStandingInstructionsComponent implements OnInit {
       if (destination === 1) {
         this.allowclientedit = false;
         this.createStandingInstructionsForm.patchValue({
-          'toOfficeId': this.officeId,
-          'toClientId': this.clientId
+          toOfficeId: this.officeId,
+          toClientId: this.clientId
         });
         this.ToOfficeId = true;
         this.ToClientId = true;
@@ -179,29 +244,30 @@ export class CreateStandingInstructionsComponent implements OnInit {
       } else {
         this.allowclientedit = true;
         this.createStandingInstructionsForm.patchValue({
-          'toOfficeId': '',
-          'toClientId': ''
+          toOfficeId: '',
+          toClientId: ''
         });
         this.createStandingInstructionsForm.controls['toOfficeId'].enable();
         this.createStandingInstructionsForm.controls['toClientId'].enable();
       }
     });
-
   }
 
   /** Executes on change of various select options */
   changeEvent() {
     const formValue = this.refineObject(this.createStandingInstructionsForm.value);
-    this.accountTransfersService.getStandingInstructionsTemplate(this.clientId, this.officeId, this.accountTypeId, formValue).subscribe((response: any) => {
-      this.standingIntructionsTemplate = response;
-      this.setOptions();
-    });
+    this.accountTransfersService
+      .getStandingInstructionsTemplate(this.clientId, this.officeId, this.accountTypeId, formValue)
+      .subscribe((response: any) => {
+        this.standingIntructionsTemplate = response;
+        this.setOptions();
+      });
   }
 
   /** Refine Object
    * Removes the object param with null or '' values
    */
-  refineObject(dataObj: Object) {
+  refineObject(dataObj: { [key: string]: any }) {
     const propNames = Object.getOwnPropertyNames(dataObj);
     for (let i = 0; i < propNames.length; i++) {
       const propName = propNames[i];
@@ -219,7 +285,7 @@ export class CreateStandingInstructionsComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const locale = this.settingsService.language.code;
     const standingInstructionData = {
-      ... this.createStandingInstructionsForm.value,
+      ...this.createStandingInstructionsForm.value,
       dateFormat,
       locale,
       monthDayFormat: 'dd MMMM',
@@ -227,7 +293,10 @@ export class CreateStandingInstructionsComponent implements OnInit {
       fromOfficeId: this.officeId,
       validFrom: this.dateUtils.formatDate(this.createStandingInstructionsForm.value.validFrom, dateFormat),
       validTill: this.dateUtils.formatDate(this.createStandingInstructionsForm.value.validTill, dateFormat),
-      recurrenceOnMonthDay: this.dateUtils.formatDate(this.createStandingInstructionsForm.value.recurrenceOnMonthDay, 'dd MMMM'),
+      recurrenceOnMonthDay: this.dateUtils.formatDate(
+        this.createStandingInstructionsForm.value.recurrenceOnMonthDay,
+        'dd MMMM'
+      )
     };
     delete standingInstructionData['destination'];
     delete standingInstructionData['applicant'];
@@ -235,5 +304,4 @@ export class CreateStandingInstructionsComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

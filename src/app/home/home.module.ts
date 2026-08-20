@@ -29,8 +29,6 @@ import { SessionTimeoutDialogComponent } from './timeout-dialog/session-timeout-
     PipesModule,
     HomeRoutingModule,
     TranslateModule,
-  ],
-  declarations: [
     HomeComponent,
     DashboardComponent,
     AmountCollectedPieComponent,
@@ -39,6 +37,6 @@ import { SessionTimeoutDialogComponent } from './timeout-dialog/session-timeout-
     WarningDialogComponent,
     SessionTimeoutDialogComponent
   ],
-  providers: [ ]
+  providers: []
 })
-export class HomeModule { }
+export class HomeModule {}

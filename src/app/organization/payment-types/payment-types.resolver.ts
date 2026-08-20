@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,18 +12,14 @@ import { OrganizationService } from '../organization.service';
  * Payment Types data resolver.
  */
 @Injectable()
-export class PaymentTypesResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class PaymentTypesResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the payment types data.
    * @returns {Observable<any>}
    */
-   resolve(route: ActivatedRouteSnapshot): Observable<any> {
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const paymentTypeId = route.paramMap.get('id');
     if (paymentTypeId) {
       return this.organizationService.getPaymentType(paymentTypeId);
@@ -31,5 +27,4 @@ export class PaymentTypesResolver implements Resolve<Object> {
       return this.organizationService.getPaymentTypes();
     }
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from '../products.service';
  * Recurring Deposit Product data resolver.
  */
 @Injectable()
-export class RecurringDepositProductResolver implements Resolve<Object> {
-
-  /**
-   * @param {ProductsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) { }
+export class RecurringDepositProductResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the recurring deposit product data.
@@ -27,5 +23,4 @@ export class RecurringDepositProductResolver implements Resolve<Object> {
     const productId = route.parent.paramMap.get('productId');
     return this.productsService.getRecurringDepositProduct(productId);
   }
-
 }

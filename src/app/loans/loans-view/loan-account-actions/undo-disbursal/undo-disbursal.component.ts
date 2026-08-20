@@ -1,10 +1,12 @@
 /** Angular Imports */
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormControl, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { UntypedFormControl, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { LoansService } from '../../../loans.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Undo Disbursal component.
@@ -12,9 +14,17 @@ import { LoansService } from '../../../loans.service';
 @Component({
   selector: 'mifosx-undo-disbursal',
   templateUrl: './undo-disbursal.component.html',
-  styleUrls: ['./undo-disbursal.component.scss']
+  styleUrls: ['./undo-disbursal.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class UndoDisbursalComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loansService = inject(LoansService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   @Input() actionName: string;
 
@@ -29,10 +39,7 @@ export class UndoDisbursalComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private loansService: LoansService,
-              private router: Router,
-              private route: ActivatedRoute) {
+  constructor() {
     this.loanId = this.route.snapshot.params['loanId'];
   }
 
@@ -51,9 +58,8 @@ export class UndoDisbursalComponent implements OnInit {
     if (this.actionName === 'Undo Last Disbursal') {
       command = 'undolastdisbursal';
     }
-    this.loansService.loanActionButtons(this.loanId, command, {'note': this.note.value}).subscribe((response: any) => {
+    this.loansService.loanActionButtons(this.loanId, command, { note: this.note.value }).subscribe((response: any) => {
       this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }
-
 }

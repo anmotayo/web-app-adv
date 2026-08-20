@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, QueryList, ViewChild, ViewChildren, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 /** Custom Services */
@@ -13,6 +13,10 @@ import { ClientDatatableStepComponent } from '../client-stepper/client-datatable
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { ClientPreviewStepComponent } from '../client-stepper/client-preview-step/client-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Client Component.
@@ -20,9 +24,26 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-create-client',
   templateUrl: './create-client.component.html',
-  styleUrls: ['./create-client.component.scss']
+  styleUrls: ['./create-client.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    ClientGeneralStepComponent,
+    ClientFamilyMembersStepComponent,
+    ClientAddressStepComponent,
+    ClientDatatableStepComponent,
+    ClientPreviewStepComponent
+  ]
 })
 export class CreateClientComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private clientsService = inject(ClientsService);
+  private settingsService = inject(SettingsService);
 
   /** Client General Step */
   @ViewChild(ClientGeneralStepComponent, { static: true }) clientGeneralStep: ClientGeneralStepComponent;
@@ -48,11 +69,8 @@ export class CreateClientComponent {
    * @param {ClientsService} clientsService Clients Service
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private route: ActivatedRoute,
-    private router: Router,
-    private clientsService: ClientsService,
-    private settingsService: SettingsService) {
-    this.route.data.subscribe((data: { clientTemplate: any, clientAddressFieldConfig: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { clientTemplate: any; clientAddressFieldConfig: any }) => {
       this.clientTemplate = data.clientTemplate;
       this.clientAddressFieldConfig = data.clientAddressFieldConfig;
       this.setDatatables();
@@ -87,7 +105,7 @@ export class CreateClientComponent {
   areFormvalids(): boolean {
     let areValids = this.clientGeneralForm.valid;
     if (this.clientTemplate.isAddressEnabled) {
-      areValids = areValids && (this.clientAddressStep.address.address.length > 0);
+      areValids = areValids && this.clientAddressStep.address.address.length > 0;
     }
     if (this.clientTemplate.datatables && this.clientTemplate.datatables.length > 0 && this.clientDatatables) {
       this.clientDatatables.forEach((clientDatatable: ClientDatatableStepComponent) => {
@@ -139,8 +157,13 @@ export class CreateClientComponent {
     }
 
     this.clientsService.createClient(clientData).subscribe((response: any) => {
-      this.router.navigate(['../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

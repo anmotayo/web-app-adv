@@ -1,15 +1,26 @@
 /** Angular Imports  */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { SystemService } from '../../system.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as _ from 'lodash';
+import { SystemService } from '../../system.service';
 
 /** Custom Components */
+import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from '../../../shared/delete-dialog/delete-dialog.component';
 import { DisableDialogComponent } from '../../../shared/disable-dialog/disable-dialog.component';
 import { EnableDialogComponent } from '../../../shared/enable-dialog/enable-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { NgClass } from '@angular/common';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatDivider } from '@angular/material/divider';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
+/** Custom Service Zitadel */
+import { environment } from '../../../../environments/environment';
+import { AuthService } from 'app/zitadel/auth.service';
 
 /**
  * View Role and Permissions Component
@@ -17,9 +28,25 @@ import { EnableDialogComponent } from '../../../shared/enable-dialog/enable-dial
 @Component({
   selector: 'mifosx-view-role',
   templateUrl: './view-role.component.html',
-  styleUrls: ['./view-role.component.scss']
+  styleUrls: ['./view-role.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatList,
+    MatListItem,
+    NgClass,
+    MatDivider,
+    MatCheckbox
+  ]
 })
 export class ViewRoleComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private systemService = inject(SystemService);
+  private router = inject(Router);
+  private formBuilder = inject(UntypedFormBuilder);
+  private translateService = inject(TranslateService);
+  dialog = inject(MatDialog);
+  private authService = inject(AuthService);
 
   /** Role Permissions Data */
   rolePermissionService: any;
@@ -45,12 +72,15 @@ export class ViewRoleComponent implements OnInit {
   backupform: UntypedFormGroup;
   /** Temporarily stores Permission data */
   tempPermissionUIData: {
-    permissions: { code: string }[]
-  }[];
+    [key: string]: {
+      permissions: { code: string; id: number; selected?: boolean }[];
+    };
+  } = {};
   /** Stores permissions */
   permissions: {
-    permissions: { code: string, id: number }[]
-  };
+    permissions: { code: string; id: number }[];
+  } = { permissions: [] };
+  /** Add role zitadel */
 
   /**
    * Retrieves the roledetails data from `resolve`.
@@ -59,12 +89,9 @@ export class ViewRoleComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {FormBuilder} formBuilder Form Builder.
    * @param {MatDialog} dialog Shared Dialog Boxes.
+   * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private route: ActivatedRoute,
-    private systemService: SystemService,
-    private router: Router,
-    private formBuilder: UntypedFormBuilder,
-    public dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { roledetails: any }) => {
       this.rolePermissionService = data.roledetails;
     });
@@ -91,17 +118,24 @@ export class ViewRoleComponent implements OnInit {
    */
   createForm() {
     this.formGroup = this.formBuilder.group({
-      roster: this.formBuilder.array(this.rolePermissionService.permissionUsageData.map((elem: any) => this.createMemberGroup(elem)))
+      roster: this.formBuilder.array(
+        this.rolePermissionService.permissionUsageData.map((elem: any) => this.createMemberGroup(elem))
+      )
     });
-
   }
 
   createMemberGroup(permission: any): UntypedFormGroup {
     return this.formBuilder.group({
       ...permission,
       ...{
-        code: [permission.code, Validators.required],
-        selected: [{ value: permission.selected, disabled: true }, Validators.required]
+        code: [
+          permission.code,
+          Validators.required
+        ],
+        selected: [
+          { value: permission.selected, disabled: true },
+          Validators.required
+        ]
       }
     });
   }
@@ -110,9 +144,7 @@ export class ViewRoleComponent implements OnInit {
    * Groups the permissions based on rules
    */
   groupRules() {
-    this.tempPermissionUIData = [{
-      permissions: []
-    }];
+    this.tempPermissionUIData = {};
     for (const i in this.rolePermissionService.permissionUsageData) {
       if (this.rolePermissionService.permissionUsageData[i]) {
         if (this.rolePermissionService.permissionUsageData[i].grouping !== this.currentGrouping) {
@@ -120,7 +152,11 @@ export class ViewRoleComponent implements OnInit {
           this.groupings.push(this.currentGrouping);
           this.tempPermissionUIData[this.currentGrouping] = { permissions: [] };
         }
-        const temp = { code: this.rolePermissionService.permissionUsageData[i].code, id: i, selected: this.rolePermissionService.permissionUsageData[i].selected };
+        const temp = {
+          code: this.rolePermissionService.permissionUsageData[i].code,
+          id: +i,
+          selected: this.rolePermissionService.permissionUsageData[i].selected
+        };
         this.tempPermissionUIData[this.currentGrouping].permissions.push(temp);
       }
     }
@@ -160,7 +196,7 @@ export class ViewRoleComponent implements OnInit {
     name = name || '';
     // replace '_' with ' '
     name = name.replace(/_/g, ' ');
-    // for reorts replace read with view
+    // for reports replace read with view
     if (this.previousGrouping === 'report') {
       name = name.replace(/READ/g, 'View');
     }
@@ -168,7 +204,7 @@ export class ViewRoleComponent implements OnInit {
   }
 
   /**
-   * Backups the valued
+   * Backups the values
    */
   backupCheckValues() {
     this.backupform = _.cloneDeep(this.formGroup) as UntypedFormGroup;
@@ -203,28 +239,27 @@ export class ViewRoleComponent implements OnInit {
    */
   submit() {
     const value = this.formGroup.get('roster').value;
-    const data = {};
+    const data: { [key: string]: boolean } = {};
     const permissionData = {
       permissions: {}
     };
-    for (let i = 0; i < value.length; i++ ) {
+    for (let i = 0; i < value.length; i++) {
       data[value[i].code] = value[i].selected;
     }
     permissionData.permissions = data;
     this.formGroup.controls.roster.disable();
     this.checkboxesChanged = false;
     this.isDisabled = true;
-    this.systemService.updateRolePermission(this.roleId, permissionData).subscribe((response: any) => {
-      console.log('response: ', response);
-    });
+    this.systemService.updateRolePermission(this.roleId, permissionData).subscribe((response: any) => {});
   }
 
   /**
    * Selects all the permission of a particular role
    */
   selectAll() {
+    const roster = this.formGroup.get('roster') as FormArray;
     for (let i = 0; i < this.permissions.permissions.length; i++) {
-      this.formGroup.controls.roster['controls'][this.permissions.permissions[i].id].patchValue({
+      roster.at(this.permissions.permissions[i].id).patchValue({
         selected: true
       });
     }
@@ -234,8 +269,9 @@ export class ViewRoleComponent implements OnInit {
    * Deselects all the permissions of a particular role
    */
   deselectAll() {
+    const roster = this.formGroup.get('roster') as FormArray;
     for (let i = 0; i < this.permissions.permissions.length; i++) {
-      this.formGroup.controls.roster['controls'][this.permissions.permissions[i].id].patchValue({
+      roster.at(this.permissions.permissions[i].id).patchValue({
         selected: false
       });
     }
@@ -246,16 +282,17 @@ export class ViewRoleComponent implements OnInit {
    */
   deleteRole() {
     const deleteRoleDialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext: `role ${this.roleId}` }
+      data: { deleteContext: this.translateService.instant('labels.inputs.Role') + ' ' + this.roleId }
     });
     deleteRoleDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.systemService.deleteRole(this.roleId)
-          .subscribe(() => {
-            this.router.navigate(['/system/roles-and-permissions']);
-          });
+        this.systemService.deleteRole(this.roleId).subscribe(() => {
+          if (environment.OIDC.oidcServerEnabled) {
+            this.authService.deleteRole(this.roleId);
+          }
+          this.router.navigate(['/system/roles-and-permissions']);
+        });
       } else {
-
       }
     });
   }
@@ -265,16 +302,14 @@ export class ViewRoleComponent implements OnInit {
    */
   enableRolesConfirmation() {
     const enableRoleDialogRef = this.dialog.open(EnableDialogComponent, {
-      data: { enableContext: `role ${this.roleId}` }
+      data: { enableContext: this.translateService.instant('labels.inputs.Role') + ' ' + this.roleId }
     });
     enableRoleDialogRef.afterClosed().subscribe((response: any) => {
       if (response.enable) {
-        this.systemService.enableRole(this.roleId)
-          .subscribe(() => {
-            this.router.navigate(['/system/roles-and-permissions']);
-          });
+        this.systemService.enableRole(this.roleId).subscribe(() => {
+          this.router.navigate(['/system/roles-and-permissions']);
+        });
       } else {
-
       }
     });
   }
@@ -284,18 +319,15 @@ export class ViewRoleComponent implements OnInit {
    */
   disableRolesConfirmation() {
     const deleteRoleDialogRef = this.dialog.open(DisableDialogComponent, {
-      data: { disableContext: `role ${this.roleId}` }
+      data: { disableContext: this.translateService.instant('labels.inputs.Role') + ' ' + this.roleId }
     });
     deleteRoleDialogRef.afterClosed().subscribe((response: any) => {
       if (response.disable) {
-        this.systemService.disableRole(this.roleId)
-          .subscribe(() => {
-            this.router.navigate(['/system/roles-and-permissions']);
-          });
+        this.systemService.disableRole(this.roleId).subscribe(() => {
+          this.router.navigate(['/system/roles-and-permissions']);
+        });
       } else {
-
       }
     });
   }
-
 }

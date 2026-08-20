@@ -1,12 +1,9 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-@Pipe({
-  name: 'yesNo'
-})
+@Pipe({ name: 'yesNo' })
 export class YesnoPipe implements PipeTransform {
-
-  constructor(private translateService: TranslateService) { }
+  private translateService = inject(TranslateService);
 
   transform(value: boolean, ...args: unknown[]): string {
     if (value == null) {
@@ -15,5 +12,4 @@ export class YesnoPipe implements PipeTransform {
     const result = value ? 'Yes' : 'No';
     return this.translateService.instant('labels.buttons.' + result);
   }
-
 }

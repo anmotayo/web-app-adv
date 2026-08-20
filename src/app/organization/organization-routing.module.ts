@@ -52,7 +52,7 @@ import { ViewBulkImportComponent } from './bulk-import/view-bulk-import/view-bul
 import { ViewLoanProvisioningCriteriaComponent } from './loan-provisioning-criteria/view-loan-provisioning-criteria/view-loan-provisioning-criteria.component';
 import { CreateCampaignComponent } from './sms-campaigns/create-campaign/create-campaign.component';
 import { EditCampaignComponent } from './sms-campaigns/edit-campaign/edit-campaign.component';
-import { CreateEnityDataTableChecksComponent } from './entity-data-table-checks/create-enity-data-table-checks/create-enity-data-table-checks.component';
+import { CreateEntityDataTableChecksComponent } from './entity-data-table-checks/create-entity-data-table-checks/create-entity-data-table-checks.component';
 import { CreateLoanProvisioningCriteriaComponent } from './loan-provisioning-criteria/create-loan-provisioning-criteria/create-loan-provisioning-criteria.component';
 import { BulkLoanReassignmnetComponent } from './bulk-loan-reassignmnet/bulk-loan-reassignmnet.component';
 import { EditLoanProvisioningCriteriaComponent } from './loan-provisioning-criteria/edit-loan-provisioning-criteria/edit-loan-provisioning-criteria.component';
@@ -131,7 +131,7 @@ const routes: Routes = [
               data: { title: 'Create Provisioning Criteria', breadcrumb: 'Create Provisioning Criteria' },
               component: CreateLoanProvisioningCriteriaComponent,
               resolve: {
-                loanProvisioningCriteriaTemplate: LoanProvisioningCriteriaTemplateResolver,
+                loanProvisioningCriteriaTemplate: LoanProvisioningCriteriaTemplateResolver
               }
             },
             {
@@ -155,7 +155,7 @@ const routes: Routes = [
                 }
               ]
             }
-          ],
+          ]
         },
         {
           path: 'offices',
@@ -165,7 +165,7 @@ const routes: Routes = [
               path: '',
               component: OfficesComponent,
               resolve: {
-              offices: OfficesResolver
+                offices: OfficesResolver
               }
             },
             {
@@ -173,7 +173,7 @@ const routes: Routes = [
               component: CreateOfficeComponent,
               data: { title: 'Create Office', breadcrumb: 'Create Office' },
               resolve: {
-                offices: OfficesResolver,
+                offices: OfficesResolver
               }
             },
             {
@@ -181,7 +181,7 @@ const routes: Routes = [
               data: { title: 'View Office', breadcrumb: 'officeId', routeParamBreadcrumb: 'officeId' },
               component: ViewOfficeComponent,
               resolve: {
-                 officeDatatables: OfficeDatatablesResolver,
+                officeDatatables: OfficeDatatablesResolver
               },
               children: [
                 {
@@ -199,7 +199,8 @@ const routes: Routes = [
                 },
                 {
                   path: 'datatables',
-                  children: [{
+                  children: [
+                    {
                       path: ':datatableName',
                       component: DatatableTabsComponent,
                       data: { title: 'Data Table View', routeParamBreadcrumb: 'datatableName' },
@@ -248,7 +249,7 @@ const routes: Routes = [
                   path: '',
                   component: ViewEmployeeComponent,
                   resolve: {
-                    employee: EmployeeResolver,
+                    employee: EmployeeResolver
                   }
                 },
                 {
@@ -272,7 +273,7 @@ const routes: Routes = [
           children: [
             {
               path: '',
-              component: CurrenciesComponent,
+              component: CurrenciesComponent
             },
             {
               path: 'manage',
@@ -302,7 +303,10 @@ const routes: Routes = [
             },
             {
               path: ':id',
-              data: { title: 'View SMS Campaign', routeResolveBreadcrumb: ['smsCampaign', 'campaignName'] },
+              data: { title: 'View SMS Campaign', routeResolveBreadcrumb: [
+                  'smsCampaign',
+                  'campaignName'
+                ] },
               resolve: {
                 smsCampaign: SmsCampaignResolver
               },
@@ -310,14 +314,14 @@ const routes: Routes = [
               children: [
                 {
                   path: '',
-                  component: ViewCampaignComponent,
+                  component: ViewCampaignComponent
                 },
                 {
                   path: 'edit',
                   component: EditCampaignComponent,
-                  data: { title: 'Edit SMS Campaign', breadcrumb: 'Edit', routeResolveBreadcrumb: false},
+                  data: { title: 'Edit SMS Campaign', breadcrumb: 'Edit', routeResolveBreadcrumb: false },
                   resolve: {
-                    smsCampaignTemplate: SmsCampaignTemplateResolver,
+                    smsCampaignTemplate: SmsCampaignTemplateResolver
                   }
                 }
               ]
@@ -335,7 +339,7 @@ const routes: Routes = [
         {
           path: 'fund-mapping',
           component: FundMappingComponent,
-          data: { title: 'Advance Search', breadcrumb: 'Advance Search' },
+          data: { title: 'Fund Mapping', breadcrumb: 'Fund Mapping' },
           resolve: {
             advanceSearchTemplate: AdvanceSearchTemplateResolver
           }
@@ -344,7 +348,7 @@ const routes: Routes = [
           path: 'investors',
           component: InvestorsComponent,
           data: { title: 'Investors', breadcrumb: 'Investors' },
-          resolve: {  }
+          resolve: {}
         },
         {
           path: 'adhoc-query',
@@ -374,7 +378,7 @@ const routes: Routes = [
                   component: ViewAdhocQueryComponent,
                   resolve: {
                     adhocQuery: AdhocQueryResolver
-                  },
+                  }
                 },
                 {
                   path: 'edit',
@@ -416,7 +420,7 @@ const routes: Routes = [
                   component: ViewTellerComponent,
                   resolve: {
                     teller: TellerResolver
-                  },
+                  }
                 },
                 {
                   path: 'edit',
@@ -469,7 +473,11 @@ const routes: Routes = [
                         },
                         {
                           path: 'transactions',
-                          data: { title: 'Cashier Transactions', breadcrumb: 'Transactions', routeParamBreadcrumb: false },
+                          data: {
+                            title: 'Cashier Transactions',
+                            breadcrumb: 'Transactions',
+                            routeParamBreadcrumb: false
+                          },
                           component: TransactionsComponent,
                           resolve: {
                             currencies: CurrenciesResolver
@@ -513,7 +521,7 @@ const routes: Routes = [
             {
               path: 'create',
               component: CreatePaymentTypeComponent,
-              data: { title: 'Create Payment Type', breadcrumb: 'Create Payment Type'}
+              data: { title: 'Create Payment Type', breadcrumb: 'Create Payment Type' }
             },
             {
               path: ':id',
@@ -556,11 +564,11 @@ const routes: Routes = [
               component: EntityDataTableChecksComponent,
               resolve: {
                 entityDataTableChecks: EntityDataTableChecksResolver
-              },
+              }
             },
             {
               path: 'create',
-              component: CreateEnityDataTableChecksComponent,
+              component: CreateEntityDataTableChecksComponent,
               data: { title: 'Create Entity Data Table Checks', breadcrumb: 'Create' },
               resolve: {
                 dataTableEntity: EntityDataTableChecksTemplateResolver
@@ -585,7 +593,7 @@ const routes: Routes = [
               component: ManageFundsComponent,
               resolve: {
                 funds: ManageFundsResolver
-              },
+              }
             },
             {
               path: 'create',
@@ -604,7 +612,7 @@ const routes: Routes = [
                   component: ViewFundComponent,
                   resolve: {
                     fundData: ManageFundResolver
-                  },
+                  }
                 },
                 {
                   path: 'edit',
@@ -613,9 +621,9 @@ const routes: Routes = [
                   resolve: {
                     fundData: ManageFundResolver
                   }
-                },
+                }
               ]
-            },
+            }
           ],
           resolve: {
             funds: ManageFundsResolver
@@ -627,7 +635,7 @@ const routes: Routes = [
           children: [
             {
               path: '',
-              component: BulkImportComponent,
+              component: BulkImportComponent
             },
             {
               path: ':import-name',
@@ -740,4 +748,4 @@ const routes: Routes = [
     AdvanceSearchTemplateResolver
   ]
 })
-export class OrganizationRoutingModule { }
+export class OrganizationRoutingModule {}

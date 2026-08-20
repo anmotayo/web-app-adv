@@ -1,7 +1,7 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /**
  * Custom Services
@@ -9,13 +9,23 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ClientsService } from 'app/clients/clients.service';
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-add-client-collateral',
   templateUrl: './add-client-collateral.component.html',
-  styleUrls: ['./add-client-collateral.component.scss']
+  styleUrls: ['./add-client-collateral.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AddClientCollateralComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private productsService = inject(ProductsService);
+  private clientsService = inject(ClientsService);
+  private settingsService = inject(SettingsService);
 
   /** Client Collateral Form */
   clientCollateralForm: UntypedFormGroup;
@@ -33,19 +43,12 @@ export class AddClientCollateralComponent implements OnInit {
    * @param {Router} router Router.
    * @param {ProductsService} productsService Products Service
    */
-  constructor(
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private productsService: ProductsService,
-    private clientsService: ClientsService,
-    private settingsService: SettingsService,
-    ) {
-      this.route.data.subscribe((data: { clientActionData: any }) => {
-        this.clientCollateralOptions = data.clientActionData;
-      });
-      this.clientId = this.route.parent.snapshot.params['clientId'];
-    }
+  constructor() {
+    this.route.data.subscribe((data: { clientActionData: any }) => {
+      this.clientCollateralOptions = data.clientActionData;
+    });
+    this.clientId = this.route.parent.snapshot.params['clientId'];
+  }
 
   ngOnInit(): void {
     this.createClientCollateralForm();
@@ -56,22 +59,22 @@ export class AddClientCollateralComponent implements OnInit {
    * Subscribe to Form controls value changes
    */
   buildDependencies() {
-    this.clientCollateralForm.controls.collateralId.valueChanges.subscribe(collateralId => {
+    this.clientCollateralForm.controls.collateralId.valueChanges.subscribe((collateralId) => {
       this.productsService.getCollateral(collateralId).subscribe((data: any) => {
         this.collateralDetails = data;
         this.clientCollateralForm.patchValue({
-          'name': data.name,
-          'quality': data.quality,
-          'unitType': data.unitType,
-          'basePrice': this.collateralDetails.basePrice,
-          'pctToBase': this.collateralDetails.pctToBase,
+          name: data.name,
+          quality: data.quality,
+          unitType: data.unitType,
+          basePrice: this.collateralDetails.basePrice,
+          pctToBase: this.collateralDetails.pctToBase
         });
       });
     });
     this.clientCollateralForm.controls.quantity.valueChanges.subscribe((quantity: any) => {
       this.clientCollateralForm.patchValue({
-        'totalValue': this.collateralDetails.basePrice * quantity,
-        'totalCollateralValue': this.collateralDetails.basePrice * this.collateralDetails.pctToBase * quantity / 100
+        totalValue: this.collateralDetails.basePrice * quantity,
+        totalCollateralValue: (this.collateralDetails.basePrice * this.collateralDetails.pctToBase * quantity) / 100
       });
     });
   }
@@ -81,15 +84,21 @@ export class AddClientCollateralComponent implements OnInit {
    */
   createClientCollateralForm() {
     this.clientCollateralForm = this.formBuilder.group({
-      'collateralId': [ '', Validators.required ],
-      'quantity': [ '', Validators.required ],
-      'name': [{ value: '', disabled: true }],
-      'quality': [{value: '', disabled: true}],
-      'unitType': [{value: '', disabled: true}],
-      'basePrice': [{value: '', disabled: true}],
-      'pctToBase': [{value: '', disabled: true}],
-      'totalValue': [{value: '', disabled: true}],
-      'totalCollateralValue': [{value: '', disabled: true}],
+      collateralId: [
+        '',
+        Validators.required
+      ],
+      quantity: [
+        '',
+        Validators.required
+      ],
+      name: [{ value: '', disabled: true }],
+      quality: [{ value: '', disabled: true }],
+      unitType: [{ value: '', disabled: true }],
+      basePrice: [{ value: '', disabled: true }],
+      pctToBase: [{ value: '', disabled: true }],
+      totalValue: [{ value: '', disabled: true }],
+      totalCollateralValue: [{ value: '', disabled: true }]
     });
   }
 
@@ -106,8 +115,7 @@ export class AddClientCollateralComponent implements OnInit {
       locale
     };
     this.clientsService.createClientCollateral(this.clientId, clientCollateral).subscribe(() => {
-      this.router.navigate(['../../'], {relativeTo: this.route});
+      this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

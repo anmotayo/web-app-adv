@@ -1,6 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit, Input, ViewChild, EventEmitter, Output} from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, Input, ViewChild, EventEmitter, Output, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
 
 /** Custom Services */
 import { ReportsService } from 'app/reports/reports.service';
@@ -10,6 +16,10 @@ import { ReportParameter } from 'app/reports/common-models/report-parameter.mode
 
 /** Custom Components */
 import { BusinessRuleParametersComponent } from './business-rule-parameters/business-rule-parameters.component';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * SMS Campaign Step Component
@@ -17,9 +27,19 @@ import { BusinessRuleParametersComponent } from './business-rule-parameters/busi
 @Component({
   selector: 'mifosx-sms-campaign-step',
   templateUrl: './sms-campaign-step.component.html',
-  styleUrls: ['./sms-campaign-step.component.scss']
+  styleUrls: ['./sms-campaign-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext,
+    BusinessRuleParametersComponent
+  ]
 })
 export class SmsCampaignStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private reportService = inject(ReportsService);
 
   /** SMS Campaign Template */
   @Input() smsCampaignTemplate: any;
@@ -51,8 +71,7 @@ export class SmsCampaignStepComponent implements OnInit {
    * @param {FormBuilder} formBuilder Form Builder
    * @param {ReportsService} reportService Reports Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private reportService: ReportsService) {
+  constructor() {
     this.createSMSCampaignDetailsForm();
     this.buildDependencies();
   }
@@ -112,11 +131,20 @@ export class SmsCampaignStepComponent implements OnInit {
    */
   createSMSCampaignDetailsForm() {
     this.smsCampaignDetailsForm = this.formBuilder.group({
-      'campaignName': ['', Validators.required],
-      'providerId': [null],
-      'triggerType': ['', Validators.required],
-      'runReportId': ['', Validators.required],
-      'isNotification': [false]
+      campaignName: [
+        '',
+        Validators.required
+      ],
+      providerId: [null],
+      triggerType: [
+        '',
+        Validators.required
+      ],
+      runReportId: [
+        '',
+        Validators.required
+      ],
+      isNotification: [false]
     });
   }
 
@@ -159,18 +187,44 @@ export class SmsCampaignStepComponent implements OnInit {
           this.smsCampaignDetailsForm.removeControl('repeatsOnDay');
           switch (frequency) {
             case 1: // Daily
-              this.repetitionIntervals = ['1', '2', '3'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3'
+              ];
+              break;
             case 2: // Weekly
-              this.repetitionIntervals = ['1', '2', '3'];
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3'
+              ];
               this.smsCampaignDetailsForm.addControl('repeatsOnDay', new UntypedFormControl('', Validators.required));
-            break;
+              break;
             case 3: // Monthly
-              this.repetitionIntervals = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                '10',
+                '11'
+              ];
+              break;
             case 4: // Yearly
-              this.repetitionIntervals = ['1', '2', '3', '4', '5'];
-            break;
+              this.repetitionIntervals = [
+                '1',
+                '2',
+                '3',
+                '4',
+                '5'
+              ];
+              break;
           }
         });
       } else {
@@ -181,5 +235,4 @@ export class SmsCampaignStepComponent implements OnInit {
       }
     });
   }
-
 }

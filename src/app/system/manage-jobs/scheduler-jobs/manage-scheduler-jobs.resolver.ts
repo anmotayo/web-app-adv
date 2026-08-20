@@ -6,17 +6,17 @@ import { Resolve } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 
 /** Custom Services */
-import { SystemService } from '../system.service';
+import { SystemService } from '../../system.service';
 
 /**
  * Manage Scheduler Jobs data resolver.
  */
 @Injectable()
 export class ManageSchedulerJobsResolver implements Resolve<Object> {
-
   /**
    * @param {SystemService} systemService System service.
    */
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   constructor(private systemService: SystemService) {}
 
   /**
@@ -29,5 +29,4 @@ export class ManageSchedulerJobsResolver implements Resolve<Object> {
       this.systemService.getScheduler()
     ]);
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Services */
@@ -9,6 +9,8 @@ import { UsersService } from '../users.service';
 /** Custom Components */
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { ChangePasswordDialogComponent } from 'app/shared/change-password-dialog/change-password-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View user component.
@@ -16,9 +18,18 @@ import { ChangePasswordDialogComponent } from 'app/shared/change-password-dialog
 @Component({
   selector: 'mifosx-view-user',
   templateUrl: './view-user.component.html',
-  styleUrls: ['./view-user.component.scss']
+  styleUrls: ['./view-user.component.scss'],
+  standalone: true,
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
-export class ViewUserComponent implements OnInit {
+export class ViewUserComponent {
+  private usersService = inject(UsersService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   /** User Data. */
   userData: any;
@@ -30,16 +41,10 @@ export class ViewUserComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private usersService: UsersService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { user: any }) => {
       this.userData = data.user;
     });
-  }
-
-  ngOnInit() {
   }
 
   /**
@@ -51,10 +56,9 @@ export class ViewUserComponent implements OnInit {
     });
     deleteUserDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.usersService.deleteUser(this.userData.id)
-          .subscribe(() => {
-            this.router.navigate(['/appusers']);
-          });
+        this.usersService.deleteUser(this.userData.id).subscribe(() => {
+          this.router.navigate(['/appusers']);
+        });
       }
     });
   }
@@ -64,20 +68,18 @@ export class ViewUserComponent implements OnInit {
    */
   changeUserPassword() {
     const changeUserPasswordDialogRef = this.dialog.open(ChangePasswordDialogComponent, {
-      width: '400px',
-      height: '300px'
+      width: '440px'
     });
     changeUserPasswordDialogRef.afterClosed().subscribe((response: any) => {
       if (response.password && response.repeatPassword) {
         const password = response.password;
         const repeatPassword = response.repeatPassword;
         const firstname = this.userData.firstname;
-        const data = {password: password, repeatPassword: repeatPassword, firstname: firstname};
+        const data = { password: password, repeatPassword: repeatPassword, firstname: firstname };
         this.usersService.changePassword(this.userData.id, data).subscribe(() => {
           this.router.navigate(['/appusers']);
         });
       }
     });
   }
-
 }

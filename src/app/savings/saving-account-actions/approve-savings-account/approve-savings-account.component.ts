@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Approve Savings Account Component
@@ -14,9 +16,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-approve-savings-account',
   templateUrl: './approve-savings-account.component.html',
-  styleUrls: ['./approve-savings-account.component.scss']
+  styleUrls: ['./approve-savings-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class ApproveSavingsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private savingsService = inject(SavingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +47,7 @@ export class ApproveSavingsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private savingsService: SavingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.snapshot.params['savingAccountId'];
   }
 
@@ -57,8 +64,11 @@ export class ApproveSavingsAccountComponent implements OnInit {
    */
   createApproveSavingsAccountForm() {
     this.approveSavingsAccountForm = this.formBuilder.group({
-      'approvedOnDate': ['', Validators.required],
-      'note': ['']
+      approvedOnDate: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -83,5 +93,4 @@ export class ApproveSavingsAccountComponent implements OnInit {
       this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

@@ -60,14 +60,13 @@ import { BusinessRuleParametersComponent } from './sms-campaigns/sms-campaign-st
 import { EditCampaignComponent } from './sms-campaigns/edit-campaign/edit-campaign.component';
 import { EditSmsCampaignStepComponent } from './sms-campaigns/sms-campaign-stepper/edit-sms-campaign-step/edit-sms-campaign-step.component';
 import { EditBusinessRuleParametersComponent } from './sms-campaigns/sms-campaign-stepper/edit-sms-campaign-step/edit-business-rule-parameters/edit-business-rule-parameters.component';
-import { CreateEnityDataTableChecksComponent } from './entity-data-table-checks/create-enity-data-table-checks/create-enity-data-table-checks.component';
+import { CreateEntityDataTableChecksComponent } from './entity-data-table-checks/create-entity-data-table-checks/create-entity-data-table-checks.component';
 import { BulkLoanReassignmnetComponent } from './bulk-loan-reassignmnet/bulk-loan-reassignmnet.component';
 import { CreateLoanProvisioningCriteriaComponent } from './loan-provisioning-criteria/create-loan-provisioning-criteria/create-loan-provisioning-criteria.component';
 import { EditLoanProvisioningCriteriaComponent } from './loan-provisioning-criteria/edit-loan-provisioning-criteria/edit-loan-provisioning-criteria.component';
 import { StandingInstructionsHistoryComponent } from './standing-instructions-history/standing-instructions-history.component';
 import { FundMappingComponent } from './fund-mapping/fund-mapping.component';
 import { CreateHolidayComponent } from './holidays/create-holiday/create-holiday.component';
-
 
 /** Custom Service */
 import { OfficeItemNode } from './holidays/create-holiday/office-item.class';
@@ -79,7 +78,6 @@ import { EditFundComponent } from './manage-funds/edit-fund/edit-fund.component'
 import { ViewFundComponent } from './manage-funds/view-fund/view-fund.component';
 import { InvestorsComponent } from './investors/investors.component';
 
-
 /**
  * Organization Module
  *
@@ -90,9 +88,7 @@ import { InvestorsComponent } from './investors/investors.component';
     SharedModule,
     PipesModule,
     DirectivesModule,
-    OrganizationRoutingModule
-  ],
-  declarations: [
+    OrganizationRoutingModule,
     OrganizationComponent,
     LoanProvisioningCriteriaComponent,
     OfficesComponent,
@@ -145,7 +141,7 @@ import { InvestorsComponent } from './investors/investors.component';
     EditCampaignComponent,
     EditSmsCampaignStepComponent,
     EditBusinessRuleParametersComponent,
-    CreateEnityDataTableChecksComponent,
+    CreateEntityDataTableChecksComponent,
     BulkLoanReassignmnetComponent,
     CreateLoanProvisioningCriteriaComponent,
     EditLoanProvisioningCriteriaComponent,
@@ -164,4 +160,4 @@ import { InvestorsComponent } from './investors/investors.component';
     OfficeItemNode
   ]
 })
-export class OrganizationModule { }
+export class OrganizationModule {}

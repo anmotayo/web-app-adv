@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { NotificationsService } from './notifications.service';
  * Notifications data resolver.
  */
 @Injectable()
-export class NotificationsResolver implements Resolve<Object> {
-
-  /**
-   * @param {NotificationsService} notificationsService Notifications service.
-   */
-  constructor(private notificationsService: NotificationsService) {}
+export class NotificationsResolver {
+  private notificationsService = inject(NotificationsService);
 
   /**
    * Returns the Notifications data.
    * @returns {Observable<any>}
    */
   resolve(): Observable<any> {
-    return this.notificationsService.getNotifications(true);
+    return this.notificationsService.getNotifications(true, 50);
   }
-
 }

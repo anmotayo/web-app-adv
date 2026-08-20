@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { FixedDepositsService } from 'app/deposits/fixed-deposits/fixed-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Approve Fixed Deposits Account Component
@@ -14,9 +16,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-approve-fixed-deposits-account',
   templateUrl: './approve-fixed-deposits-account.component.html',
-  styleUrls: ['./approve-fixed-deposits-account.component.scss']
+  styleUrls: ['./approve-fixed-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class ApproveFixedDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private fixedDepositsService = inject(FixedDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +47,7 @@ export class ApproveFixedDepositsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private fixedDepositsService: FixedDepositsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['fixedDepositAccountId'];
   }
 
@@ -57,8 +64,11 @@ export class ApproveFixedDepositsAccountComponent implements OnInit {
    */
   createApproveFixedDepositsAccountForm() {
     this.approveFixedDepositsAccountForm = this.formBuilder.group({
-      'approvedOnDate': ['', Validators.required],
-      'note': ['']
+      approvedOnDate: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -83,5 +93,4 @@ export class ApproveFixedDepositsAccountComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

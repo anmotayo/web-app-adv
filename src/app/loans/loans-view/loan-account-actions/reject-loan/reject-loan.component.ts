@@ -1,12 +1,14 @@
 /** Angular Imports. */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom services. */
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Reject Loan component.
@@ -14,9 +16,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-reject-loan',
   templateUrl: './reject-loan.component.html',
-  styleUrls: ['./reject-loan.component.scss']
+  styleUrls: ['./reject-loan.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class RejectLoanComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private loanService = inject(LoansService);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   /** Loan Id. */
   loanId: any;
@@ -34,12 +46,7 @@ export class RejectLoanComponent implements OnInit {
    * @param route Activated Route.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private router: Router,
-              private route: ActivatedRoute,
-              private loanService: LoansService,
-              private dateUtils: Dates,
-              private settingsService: SettingsService ) {
+  constructor() {
     this.loanId = this.route.snapshot.params['loanId'];
   }
 
@@ -53,8 +60,11 @@ export class RejectLoanComponent implements OnInit {
    */
   setRejectLoanForm() {
     this.rejectLoanForm = this.formBuilder.group({
-      'rejectedOnDate': [new Date(), Validators.required],
-      'note': ['']
+      rejectedOnDate: [
+        new Date(),
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -78,5 +88,4 @@ export class RejectLoanComponent implements OnInit {
       this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }
-
 }

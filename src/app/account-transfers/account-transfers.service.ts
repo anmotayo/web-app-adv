@@ -1,9 +1,13 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
+
+/** Environment Configuration */
+import { environment } from '../../environments/environment';
+import { switchMap } from 'rxjs/operators';
 
 /**
  * Account Transfers Service.
@@ -12,8 +16,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AccountTransfersService {
-
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
 
   /**
    * @params standingInstructionsId
@@ -33,10 +36,16 @@ export class AccountTransfersService {
     return this.http.put(`/standinginstructions/${standinginstructionsId}`, data, { params: httpParams });
   }
 
-  getStandingInstructionsTemplate(clientId: any, officeId: any, accountTypeId: string, formValue?: any): Observable<any> {
-    let httpParams = new HttpParams().set('fromAccountType', accountTypeId)
-                                       .set('fromClientId', clientId)
-                                       .set('fromOfficeId', officeId);
+  getStandingInstructionsTemplate(
+    clientId: any,
+    officeId: any,
+    accountTypeId: string,
+    formValue?: any
+  ): Observable<any> {
+    let httpParams = new HttpParams()
+      .set('fromAccountType', accountTypeId)
+      .set('fromClientId', clientId)
+      .set('fromOfficeId', officeId);
     if (formValue) {
       const propNames = Object.getOwnPropertyNames(formValue);
       for (let i = 0; i < propNames.length; i++) {
@@ -52,8 +61,7 @@ export class AccountTransfersService {
   }
 
   newAccountTranferResource(id: any, accountTypeId: any, formValue?: any): Observable<any> {
-    let httpParams = new HttpParams().set('fromAccountId', id)
-      .set('fromAccountType', accountTypeId);
+    let httpParams = new HttpParams().set('fromAccountId', id).set('fromAccountType', accountTypeId);
     if (formValue) {
       const propNames = Object.getOwnPropertyNames(formValue);
       for (let i = 0; i < propNames.length; i++) {
@@ -62,7 +70,6 @@ export class AccountTransfersService {
       }
     }
     return this.http.get(`/accounttransfers/template`, { params: httpParams });
-
   }
 
   createAccountTransfer(data: any): Observable<any> {
@@ -98,13 +105,13 @@ export class AccountTransfersService {
     return this.http.delete(`/standinginstructions/${id}`, { params: httpParams });
   }
 
-
   getStandingInstructionsTransactions(standingInstructionsId: any, dateFormat: any, locale: any) {
-    const httpParams = new HttpParams().set('associations', 'transactions')
-                                        .set('dateFormat', dateFormat)
-                                        .set('limit', '14')
-                                        .set('locale', locale)
-                                        .set('offset', '0');
+    const httpParams = new HttpParams()
+      .set('associations', 'transactions')
+      .set('dateFormat', dateFormat)
+      .set('limit', '14')
+      .set('locale', locale)
+      .set('offset', '0');
     return this.http.get(`/standinginstructions/${standingInstructionsId}`, { params: httpParams });
   }
 
@@ -112,4 +119,37 @@ export class AccountTransfersService {
     return this.http.get(`/accounttransfers/${transferId}`);
   }
 
+  getAccountByNumber(accountNumber: string, currency: string): Observable<any> {
+    const payload = {
+      partyId: accountNumber,
+      partyIdType: 'MSISDN',
+      currencyCode: currency
+    };
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http
+      .post(
+        `${environment.vNextApiUrl}${environment.vNextApiVersion}${environment.vNextApiProvider}/participant`,
+        JSON.stringify(payload),
+        { headers }
+      )
+      .pipe(
+        switchMap((participant: any) => {
+          const body = JSON.stringify({ ...payload, ownerFspId: participant.fspId });
+          return this.http.post(
+            `${environment.vNextApiUrl}${environment.vNextApiVersion}${environment.vNextApiProvider}/partyinfo`,
+            body,
+            { headers }
+          );
+        })
+      );
+  }
+
+  sendInterbankTransfer(body: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post(
+      `${environment.vNextApiUrl}${environment.vNextApiVersion}${environment.vNextApiProvider}/executetransfer`,
+      body,
+      { headers }
+    );
+  }
 }

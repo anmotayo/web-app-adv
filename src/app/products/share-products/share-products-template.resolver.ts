@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -9,9 +8,8 @@ import { Observable } from 'rxjs';
 import { ProductsService } from '../products.service';
 
 @Injectable()
-export class ShareProductsTemplateResolver implements Resolve<Object> {
-
-  constructor(private productsService: ProductsService) {}
+export class ShareProductsTemplateResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the share products template data.
@@ -20,5 +18,4 @@ export class ShareProductsTemplateResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.productsService.getShareProductsTemplate();
   }
-
 }

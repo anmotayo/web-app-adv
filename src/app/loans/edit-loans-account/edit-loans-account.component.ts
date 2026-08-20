@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoansService } from '../loans.service';
 import { LoansAccountDetailsStepComponent } from '../loans-account-stepper/loans-account-details-step/loans-account-details-step.component';
@@ -8,6 +8,11 @@ import { LoansAccountChargesStepComponent } from '../loans-account-stepper/loans
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatStepper, MatStepperIcon, MatStep, MatStepLabel } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { LoansAccountScheduleStepComponent } from '../loans-account-stepper/loans-account-schedule-step/loans-account-schedule-step.component';
+import { LoansAccountPreviewStepComponent } from '../loans-account-stepper/loans-account-preview-step/loans-account-preview-step.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Loans
@@ -15,13 +20,33 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-edit-loans-account',
   templateUrl: './edit-loans-account.component.html',
-  styleUrls: ['./edit-loans-account.component.scss']
+  styleUrls: ['./edit-loans-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatStepper,
+    MatStepperIcon,
+    FaIconComponent,
+    MatStep,
+    MatStepLabel,
+    LoansAccountDetailsStepComponent,
+    LoansAccountTermsStepComponent,
+    LoansAccountChargesStepComponent,
+    LoansAccountScheduleStepComponent,
+    LoansAccountPreviewStepComponent
+  ]
 })
-export class EditLoansAccountComponent implements OnInit {
+export class EditLoansAccountComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private loansService = inject(LoansService);
+  private settingsService = inject(SettingsService);
 
-  @ViewChild(LoansAccountDetailsStepComponent, { static: true }) loansAccountDetailsStep: LoansAccountDetailsStepComponent;
+  @ViewChild(LoansAccountDetailsStepComponent, { static: true })
+  loansAccountDetailsStep: LoansAccountDetailsStepComponent;
   @ViewChild(LoansAccountTermsStepComponent, { static: true }) loansAccountTermsStep: LoansAccountTermsStepComponent;
-  @ViewChild(LoansAccountChargesStepComponent, { static: true }) loansAccountChargesStep: LoansAccountChargesStepComponent;
+  @ViewChild(LoansAccountChargesStepComponent, { static: true })
+  loansAccountChargesStep: LoansAccountChargesStepComponent;
 
   loansAccountAndTemplate: any;
   /** Loans Account Product Template */
@@ -41,19 +66,11 @@ export class EditLoansAccountComponent implements OnInit {
    * @param {loansService} LoansService Loans Service
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private loansService: LoansService,
-    private settingsService: SettingsService
-  ) {
+  constructor() {
     this.route.data.subscribe((data: { loansAccountAndTemplate: any }) => {
       this.loansAccountAndTemplate = data.loansAccountAndTemplate;
     });
     this.loanId = this.route.snapshot.params['loanId'];
-  }
-
-  ngOnInit() {
   }
 
   /**
@@ -64,9 +81,11 @@ export class EditLoansAccountComponent implements OnInit {
     this.loansAccountProductTemplate = $event;
     this.currencyCode = this.loansAccountProductTemplate.currency.code;
     if (this.loansAccountProductTemplate.loanProductId) {
-      this.loansService.getLoansCollateralTemplateResource(this.loansAccountProductTemplate.loanProductId).subscribe((response: any) => {
-        this.collateralOptions = response.loanCollateralOptions;
-      });
+      this.loansService
+        .getLoansCollateralTemplateResource(this.loansAccountProductTemplate.loanProductId)
+        .subscribe((response: any) => {
+          this.collateralOptions = response.loanCollateralOptions;
+        });
     }
   }
 
@@ -83,14 +102,12 @@ export class EditLoansAccountComponent implements OnInit {
   /** Checks wheter all the forms in different steps are valid and not pristine */
   get loansAccountFormValidAndNotPristine() {
     return (
-      (this.loansAccountDetailsForm.valid &&
-      this.loansAccountTermsForm.valid) &&
-      (
-        !this.loansAccountDetailsForm.pristine ||
+      this.loansAccountDetailsForm.valid &&
+      this.loansAccountTermsForm.valid &&
+      (!this.loansAccountDetailsForm.pristine ||
         !this.loansAccountTermsForm.pristine ||
         !this.loansAccountTermsStep.pristine ||
-        !this.loansAccountChargesStep.pristine
-      )
+        !this.loansAccountChargesStep.pristine)
     );
   }
 
@@ -112,14 +129,29 @@ export class EditLoansAccountComponent implements OnInit {
     const locale = this.settingsService.language.code;
     const dateFormat = this.settingsService.dateFormat;
     const loanType = 'individual';
+    const uniqueCharges = new Map<number | string, any>();
+    (this.loansAccount.charges ?? []).forEach((charge: any) => {
+      const chargeId = charge.chargeId;
+      if (chargeId == null) {
+        return;
+      } // Skip malformed entries
+      uniqueCharges.set(chargeId, charge);
+    });
+
     const loansAccountData = {
       ...this.loansAccount,
       clientId: this.loansAccountAndTemplate.clientId,
-      charges: this.loansAccount.charges.map((charge: any) => ({
-        chargeId: charge.id,
-        amount: charge.amount,
-        dueDate: charge.dueDate && this.dateUtils.formatDate(charge.dueDate, dateFormat),
-      })),
+      charges: Array.from(uniqueCharges.values()).map((charge: any) => {
+        const result: any = {
+          chargeId: charge.chargeId,
+          amount: charge.amount,
+          dueDate: charge.dueDate && this.dateUtils.formatDate(charge.dueDate, dateFormat)
+        };
+        if (charge.id && charge.id !== charge.chargeId) {
+          result.id = charge.id;
+        }
+        return result;
+      }),
       collateral: this.loansAccount.collateral.map((collateralEle: any) => ({
         type: collateralEle.type,
         value: collateralEle.value,
@@ -144,21 +176,32 @@ export class EditLoansAccountComponent implements OnInit {
     }
 
     if (loansAccountData.recalculationRestFrequencyDate) {
-      loansAccountData.recalculationRestFrequencyDate = this.dateUtils.formatDate(this.loansAccount.recalculationRestFrequencyDate, dateFormat);
+      loansAccountData.recalculationRestFrequencyDate = this.dateUtils.formatDate(
+        this.loansAccount.recalculationRestFrequencyDate,
+        dateFormat
+      );
     }
 
     if (loansAccountData.interestCalculationPeriodType === 0) {
-      loansAccountData.allowPartialPeriodInterestCalcualtion = false;
+      loansAccountData.allowPartialPeriodInterestCalculation = false;
     }
-    if (!loansAccountData.isLoanProductLinkedToFloatingRate || loansAccountData.isLoanProductLinkedToFloatingRate === false) {
+    if (
+      !loansAccountData.isLoanProductLinkedToFloatingRate ||
+      loansAccountData.isLoanProductLinkedToFloatingRate === false
+    ) {
       delete loansAccountData.isFloatingInterestRate;
     }
     loansAccountData.principal = loansAccountData.principalAmount;
     delete loansAccountData.principalAmount;
     delete loansAccountData.multiDisburseLoan;
+
+    // In Fineract, the POST and PUT endpoints for /v1/loans have a typo in the field
+    // allowPartialPeriodInterestCalculation. Until that is fixed, we need to replace the field name in the payload.
+    loansAccountData.allowPartialPeriodInterestCalcualtion = loansAccountData.allowPartialPeriodInterestCalculation;
+    delete loansAccountData.allowPartialPeriodInterestCalculation;
+
     this.loansService.updateLoansAccount(this.loanId, loansAccountData).subscribe((response: any) => {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

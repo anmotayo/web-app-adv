@@ -1,10 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 
 /** Custom Services */
 import { LoansService } from 'app/loans/loans.service';
@@ -23,13 +35,44 @@ import { Dates } from 'app/core/utils/dates';
 import { SystemService } from 'app/system/system.service';
 import { GlobalConfiguration } from 'app/system/configurations/global-configurations-tab/configuration.model';
 import { TranslateService } from '@ngx-translate/core';
+import { CurrencyPipe } from '@angular/common';
+import { MatTooltip } from '@angular/material/tooltip';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-charges-tab',
   templateUrl: './charges-tab.component.html',
-  styleUrls: ['./charges-tab.component.scss']
+  styleUrls: ['./charges-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    CurrencyPipe,
+    DateFormatPipe
+  ]
 })
 export class ChargesTabComponent implements OnInit {
+  private loansService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private translateService = inject(TranslateService);
+  dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
+  private systemService = inject(SystemService);
 
   /** Loan Details Data */
   loanDetails: any;
@@ -38,7 +81,18 @@ export class ChargesTabComponent implements OnInit {
   /** Status */
   status: any;
   /** Columns to be displayed in charges table. */
-  displayedColumns: string[] = ['name', 'feepenalty', 'paymentdueat', 'dueDate', 'calculationtype', 'due', 'paid', 'waived', 'outstanding', 'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'feepenalty',
+    'paymentdueat',
+    'dueDate',
+    'calculationtype',
+    'due',
+    'paid',
+    'waived',
+    'outstanding',
+    'actions'
+  ];
   /** Data source for charges table. */
   dataSource: MatTableDataSource<any>;
 
@@ -54,14 +108,7 @@ export class ChargesTabComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private loansService: LoansService,
-    private route: ActivatedRoute,
-    private dateUtils: Dates,
-    private router: Router,
-    private translateService: TranslateService,
-    public dialog: MatDialog,
-    private settingsService: SettingsService,
-    private systemService: SystemService) {
+  constructor() {
     this.route.parent.data.subscribe((data: { loanDetailsData: any }) => {
       this.loanDetails = data.loanDetailsData;
     });
@@ -69,21 +116,28 @@ export class ChargesTabComponent implements OnInit {
 
   ngOnInit() {
     this.systemService.getConfigurationByName('charge-accrual-date').subscribe((config: GlobalConfiguration) => {
-      this.useDueDate = (config.stringValue === 'due-date');
+      this.useDueDate = config.stringValue === 'due-date';
     });
     this.chargesData = this.loanDetails.charges;
     this.status = this.loanDetails.status.value;
     let actionFlag;
     this.chargesData.forEach((element: any) => {
       element.dueDate = this.dateUtils.parseDate(element.dueDate);
-      if (element.paid || element.waived || element.chargeTimeType.value === 'Disbursement' || this.loanDetails.status.value !== 'Active') {
+      if (
+        element.paid ||
+        element.waived ||
+        element.chargeTimeType.value === 'Disbursement' ||
+        this.loanDetails.status.value !== 'Active'
+      ) {
         actionFlag = true;
       } else {
         actionFlag = false;
       }
       element.actionFlag = actionFlag;
     });
-    this.chargesData = this.chargesData.sort(function (a: any, b: any) { return b.dueDate - a.dueDate; });
+    this.chargesData = this.chargesData.sort(function (a: any, b: any) {
+      return b.dueDate - a.dueDate;
+    });
     this.dataSource = new MatTableDataSource(this.chargesData);
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -127,7 +181,8 @@ export class ChargesTabComponent implements OnInit {
           dateFormat,
           locale
         };
-        this.loansService.executeLoansAccountChargesCommand(this.loanDetails.id, 'pay', dataObject, chargeId)
+        this.loansService
+          .executeLoansAccountChargesCommand(this.loanDetails.id, 'pay', dataObject, chargeId)
           .subscribe(() => {
             this.reload();
           });
@@ -140,10 +195,19 @@ export class ChargesTabComponent implements OnInit {
    * @param {any} chargeId Charge Id
    */
   waiveCharge(chargeId: any) {
-    const waiveChargeDialogRef = this.dialog.open(ConfirmationDialogComponent, { data: { heading: this.translateService.instant('labels.heading.Waive Charge'), dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want to waive charge with id') + `${chargeId} ?`, type: 'Basic' } });
+    const waiveChargeDialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        heading: this.translateService.instant('labels.heading.Waive Charge'),
+        dialogContext:
+          this.translateService.instant('labels.dialogContext.Are you sure you want to waive charge with id') +
+          `${chargeId} ?`,
+        type: 'Basic'
+      }
+    });
     waiveChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.loansService.executeLoansAccountChargesCommand(this.loanDetails.id, 'waive', {}, chargeId)
+        this.loansService
+          .executeLoansAccountChargesCommand(this.loanDetails.id, 'waive', {}, chargeId)
           .subscribe(() => {
             this.reload();
           });
@@ -180,10 +244,9 @@ export class ChargesTabComponent implements OnInit {
           dateFormat,
           locale
         };
-        this.loansService.editLoansAccountCharge(this.loanDetails.id, dataObject, charge.id)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.loansService.editLoansAccountCharge(this.loanDetails.id, dataObject, charge.id).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -198,10 +261,9 @@ export class ChargesTabComponent implements OnInit {
     });
     deleteChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.loansService.deleteLoansAccountCharge(this.loanDetails.id, chargeId)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.loansService.deleteLoansAccountCharge(this.loanDetails.id, chargeId).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -221,8 +283,8 @@ export class ChargesTabComponent implements OnInit {
   private reload() {
     const clientId = this.loanDetails.clientId;
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/clients/${clientId}/loans-accounts`, { skipLocationChange: true })
+    this.router
+      .navigateByUrl(`/clients/${clientId}/loans-accounts`, { skipLocationChange: true })
       .then(() => this.router.navigate([url]));
   }
-
 }

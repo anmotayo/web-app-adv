@@ -1,10 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SystemService } from 'app/system/system.service';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Amazon S3 Component.
@@ -12,9 +15,18 @@ import { SystemService } from 'app/system/system.service';
 @Component({
   selector: 'mifosx-edit-amazon-s3',
   templateUrl: './edit-amazon-s3.component.html',
-  styleUrls: ['./edit-amazon-s3.component.scss']
+  styleUrls: ['./edit-amazon-s3.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    FaIconComponent
+  ]
 })
 export class EditAmazonS3Component implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Amazon S3 Configuration data */
   amazonS3ConfigurationData: any;
@@ -32,10 +44,7 @@ export class EditAmazonS3Component implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { amazonS3Configuration: any }) => {
       this.amazonS3ConfigurationData = data.amazonS3Configuration;
     });
@@ -55,9 +64,18 @@ export class EditAmazonS3Component implements OnInit {
    */
   createAmazonS3ConfigurationForm() {
     this.amazonS3ConfigurationForm = this.formBuilder.group({
-      's3_bucket_name': [this.amazonS3ConfigurationData[1].value, Validators.required],
-      's3_access_key': [this.amazonS3ConfigurationData[0].value, Validators.required],
-      's3_secret_key': [this.amazonS3ConfigurationData[2].value, Validators.required]
+      s3_bucket_name: [
+        this.amazonS3ConfigurationData[1].value,
+        Validators.required
+      ],
+      s3_access_key: [
+        this.amazonS3ConfigurationData[0].value,
+        Validators.required
+      ],
+      s3_secret_key: [
+        this.amazonS3ConfigurationData[2].value,
+        Validators.required
+      ]
     });
   }
 
@@ -72,5 +90,4 @@ export class EditAmazonS3Component implements OnInit {
         this.router.navigate(['../'], { relativeTo: this.route });
       });
   }
-
 }

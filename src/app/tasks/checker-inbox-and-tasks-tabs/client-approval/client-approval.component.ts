@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import * as _ from 'lodash';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Dialog Imports */
@@ -15,13 +27,41 @@ import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicke
 import { TasksService } from '../../tasks.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { KeyValuePipe } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { AccountsFilterPipe } from '../../../pipes/accounts-filter.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-client-approval',
   templateUrl: './client-approval.component.html',
-  styleUrls: ['./client-approval.component.scss']
+  styleUrls: ['./client-approval.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCheckbox,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    KeyValuePipe,
+    AccountsFilterPipe
+  ]
 })
 export class ClientApprovalComponent {
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
+  private tasksService = inject(TasksService);
 
   /** Grouped Clients Data */
   groupedClients: any;
@@ -34,7 +74,12 @@ export class ClientApprovalComponent {
   /** Row Selection Data */
   selection: SelectionModel<any>;
   /** Displayed Columns */
-  displayedColumns: string[] = ['select', 'name', 'accountNumber', 'staff'];
+  displayedColumns: string[] = [
+    'select',
+    'name',
+    'accountNumber',
+    'staff'
+  ];
 
   /**
    * Retrieves the grouped client data from `resolve`.
@@ -45,12 +90,7 @@ export class ClientApprovalComponent {
    * @param {SettingsService} settingsService Settings Service.
    * @param {TasksService} tasksService Tasks Service.
    */
-  constructor(private route: ActivatedRoute,
-    private dialog: MatDialog,
-    private dateUtils: Dates,
-    private router: Router,
-    private settingsService: SettingsService,
-    private tasksService: TasksService) {
+  constructor() {
     this.route.data.subscribe((data: { groupedClientData: any }) => {
       this.groupedClients = _.groupBy(data.groupedClientData.pageItems, 'officeName');
       if (Object.keys(this.groupedClients).length) {
@@ -72,9 +112,9 @@ export class ClientApprovalComponent {
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle(dataSource3: any) {
     if (dataSource3) {
-      this.isAllSelected(dataSource3) ?
-        dataSource3.forEach((row: any) => this.selection.deselect(row)) :
-        dataSource3.forEach((row: any) => this.selection.select(row));
+      this.isAllSelected(dataSource3)
+        ? dataSource3.forEach((row: any) => this.selection.deselect(row))
+        : dataSource3.forEach((row: any) => this.selection.select(row));
     }
   }
 
@@ -94,7 +134,7 @@ export class ClientApprovalComponent {
         value: new Date(),
         type: 'datetime-local',
         required: true
-      }),
+      })
     ];
     const data = {
       title: 'Enter Clients Activation Date',
@@ -131,7 +171,7 @@ export class ClientApprovalComponent {
     });
     this.tasksService.submitBatchData(this.batchRequests).subscribe((response: any) => {
       response.forEach((responseEle: any) => {
-        if (responseEle.statusCode = '200') {
+        if (responseEle.statusCode === '200') {
           activatedAccounts++;
           responseEle.body = JSON.parse(responseEle.body);
           if (selectedAccounts === activatedAccounts) {
@@ -152,8 +192,8 @@ export class ClientApprovalComponent {
    */
   reload() {
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
+    this.router
+      .navigateByUrl(`/checker-inbox-and-tasks`, { skipLocationChange: true })
       .then(() => this.router.navigate([url]));
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { ProductsService } from 'app/products/products.service';
  * Charge data resolver.
  */
 @Injectable()
-export class ChargeResolver implements Resolve<Object> {
-
-  /**
-   * @param {productsService} productsService Products service.
-   */
-  constructor(private productsService: ProductsService) {}
+export class ChargeResolver {
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the charge data.
@@ -27,5 +23,4 @@ export class ChargeResolver implements Resolve<Object> {
     const chargeId = route.paramMap.get('id');
     return this.productsService.getCharge(chargeId);
   }
-
 }

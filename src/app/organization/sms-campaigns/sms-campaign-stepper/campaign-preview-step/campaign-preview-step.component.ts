@@ -1,5 +1,8 @@
 /** Angular Imports */
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { MatList, MatListItem } from '@angular/material/list';
+import { FindPipe } from '../../../../pipes/find.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Campaign Preview Step.
@@ -7,10 +10,15 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 @Component({
   selector: 'mifosx-campaign-preview-step',
   templateUrl: './campaign-preview-step.component.html',
-  styleUrls: ['./campaign-preview-step.component.scss']
+  styleUrls: ['./campaign-preview-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatList,
+    MatListItem,
+    FindPipe
+  ]
 })
 export class CampaignPreviewStepComponent implements OnInit {
-
   /** SMS Campaign */
   @Input() campaign: any;
   /** [Optional] SMS Campaign Template for create form */
@@ -24,9 +32,9 @@ export class CampaignPreviewStepComponent implements OnInit {
   smsProviders: any[];
 
   /** Emits submit() event */
-  @Output() submit = new EventEmitter;
+  @Output() submitEvent = new EventEmitter();
 
-  constructor() { }
+  constructor() {}
 
   /**
    * Sets SMS providers and trigger types options.
@@ -35,5 +43,4 @@ export class CampaignPreviewStepComponent implements OnInit {
     this.triggerTypes = this.smsCampaignTemplate.triggerTypeOptions;
     this.smsProviders = this.smsCampaignTemplate.smsProviderOptions;
   }
-
 }

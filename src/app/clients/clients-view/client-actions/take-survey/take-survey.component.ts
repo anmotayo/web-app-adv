@@ -1,10 +1,13 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ClientsService } from '../../../clients.service';
 import { AuthenticationService } from '../../../../core/authentication/authentication.service';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Take Survey Component
@@ -12,9 +15,19 @@ import { AuthenticationService } from '../../../../core/authentication/authentic
 @Component({
   selector: 'mifosx-take-survey',
   templateUrl: './take-survey.component.html',
-  styleUrls: ['./take-survey.component.scss']
+  styleUrls: ['./take-survey.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatRadioGroup,
+    FormsModule,
+    MatRadioButton
+  ]
 })
 export class TakeSurveyComponent {
+  private route = inject(ActivatedRoute);
+  private clientsService = inject(ClientsService);
+  private router = inject(Router);
+  private authenticationService = inject(AuthenticationService);
 
   /** List of all Survey Data */
   allSurveyData: any;
@@ -28,13 +41,13 @@ export class TakeSurveyComponent {
   clientId: any;
   /** Stores the value to send to the API */
   formData: {
-    userId: Number,
-    clientId: Number,
-    surveyId: Number,
-    scorecardValues: { questionId: Number, responseId: Number, value: String }[],
-    surveyName: String,
-    username: String,
-    id: Number
+    userId: Number;
+    clientId: Number;
+    surveyId: Number;
+    scorecardValues: { questionId: Number; responseId: Number; value: String }[];
+    surveyName: String;
+    username: String;
+    id: Number;
   };
 
   /**
@@ -44,10 +57,7 @@ export class TakeSurveyComponent {
    * @param {Router} router Router
    * @param {AuthenticationService} authenticationService AuthenticationService
    */
-  constructor(private route: ActivatedRoute,
-              private clientsService: ClientsService,
-              private router: Router,
-              private authenticationService: AuthenticationService) {
+  constructor() {
     this.route.data.subscribe((data: { clientActionData: any }) => {
       this.allSurveyData = data.clientActionData;
       this.clientId = this.route.parent.snapshot.params['clientId'];
@@ -71,7 +81,7 @@ export class TakeSurveyComponent {
 
   // TODO: document the function
   groupBy(array: any, func: any) {
-    const groups = {};
+    const groups: { [key: string]: any[] } = {};
     array.forEach((ele: any) => {
       const group = JSON.stringify(func(ele));
       groups[group] = groups[group] || [];
@@ -81,7 +91,6 @@ export class TakeSurveyComponent {
       return groups[group];
     });
   }
-
 
   /**
    * Checks if there is any response or not from the user and enables the submit button accordingly
@@ -127,5 +136,4 @@ export class TakeSurveyComponent {
       this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }
-
 }

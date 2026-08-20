@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ClientsService } from 'app/clients/clients.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Close Client Component
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-close-client',
   templateUrl: './close-client.component.html',
-  styleUrls: ['./close-client.component.scss']
+  styleUrls: ['./close-client.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class CloseClientComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private clientsService = inject(ClientsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -37,12 +47,7 @@ export class CloseClientComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private clientsService: ClientsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { clientActionData: any }) => {
       this.closureData = data.clientActionData.narrations;
     });
@@ -59,8 +64,14 @@ export class CloseClientComponent implements OnInit {
    */
   createCloseClientForm() {
     this.closeClientForm = this.formBuilder.group({
-      'closureDate': ['', Validators.required],
-      'closureReasonId': ['', Validators.required]
+      closureDate: [
+        '',
+        Validators.required
+      ],
+      closureReasonId: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -84,5 +95,4 @@ export class CloseClientComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

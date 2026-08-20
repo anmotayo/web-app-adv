@@ -49,12 +49,18 @@ testem.log
 /typings
 /reports
 /src/translations/template.*
+.eslintcache
 
 # System Files
 .DS_Store
 Thumbs.db
 .vscode/
-cypress/
+
+# Cypress - only ignore downloads, screenshots, and videos
+cypress/downloads/
+cypress/screenshots/
+cypress/videos/
 
 src/assets/env.js
+src/environments/.env.ts
 CLAUDE.md

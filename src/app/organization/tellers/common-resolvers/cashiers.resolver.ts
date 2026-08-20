@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { OrganizationService } from 'app/organization/organization.service';
  * Cashiers data resolver.
  */
 @Injectable()
-export class CashiersResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class CashiersResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the cashiers data.
@@ -27,5 +23,4 @@ export class CashiersResolver implements Resolve<Object> {
     const tellerId = route.parent.paramMap.get('id');
     return this.organizationService.getCashiers(tellerId);
   }
-
 }

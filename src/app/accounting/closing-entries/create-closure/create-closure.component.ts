@@ -1,21 +1,33 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../../accounting.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Create closure component.
  */
 @Component({
   selector: 'mifosx-create-closure',
   templateUrl: './create-closure.component.html',
-  styleUrls: ['./create-closure.component.scss']
+  styleUrls: ['./create-closure.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class CreateClosureComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum closing date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -34,12 +46,7 @@ export class CreateClosureComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private accountingService: AccountingService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { offices: any }) => {
       this.officeData = data.offices;
     });
@@ -58,9 +65,15 @@ export class CreateClosureComponent implements OnInit {
    */
   createAccountingClosureForm() {
     this.accountingClosureForm = this.formBuilder.group({
-      'officeId': ['', Validators.required],
-      'closingDate': ['', Validators.required],
-      'comments': ['']
+      officeId: [
+        '',
+        Validators.required
+      ],
+      closingDate: [
+        '',
+        Validators.required
+      ],
+      comments: ['']
     });
   }
 
@@ -74,11 +87,19 @@ export class CreateClosureComponent implements OnInit {
     accountingClosure.locale = this.settingsService.language.code;
     accountingClosure.dateFormat = this.settingsService.dateFormat;
     if (accountingClosure.closingDate) {
-      accountingClosure.closingDate = this.dateUtils.formatDate(accountingClosure.closingDate, this.settingsService.dateFormat);
+      accountingClosure.closingDate = this.dateUtils.formatDate(
+        accountingClosure.closingDate,
+        this.settingsService.dateFormat
+      );
     }
     this.accountingService.createAccountingClosure(accountingClosure).subscribe((response: any) => {
-      this.router.navigate(['../view', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../view',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

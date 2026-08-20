@@ -1,36 +1,35 @@
 .surveyOption {
-    border: 1px solid #cbcbcb;
-    padding: 5px;
-
+  border: 1px solid #cbcbcb;
+  padding: 5px;
 }
 
-.displayQuestions {
-    margin-top: 20px;
+.display-questions {
+  margin-top: 20px;
 }
 
 .question {
-  padding: 10px 0px;
+  padding: 10px 0;
 }
 
 .wrap-mat-radio-label {
-  white-space: normal
+  white-space: normal;
 }
 
-.questionText {
+.question-text {
   font-weight: bold;
 }
 
-.surveySelect {
-    height: 40px;
-    margin-bottom: 20px;
+.survey-select {
+  height: 40px;
+  margin-bottom: 20px;
 }
 
-.nameLabel {
-    width: 25%;
+.name-label {
+  width: 25%;
 }
 
 .surveyCont {
-    padding: 5%
+  padding: 5%;
 }
 
 .button-cancel {
@@ -39,4 +38,22 @@
 
 .button-submit {
   margin-left: 2%;
+}
+
+.radio-button {
+  margin-bottom: 5px;
+  align-items: normal;
+  white-space: normal;
+}
+
+.radio-group-spacing {
+  display: flex;
+  gap: 2rem;
+  flex-direction: row;
+}
+
+@media (width <= 768px) {
+  .radio-group-spacing {
+    flex-direction: column;
+  }
 }

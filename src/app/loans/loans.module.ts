@@ -58,10 +58,6 @@ import { ViewTransactionComponent } from './loans-view/transactions/view-transac
 import { EditTransactionComponent } from './loans-view/transactions/edit-transaction/edit-transaction.component';
 import { GlimAccountComponent } from './glim-account/glim-account.component';
 import { CreateGlimAccountComponent } from './glim-account/create-glim-account/create-glim-account.component';
-import { GlimDetailsStepComponent } from './glim-account/create-glim-account/glim-account-stepper/glim-details-step/glim-details-step.component';
-import { GlimChargesStepComponent } from './glim-account/create-glim-account/glim-account-stepper/glim-charges-step/glim-charges-step.component';
-import { GlimTermsStepComponent } from './glim-account/create-glim-account/glim-account-stepper/glim-terms-step/glim-terms-step.component';
-import { GlimPreviewStepComponent } from './glim-account/create-glim-account/glim-account-stepper/glim-preview-step/glim-preview-step.component';
 
 /** Dialog Components */
 import { LoansAccountViewGuarantorDetailsDialogComponent } from './custom-dialog/loans-account-view-guarantor-details-dialog/loans-account-view-guarantor-details-dialog.component';
@@ -82,6 +78,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { LoanDelinquencyActionDialogComponent } from './custom-dialog/loan-delinquency-action-dialog/loan-delinquency-action-dialog.component';
 import { LoanReagingComponent } from './loans-view/loan-account-actions/loan-reaging/loan-reaging.component';
 import { LoanReamortizeComponent } from './loans-view/loan-account-actions/loan-reamortize/loan-reamortize.component';
+import { LoanTermVariationsTabComponent } from './loans-view/loan-term-variations-tab/loan-term-variations-tab.component';
+import { AddInterestPauseComponent } from './loans-view/loan-account-actions/add-interest-pause/add-interest-pause.component';
+import { LoansActiveClientMembersComponent } from './loans-account-stepper/loans-active-client-members/loans-active-client-members.component';
 
 /**
  * Loans Module
@@ -94,9 +93,7 @@ import { LoanReamortizeComponent } from './loans-view/loan-account-actions/loan-
     DirectivesModule,
     LoansRoutingModule,
     PipesModule,
-    TranslateModule
-  ],
-  declarations: [
+    TranslateModule,
     AddLoanChargeComponent,
     LoansViewComponent,
     GeneralTabComponent,
@@ -150,10 +147,6 @@ import { LoanReamortizeComponent } from './loans-view/loan-account-actions/loan-
     LoanCreditBalanceRefundComponent,
     GlimAccountComponent,
     CreateGlimAccountComponent,
-    GlimDetailsStepComponent,
-    GlimChargesStepComponent,
-    GlimTermsStepComponent,
-    GlimPreviewStepComponent,
     LoanDelinquencyTagsTabComponent,
     LoansAccountScheduleStepComponent,
     EditRepaymentScheduleComponent,
@@ -167,8 +160,11 @@ import { LoanReamortizeComponent } from './loans-view/loan-account-actions/loan-
     ExternalAssetTransferComponent,
     LoanDelinquencyActionDialogComponent,
     LoanReagingComponent,
-    LoanReamortizeComponent
+    LoanReamortizeComponent,
+    LoanTermVariationsTabComponent,
+    AddInterestPauseComponent,
+    LoansActiveClientMembersComponent
   ],
-  providers: [ ],
+  providers: []
 })
 export class LoansModule {}

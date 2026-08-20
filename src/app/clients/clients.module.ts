@@ -54,10 +54,8 @@ import { ClientPreviewStepComponent } from './client-stepper/client-preview-step
 import { ClientAddressStepComponent } from './client-stepper/client-address-step/client-address-step.component';
 import { ClientFamilyMemberDialogComponent } from './client-stepper/client-family-members-step/client-family-member-dialog/client-family-member-dialog.component';
 import { CaptureImageDialogComponent } from './clients-view/custom-dialogs/capture-image-dialog/capture-image-dialog.component';
-import { CreateSelfServiceUserComponent } from './clients-view/client-actions/create-self-service-user/create-self-service-user.component';
 import { AddClientCollateralComponent } from './clients-view/client-actions/add-client-collateral/add-client-collateral.component';
 import { ClientDatatableStepComponent } from './client-stepper/client-datatable-step/client-datatable-step.component';
-
 
 /**
  * Clients Module
@@ -69,9 +67,7 @@ import { ClientDatatableStepComponent } from './client-stepper/client-datatable-
     SharedModule,
     ClientsRoutingModule,
     PipesModule,
-    DirectivesModule
-  ],
-  declarations: [
+    DirectivesModule,
     ClientsComponent,
     ClientsViewComponent,
     GeneralTabComponent,
@@ -118,11 +114,9 @@ import { ClientDatatableStepComponent } from './client-stepper/client-datatable-
     ClientAddressStepComponent,
     ClientFamilyMemberDialogComponent,
     CaptureImageDialogComponent,
-    CreateSelfServiceUserComponent,
     AddClientCollateralComponent,
     ClientDatatableStepComponent
   ],
-  providers: [ ]
-
+  providers: []
 })
-export class ClientsModule { }
+export class ClientsModule {}

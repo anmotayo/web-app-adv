@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { TasksService } from '../tasks.service';
  * Offices data resolver.
  */
 @Injectable()
-export class GetOffices implements Resolve<Object> {
+export class GetOffices {
+  private tasksService = inject(TasksService);
 
-    /**
-     * @param {TasksService} tasksService Tasks service.
-     */
-    constructor(private tasksService: TasksService) { }
-
-    /**
-     * Returns the offices data.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.tasksService.getAllOffices();
-    }
-
+  /**
+   * Returns the offices data.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.tasksService.getAllOffices();
+  }
 }

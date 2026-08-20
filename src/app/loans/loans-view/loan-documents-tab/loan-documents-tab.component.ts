@@ -1,11 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 /** Custom Services */
-import { environment } from 'environments/environment';
+import { environment } from '../../../../environments/environment';
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { EntityDocumentsTabComponent } from '../../../shared/tabs/entity-documents-tab/entity-documents-tab.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Overdue charges tab component
@@ -13,9 +15,16 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-loan-documents-tab',
   templateUrl: './loan-documents-tab.component.html',
-  styleUrls: ['./loan-documents-tab.component.scss']
+  styleUrls: ['./loan-documents-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    EntityDocumentsTabComponent
+  ]
 })
 export class LoanDocumentsTabComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private loansService = inject(LoansService);
+  private settingsService = inject(SettingsService);
 
   /** Stores the resolved loan documents data */
   entityDocuments: any;
@@ -27,23 +36,36 @@ export class LoanDocumentsTabComponent implements OnInit {
    * Retrieves the loans data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute,
-    private loansService: LoansService,
-    private settingsService: SettingsService) {
-      this.entityId = this.route.parent.snapshot.params['loanId'];
+  constructor() {
+    this.entityId = this.route.parent.snapshot.params['loanId'];
 
-      this.route.data.subscribe((data: { loanDocuments: any }) => {
-        this.getLoanDocumentsData(data.loanDocuments);
-      });
+    this.route.data.subscribe((data: { loanDocuments: any }) => {
+      this.getLoanDocumentsData(data.loanDocuments);
+    });
   }
 
-  ngOnInit() { }
+  ngOnInit(): void {
+    this.route.parent.params.subscribe((params) => {
+      this.entityId = params['loanId'];
+    });
+  }
 
   getLoanDocumentsData(data: any) {
     data.forEach((ele: any) => {
-      ele.docUrl = this.settingsService.serverUrl + '/loans/' + ele.parentEntityId + '/documents/' + ele.id + '/attachment?tenantIdentifier=' + environment.fineractPlatformTenantId;
+      ele.docUrl =
+        this.settingsService.serverUrl +
+        '/loans/' +
+        ele.parentEntityId +
+        '/documents/' +
+        ele.id +
+        '/attachment?tenantIdentifier=' +
+        environment.fineractPlatformTenantId;
       if (ele.fileName) {
-        if (ele.fileName.toLowerCase().indexOf('.jpg') !== -1 || ele.fileName.toLowerCase().indexOf('.jpeg') !== -1 || ele.fileName.toLowerCase().indexOf('.png') !== -1) {
+        if (
+          ele.fileName.toLowerCase().indexOf('.jpg') !== -1 ||
+          ele.fileName.toLowerCase().indexOf('.jpeg') !== -1 ||
+          ele.fileName.toLowerCase().indexOf('.png') !== -1
+        ) {
           ele.fileIsImage = true;
         }
       }
@@ -56,13 +78,6 @@ export class LoanDocumentsTabComponent implements OnInit {
     this.entityDocuments = data;
   }
 
-  downloadDocument(documentId: string) {
-    this.loansService.downloadLoanDocument(this.entityId, documentId).subscribe(res => {
-      const url = window.URL.createObjectURL(res);
-      window.open(url);
-    });
-  }
-
   uploadDocument(formData: FormData): any {
     return this.loansService.loadLoanDocument(this.entityId, formData);
   }
@@ -70,5 +85,4 @@ export class LoanDocumentsTabComponent implements OnInit {
   deleteDocument(documentId: any) {
     this.loansService.deleteLoanDocument(this.entityId, documentId).subscribe((res: any) => {});
   }
-
 }

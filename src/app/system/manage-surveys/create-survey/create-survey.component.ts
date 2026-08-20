@@ -1,15 +1,27 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormArray, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormArray,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, moveItemInArray, CdkDropList, CdkDrag } from '@angular/cdk/drag-drop';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
 
 /** Custom Components */
 import { CancelDialogComponent } from '../../../shared/cancel-dialog/cancel-dialog.component';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatDivider } from '@angular/material/divider';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create survey component.
@@ -17,25 +29,27 @@ import { CancelDialogComponent } from '../../../shared/cancel-dialog/cancel-dial
 @Component({
   selector: 'mifosx-create-survey',
   templateUrl: './create-survey.component.html',
-  styleUrls: ['./create-survey.component.scss']
+  styleUrls: ['./create-survey.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize,
+    CdkDropList,
+    CdkDrag,
+    FaIconComponent,
+    MatDivider,
+    MatIconButton,
+    MatTooltip
+  ]
 })
 export class CreateSurveyComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
 
   /** Survey form. */
   surveyForm: UntypedFormGroup;
-
-  /**
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {SystemService} systemService System Service.
-   * @param {ActivatedRoute} route Activated Route.
-   * @param {Router} router Router for navigation.
-   * @param {MatDialog} dialog Dialog reference.
-   */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private route: ActivatedRoute,
-              private router: Router,
-              public dialog: MatDialog) { }
 
   /**
    * Creates the survey form.
@@ -49,11 +63,23 @@ export class CreateSurveyComponent implements OnInit {
    */
   createSurveyForm() {
     this.surveyForm = this.formBuilder.group({
-      'key': ['', Validators.required],
-      'name': ['', Validators.required],
-      'countryCode': ['', [Validators.required, Validators.pattern('^\\s*([A-Za-z]{2})?\\s*$')]],
-      'description': [''],
-      'questionDatas': this.formBuilder.array([])
+      key: [
+        '',
+        Validators.required
+      ],
+      name: [
+        '',
+        Validators.required
+      ],
+      countryCode: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^\\s*([A-Za-z]{2})?\\s*$')
+        ]
+      ],
+      description: [''],
+      questionDatas: this.formBuilder.array([])
     });
   }
 
@@ -71,7 +97,11 @@ export class CreateSurveyComponent implements OnInit {
    * @returns {FormArray} Responses form array.
    */
   getResponseDatas(questionIndex: number): UntypedFormArray {
-    return this.surveyForm.get(['questionDatas', questionIndex, 'responseDatas']) as UntypedFormArray;
+    return this.surveyForm.get([
+      'questionDatas',
+      questionIndex,
+      'responseDatas'
+    ]) as UntypedFormArray;
   }
 
   /**
@@ -80,11 +110,17 @@ export class CreateSurveyComponent implements OnInit {
    */
   createQuestionForm(): UntypedFormGroup {
     return this.formBuilder.group({
-      'key': ['', Validators.required],
-      'text': ['', Validators.required],
-      'description': [''],
-      'responseDatas': this.formBuilder.array([this.createResponseForm()]),
-      'sequenceNo': ['']
+      key: [
+        '',
+        Validators.required
+      ],
+      text: [
+        '',
+        Validators.required
+      ],
+      description: [''],
+      responseDatas: this.formBuilder.array([this.createResponseForm()]),
+      sequenceNo: ['']
     });
   }
 
@@ -111,9 +147,18 @@ export class CreateSurveyComponent implements OnInit {
    */
   createResponseForm(): UntypedFormGroup {
     return this.formBuilder.group({
-      'text': ['', Validators.required],
-      'value': ['', [Validators.required, Validators.pattern('^\\s*[-]?\\d{0,4}\\s*$')]],
-      'sequenceNo': ['']
+      text: [
+        '',
+        Validators.required
+      ],
+      value: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^\\s*[-]?\\d{0,4}\\s*$')
+        ]
+      ],
+      sequenceNo: ['']
     });
   }
 
@@ -141,9 +186,15 @@ export class CreateSurveyComponent implements OnInit {
    */
   updateSequenceNumber() {
     for (let questionIndex = 0; questionIndex < this.questionDatas.length; questionIndex++) {
-      this.questionDatas.at(questionIndex).get('sequenceNo').setValue(questionIndex + 1);
+      this.questionDatas
+        .at(questionIndex)
+        .get('sequenceNo')
+        .setValue(questionIndex + 1);
       for (let responseIndex = 0; responseIndex < this.getResponseDatas(questionIndex).length; responseIndex++) {
-        this.getResponseDatas(questionIndex).at(responseIndex).get('sequenceNo').setValue(responseIndex + 1);
+        this.getResponseDatas(questionIndex)
+          .at(responseIndex)
+          .get('sequenceNo')
+          .setValue(responseIndex + 1);
       }
     }
   }
@@ -188,5 +239,4 @@ export class CreateSurveyComponent implements OnInit {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

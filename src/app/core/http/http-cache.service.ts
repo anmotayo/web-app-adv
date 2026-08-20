@@ -22,11 +22,10 @@ export interface HttpCacheEntry {
  */
 @Injectable()
 export class HttpCacheService {
-
   /** Key to cache Http Requests in storage. */
   private cachePersistenceStorageKey = 'mifosXHttpCache';
 
-  private cachedData: { [key: string]: HttpCacheEntry; } = {};
+  private cachedData: { [key: string]: HttpCacheEntry } = {};
   private storage: Storage | null = null;
 
   constructor() {
@@ -108,7 +107,8 @@ export class HttpCacheService {
    */
   setPersistence(persistence?: 'local' | 'session') {
     this.cleanCache();
-    this.storage = persistence === 'local' || persistence === 'session' ? window[persistence + 'Storage'] : null;
+    this.storage =
+      persistence === 'local' ? window.localStorage : persistence === 'session' ? window.sessionStorage : null;
     this.loadCacheData();
   }
 
@@ -122,5 +122,4 @@ export class HttpCacheService {
     const data = this.storage ? this.storage[this.cachePersistenceStorageKey] : null;
     this.cachedData = data ? JSON.parse(data) : {};
   }
-
 }

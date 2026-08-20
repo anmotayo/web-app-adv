@@ -1,13 +1,20 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
 /** Custom Services */
 import { HomeService } from '../../home.service';
 
 /** Charting Imports */
-import Chart from 'chart.js';
+import { Chart, registerables } from 'chart.js';
+import { MatCard, MatCardHeader, MatCardContent } from '@angular/material/card';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { NgStyle } from '@angular/common';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
+// Register Chart.js components
+Chart.register(...registerables);
 
 /**
  * Amount Disbursed Pie Chart Component
@@ -15,29 +22,36 @@ import Chart from 'chart.js';
 @Component({
   selector: 'mifosx-amount-disbursed-pie',
   templateUrl: './amount-disbursed-pie.component.html',
-  styleUrls: ['./amount-disbursed-pie.component.scss']
+  styleUrls: ['./amount-disbursed-pie.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCardHeader,
+    FaIconComponent,
+    NgStyle
+  ]
 })
 export class AmountDisbursedPieComponent implements OnInit {
+  private homeService = inject(HomeService);
+  private route = inject(ActivatedRoute);
 
-   /** Static Form control for office Id */
-   officeId = new UntypedFormControl();
-   /** Office Data */
-   officeData: any;
-   /** Chart.js chart */
-   chart: any;
-   /** Substitute for resolver */
-   hideOutput = true;
-   /** Shows fallback element */
-   showFallback = true;
+  /** Static Form control for office Id */
+  officeId = new UntypedFormControl();
+  /** Office Data */
+  officeData: any;
+  /** Chart.js chart */
+  chart: any;
+  /** Substitute for resolver */
+  hideOutput = true;
+  /** Shows fallback element */
+  showFallback = true;
 
   /**
    * Fetches offices data from `resolve`.
    * @param {HomeService} homeService Home Service.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private homeService: HomeService,
-              private route: ActivatedRoute) {
-    this.route.data.subscribe( (data: { offices: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { offices: any }) => {
       this.officeData = data.offices;
     });
   }
@@ -57,7 +71,7 @@ export class AmountDisbursedPieComponent implements OnInit {
   getChartData() {
     this.officeId.valueChanges.subscribe((value: number) => {
       this.homeService.getDisbursedAmount(value).subscribe((response: any) => {
-        const data =  Object.entries(response[0]).map(entry => entry[1]);
+        const data = Object.entries(response[0]).map((entry) => entry[1]);
         if (!(data[0] === 0 && data[1] === 0)) {
           this.setChart(data);
           this.showFallback = false;
@@ -78,13 +92,21 @@ export class AmountDisbursedPieComponent implements OnInit {
   setChart(data: any) {
     if (!this.chart) {
       this.chart = new Chart('disbursement-pie', {
-        type: 'pie',
+        type: 'doughnut',
         data: {
-          labels: ['Pending', 'Disbursed'],
-          datasets: [{
-            backgroundColor: ['red', 'yellow'],
-            data: data
-          }]
+          labels: [
+            'Pending',
+            'Disbursed'
+          ],
+          datasets: [
+            {
+              backgroundColor: [
+                'dodgerblue',
+                'red'
+              ],
+              data: data
+            }
+          ]
         },
         options: {
           layout: {
@@ -100,5 +122,4 @@ export class AmountDisbursedPieComponent implements OnInit {
       this.chart.update();
     }
   }
-
 }

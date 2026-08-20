@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +12,15 @@ import { ProductsService } from '../../products.service';
  * tax Group data resolver.
  */
 @Injectable()
-export class EditTaxGroupResolver implements Resolve<Object> {
+export class EditTaxGroupResolver {
+  private productsService = inject(ProductsService);
 
-    /**
-     * @param {ProductsService} productsService Products service.
-     */
-    constructor(private productsService: ProductsService) { }
-
-    /**
-     * Returns the tax Group data.
-     * @returns {Observable<any>}
-     */
-    resolve(route: ActivatedRouteSnapshot): Observable<any> {
-        const taxGroupId = route.parent.paramMap.get('id');
-        return this.productsService.getTaxGroup(taxGroupId, 'true');
-    }
+  /**
+   * Returns the tax Group data.
+   * @returns {Observable<any>}
+   */
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    const taxGroupId = route.parent.paramMap.get('id');
+    return this.productsService.getTaxGroup(taxGroupId, 'true');
+  }
 }

@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -8,6 +8,11 @@ import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
 import { Currency } from 'app/shared/models/general.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { FormatNumberPipe } from '../../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Loan Make Repayment Component
@@ -15,9 +20,22 @@ import { Currency } from 'app/shared/models/general.model';
 @Component({
   selector: 'mifosx-make-repayment',
   templateUrl: './make-repayment.component.html',
-  styleUrls: ['./make-repayment.component.scss']
+  styleUrls: ['./make-repayment.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    MatSlideToggle,
+    CdkTextareaAutosize,
+    FormatNumberPipe
+  ]
 })
-export class MakeRepaymentComponent implements OnInit, OnDestroy {
+export class MakeRepaymentComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** Loan Id */
@@ -34,6 +52,10 @@ export class MakeRepaymentComponent implements OnInit, OnDestroy {
   repaymentLoanForm: UntypedFormGroup;
   currency: Currency | null = null;
 
+  command: string | null = null;
+
+  classificationOptions: any[] = [];
+
   /**
    * @param {FormBuilder} formBuilder Form Builder.
    * @param {LoansService} loanService Loan Service.
@@ -41,20 +63,16 @@ export class MakeRepaymentComponent implements OnInit, OnDestroy {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+  }
 
   /**
    * Creates the repayment loan form
    * and initialize with the required values
    */
   ngOnInit() {
+    this.command = this.dataObject.type.code.split('.')[1];
     this.maxDate = this.settingsService.businessDate;
     this.createRepaymentLoanForm();
     this.setRepaymentLoanDetails();
@@ -63,25 +81,47 @@ export class MakeRepaymentComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-
-  }
-
   /**
    * Creates the create close form.
    */
   createRepaymentLoanForm() {
     this.repaymentLoanForm = this.formBuilder.group({
-      'transactionDate': [this.settingsService.businessDate, Validators.required],
-      'transactionAmount': ['', Validators.required],
-      'externalId': '',
-      'paymentTypeId': '',
-      'note': ''
+      transactionDate: [
+        this.settingsService.businessDate,
+        Validators.required
+      ],
+      externalId: '',
+      paymentTypeId: '',
+      note: '',
+      skipInterestRefund: [false]
     });
+
+    if (this.isCapitalizedIncome()) {
+      this.repaymentLoanForm.addControl(
+        'transactionAmount',
+        new UntypedFormControl('', [
+          Validators.required,
+          Validators.min(0.001),
+          Validators.max(this.dataObject.amount)
+        ])
+      );
+    } else {
+      this.repaymentLoanForm.addControl(
+        'transactionAmount',
+        new UntypedFormControl('', [
+          Validators.required,
+          Validators.min(0.001)
+        ])
+      );
+    }
+    if (this.isCapitalizedIncome() || this.isBuyDownFee()) {
+      this.repaymentLoanForm.addControl('classificationId', new UntypedFormControl(''));
+    }
   }
 
   setRepaymentLoanDetails() {
     this.paymentTypes = this.dataObject.paymentTypeOptions;
+    this.classificationOptions = this.dataObject.classificationOptions;
     this.repaymentLoanForm.patchValue({
       transactionAmount: this.dataObject.amount
     });
@@ -107,6 +147,28 @@ export class MakeRepaymentComponent implements OnInit, OnDestroy {
     }
   }
 
+  showDetails(): boolean {
+    return !this.isCapitalizedIncome() && !this.isBuyDownFee();
+  }
+
+  isCapitalizedIncome(): boolean {
+    return [
+      'capitalizedIncome',
+      'capitalizedIncomeAdjustment'
+    ].includes(this.command);
+  }
+
+  isBuyDownFee(): boolean {
+    return [
+      'buyDownFee'
+    ].includes(this.command);
+  }
+
+  showInterestRefundCheckbox(): boolean {
+    const code = this.dataObject?.type?.code?.toLowerCase() || '';
+    return code.includes('merchantissuedrefund') || code.includes('payoutrefund');
+  }
+
   /** Submits the repayment form */
   submit() {
     const repaymentLoanFormData = this.repaymentLoanForm.value;
@@ -116,17 +178,18 @@ export class MakeRepaymentComponent implements OnInit, OnDestroy {
     if (repaymentLoanFormData.transactionDate instanceof Date) {
       repaymentLoanFormData.transactionDate = this.dateUtils.formatDate(prevTransactionDate, dateFormat);
     }
-    const data = {
+    const data: any = {
       ...repaymentLoanFormData,
       dateFormat,
       locale
     };
-    const command = this.dataObject.type.code.split('.')[1];
     data['transactionAmount'] = data['transactionAmount'] * 1;
-    this.loanService.submitLoanActionButton(this.loanId, data, command)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../transactions'], { relativeTo: this.route });
+    if (repaymentLoanFormData.skipInterestRefund) {
+      data.interestRefundCalculation = false;
+    }
+    delete data.skipInterestRefund;
+    this.loanService.submitLoanActionButton(this.loanId, data, this.command).subscribe((response: any) => {
+      this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

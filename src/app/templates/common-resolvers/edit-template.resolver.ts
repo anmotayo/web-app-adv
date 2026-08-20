@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { TemplatesService } from '../templates.service';
  * Edit Template data resolver.
  */
 @Injectable()
-export class EditTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {TemplatesService} templatesService Templates service.
-   */
-  constructor(private templatesService: TemplatesService) {}
+export class EditTemplateResolver {
+  private templatesService = inject(TemplatesService);
 
   /**
    * Returns the template data.
@@ -27,5 +23,4 @@ export class EditTemplateResolver implements Resolve<Object> {
     const templateId = route.paramMap.get('id');
     return this.templatesService.getEditTemplateData(templateId);
   }
-
 }

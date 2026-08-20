@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ClientsService } from 'app/clients/clients.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Reactivate Client Component
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-reactivate-client',
   templateUrl: './reactivate-client.component.html',
-  styleUrls: ['./reactivate-client.component.scss']
+  styleUrls: ['./reactivate-client.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class ReactivateClientComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private clientsService = inject(ClientsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +45,7 @@ export class ReactivateClientComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private clientsService: ClientsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.clientId = this.route.parent.snapshot.params['clientId'];
   }
 
@@ -57,7 +62,10 @@ export class ReactivateClientComponent implements OnInit {
    */
   createReactivateClientForm() {
     this.reactivateClientForm = this.formBuilder.group({
-      'reactivationDate': ['', Validators.required]
+      reactivationDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -82,5 +90,4 @@ export class ReactivateClientComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

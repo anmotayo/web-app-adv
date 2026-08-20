@@ -1,10 +1,15 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, TemplateRef, ViewChild, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
-import { PopoverService } from '../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../configuration-wizard/configuration-wizard.service';
+import { PopoverService } from '../configuration-wizard/popover/popover.service';
+import { MatNavList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatLine } from '@angular/material/grid-list';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Products component.
@@ -12,9 +17,20 @@ import { ConfigurationWizardService } from '../configuration-wizard/configuratio
 @Component({
   selector: 'mifosx-products',
   templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss']
+  styleUrls: ['./products.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatNavList,
+    MatListItem,
+    MatIcon,
+    FaIconComponent,
+    MatLine
+  ]
 })
-export class ProductsComponent implements OnInit, AfterViewInit {
+export class ProductsComponent implements AfterViewInit {
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /* Reference of charges */
   @ViewChild('charges') charges: ElementRef<any>;
@@ -40,18 +56,8 @@ export class ProductsComponent implements OnInit, AfterViewInit {
   @ViewChild('recurringDepositProducts') recurringDepositProducts: ElementRef<any>;
   /* Template for popover on recurring deposit products */
   @ViewChild('templateRecurringDepositProducts') templateRecurringDepositProducts: TemplateRef<any>;
-
-  /**
-   * @param {Router} router Router.
-   * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
-   * @param {PopoverService} popoverService PopoverService.
-   */
-  constructor(private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) { }
-
-  ngOnInit() {
-  }
+  // Initialize an array of 11 boolean values, all set to false
+  arrowBooleans: boolean[] = new Array(11).fill(false);
 
   /**
    * To show popover.
@@ -84,7 +90,12 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     }
     if (this.configurationWizardService.showRecurringDepositProducts === true) {
       setTimeout(() => {
-        this.showPopover(this.templateRecurringDepositProducts, this.recurringDepositProducts.nativeElement, 'bottom', true);
+        this.showPopover(
+          this.templateRecurringDepositProducts,
+          this.recurringDepositProducts.nativeElement,
+          'bottom',
+          true
+        );
       });
     }
   }
@@ -95,8 +106,14 @@ export class ProductsComponent implements OnInit, AfterViewInit {
    * @param target HTMLElement | ElementRef<any>.
    * @param position String.
    * @param backdrop Boolean.
+   * @param arrowNumber - The index of the boolean value to toggle.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -206,5 +223,10 @@ export class ProductsComponent implements OnInit, AfterViewInit {
     this.configurationWizardService.showRecurringDepositProducts = false;
     this.configurationWizardService.showFixedDepositProductsList = true;
     this.router.navigate(['/products/fixed-deposit-products']);
+  }
+
+  arrowBooleansToggle(arrowNumber: number) {
+    // Toggle the boolean value at the given index
+    this.arrowBooleans[arrowNumber] = !this.arrowBooleans[arrowNumber];
   }
 }

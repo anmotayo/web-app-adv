@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,17 +11,14 @@ import { ProductsService } from '../products.service';
  * Collaterals Template Resolver
  */
 @Injectable()
-export class CollateralTemplateResolver implements Resolve<Object> {
-    /**
-     * @param {ProductsService} productsService products Service
-     */
-    constructor(private productsService: ProductsService) {}
+export class CollateralTemplateResolver {
+  private productsService = inject(ProductsService);
 
-    /**
-     * Returns the product Data.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.productsService.getCollateralTemplate();
-    }
+  /**
+   * Returns the product Data.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.productsService.getCollateralTemplate();
+  }
 }

@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services. */
 import { ClientsService } from 'app/clients/clients.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Client Pay Charge component.
@@ -14,9 +15,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-client-pay-charges',
   templateUrl: './client-pay-charges.component.html',
-  styleUrls: ['./client-pay-charges.component.scss']
+  styleUrls: ['./client-pay-charges.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class ClientPayChargesComponent implements OnInit {
+  private clientsService = inject(ClientsService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   /** Transaction Form. */
   transactionForm: any;
@@ -25,22 +35,15 @@ export class ClientPayChargesComponent implements OnInit {
   /** Minimum Date allowed. */
   minDate = new Date(2000, 0, 1);
 
-    /**
-     * Retrieves the charge data from `resolve`.
-     * @param {ClientService} clientService Products Service.
-     * @param {FormBuilder} formBuilder Form Builder.
-     * @param {ActivatedRoute} route Activated Route.
-     * @param {Router} router Router for navigation.
-     * @param {SettingsService} settingsService Setting service
-     */
-  constructor(
-    private clientsService: ClientsService,
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService
-  ) {
+  /**
+   * Retrieves the charge data from `resolve`.
+   * @param {ClientService} clientService Products Service.
+   * @param {FormBuilder} formBuilder Form Builder.
+   * @param {ActivatedRoute} route Activated Route.
+   * @param {Router} router Router for navigation.
+   * @param {SettingsService} settingsService Setting service
+   */
+  constructor() {
     this.route.data.subscribe((data: { transactionData: any }) => {
       this.transactionData = data.transactionData;
     });
@@ -55,8 +58,14 @@ export class ClientPayChargesComponent implements OnInit {
    */
   setTransactionForm() {
     this.transactionForm = this.formBuilder.group({
-      'amount': [this.transactionData.amount, Validators.required],
-      'transactionDate': [new Date(), Validators.required]
+      amount: [
+        this.transactionData.amount,
+        Validators.required
+      ],
+      transactionDate: [
+        new Date(),
+        Validators.required
+      ]
     });
   }
 
@@ -77,8 +86,13 @@ export class ClientPayChargesComponent implements OnInit {
       locale
     };
     this.clientsService.payClientCharge(this.transactionData.clientId, this.transactionData.id, data).subscribe(() => {
-      this.router.navigate(['../../..', 'general'], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../../..',
+          'general'
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

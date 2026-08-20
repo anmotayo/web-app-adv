@@ -1,13 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
 import { Currency } from 'app/shared/models/general.model';
+import { InputAmountComponent } from '../../../../shared/input-amount/input-amount.component';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Loan Recovery Repayment Action
@@ -15,9 +25,21 @@ import { Currency } from 'app/shared/models/general.model';
 @Component({
   selector: 'mifosx-recovery-repayment',
   templateUrl: './recovery-repayment.component.html',
-  styleUrls: ['./recovery-repayment.component.scss']
+  styleUrls: ['./recovery-repayment.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    InputAmountComponent,
+    MatSlideToggle,
+    CdkTextareaAutosize
+  ]
 })
 export class RecoveryRepaymentComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** Loan Id */
@@ -41,12 +63,7 @@ export class RecoveryRepaymentComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
+  constructor() {
     this.loanId = this.route.snapshot.params['loanId'];
   }
 
@@ -68,11 +85,17 @@ export class RecoveryRepaymentComponent implements OnInit {
    */
   createRecoveryRepaymentLoanForm() {
     this.recoveryRepaymentLoanForm = this.formBuilder.group({
-      'transactionDate': [new Date(), Validators.required],
-      'transactionAmount': ['', Validators.required],
-      'externalId': [''],
-      'paymentTypeId': [''],
-      'note': ['']
+      transactionDate: [
+        new Date(),
+        Validators.required
+      ],
+      transactionAmount: [
+        '',
+        Validators.required
+      ],
+      externalId: [''],
+      paymentTypeId: [''],
+      note: ['']
     });
   }
 
@@ -120,10 +143,8 @@ export class RecoveryRepaymentComponent implements OnInit {
       locale
     };
     data['transactionAmount'] = data['transactionAmount'] * 1;
-    this.loanService.submitLoanActionButton(this.loanId, data, 'recoverypayment')
-      .subscribe((response: any) => {
-        this.router.navigate(['../../general'], { relativeTo: this.route });
-      });
+    this.loanService.submitLoanActionButton(this.loanId, data, 'recoverypayment').subscribe((response: any) => {
+      this.router.navigate(['../../general'], { relativeTo: this.route });
+    });
   }
-
 }

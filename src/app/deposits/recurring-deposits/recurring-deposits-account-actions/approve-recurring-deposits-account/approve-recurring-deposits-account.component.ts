@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { RecurringDepositsService } from '../../recurring-deposits.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Approve Recurring Deposits Account Component
@@ -14,9 +16,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-approve-recurring-deposits-account',
   templateUrl: './approve-recurring-deposits-account.component.html',
-  styleUrls: ['./approve-recurring-deposits-account.component.scss']
+  styleUrls: ['./approve-recurring-deposits-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class ApproveRecurringDepositsAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private recurringDepositsService = inject(RecurringDepositsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +47,7 @@ export class ApproveRecurringDepositsAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private recurringDepositsService: RecurringDepositsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['recurringDepositAccountId'];
   }
 
@@ -57,8 +64,11 @@ export class ApproveRecurringDepositsAccountComponent implements OnInit {
    */
   createApproveRecurringDepositsAccountForm() {
     this.approveRecurringDepositsAccountForm = this.formBuilder.group({
-      'approvedOnDate': ['', Validators.required],
-      'note': ['']
+      approvedOnDate: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -72,16 +82,20 @@ export class ApproveRecurringDepositsAccountComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const prevApprovedOnDate: Date = this.approveRecurringDepositsAccountForm.value.approvedOnDate;
     if (approveRecurringDepositsAccountFormData.approvedOnDate instanceof Date) {
-      approveRecurringDepositsAccountFormData.approvedOnDate = this.dateUtils.formatDate(prevApprovedOnDate, dateFormat);
+      approveRecurringDepositsAccountFormData.approvedOnDate = this.dateUtils.formatDate(
+        prevApprovedOnDate,
+        dateFormat
+      );
     }
     const data = {
       ...approveRecurringDepositsAccountFormData,
       dateFormat,
       locale
     };
-    this.recurringDepositsService.executeRecurringDepositsAccountCommand(this.accountId, 'approve', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.recurringDepositsService
+      .executeRecurringDepositsAccountCommand(this.accountId, 'approve', data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

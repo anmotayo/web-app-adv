@@ -1,32 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductsService } from 'app/products/products.service';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-view-bucket',
   templateUrl: './view-bucket.component.html',
-  styleUrls: ['./view-bucket.component.scss']
+  styleUrls: ['./view-bucket.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
-export class ViewBucketComponent implements OnInit {
+export class ViewBucketComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private productsService = inject(ProductsService);
 
   /** Delinquency Bucket Data. */
   delinquencyBucketData: any;
 
-  constructor(private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog,
-    private productsService: ProductsService) {
+  constructor() {
     this.route.data.subscribe((data: { delinquencyBucket: any }) => {
       this.delinquencyBucketData = data.delinquencyBucket;
       this.delinquencyBucketData.ranges = this.delinquencyBucketData.ranges.sort(
-        (objA: { minimumAge: number; }, objB: { minimumAge: number; }) => objA.minimumAge - objB.minimumAge,
+        (objA: { minimumAge: number }, objB: { minimumAge: number }) => objA.minimumAge - objB.minimumAge
       );
     });
-  }
-
-  ngOnInit(): void {
   }
 
   deleteDelinquencyBucket() {
@@ -41,5 +45,4 @@ export class ViewBucketComponent implements OnInit {
       }
     });
   }
-
 }

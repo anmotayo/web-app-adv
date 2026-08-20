@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormArray } from '@angular/forms';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormArray, UntypedFormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -13,16 +13,50 @@ import { ConfigurationWizardService } from '../../configuration-wizard/configura
 
 /** Custom Dialog Component */
 import { NextStepDialogComponent } from '../../configuration-wizard/next-step-dialog/next-step-dialog.component';
+import { GlAccountSelectorComponent } from '../../shared/accounting/gl-account-selector/gl-account-selector.component';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 /**
  * Create Journal Entry component.
  */
 @Component({
   selector: 'mifosx-create-journal-entry',
   templateUrl: './create-journal-entry.component.html',
-  styleUrls: ['./create-journal-entry.component.scss']
+  styleUrls: ['./create-journal-entry.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    GlAccountSelectorComponent,
+    MatIconButton,
+    FaIconComponent,
+    CdkTextareaAutosize
+  ]
 })
 export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private accountingService = inject(AccountingService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
+  onAmountInput(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+
+    const raw = target.value.trim();
+    if (raw === '') return;
+
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 1) {
+      target.value = '1';
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
   /** Minimum transaction date allowed. */
   minDate = new Date(2000, 0, 1);
   /** Maximum transaction date allowed. */
@@ -37,6 +71,9 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
   paymentTypeData: any;
   /** Gl Account data. */
   glAccountData: any;
+  /** Asset Externalization */
+  assetExternalizationConfig: any;
+  assetExternalizationEnabled = false;
 
   /* Reference of create journal form */
   @ViewChild('createJournalFormRef') createJournalFormRef: ElementRef<any>;
@@ -53,26 +90,17 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private accountingService: AccountingService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog,
-    private configurationWizardService: ConfigurationWizardService,
-    private popoverService: PopoverService) {
-    this.route.data.subscribe((data: {
-      offices: any,
-      currencies: any,
-      paymentTypes: any,
-      glAccounts: any
-    }) => {
-      this.officeData = data.offices;
-      this.currencyData = data.currencies.selectedCurrencyOptions;
-      this.paymentTypeData = data.paymentTypes;
-      this.glAccountData = data.glAccounts;
-    });
+  constructor() {
+    this.assetExternalizationEnabled = false;
+    this.route.data.subscribe(
+      (data: { offices: any; currencies: any; paymentTypes: any; glAccounts: any; globalConfig: any }) => {
+        this.officeData = data.offices;
+        this.currencyData = data.currencies.selectedCurrencyOptions;
+        this.paymentTypeData = data.paymentTypes;
+        this.glAccountData = data.glAccounts;
+        this.assetExternalizationConfig = data.globalConfig;
+      }
+    );
   }
 
   /**
@@ -88,19 +116,28 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    */
   createJournalEntryForm() {
     this.journalEntryForm = this.formBuilder.group({
-      'officeId': ['', Validators.required],
-      'currencyCode': ['', Validators.required],
-      'debits': this.formBuilder.array([this.createAffectedGLEntryForm()]),
-      'credits': this.formBuilder.array([this.createAffectedGLEntryForm()]),
-      'referenceNumber': [''],
-      'transactionDate': ['', Validators.required],
-      'paymentTypeId': [''],
-      'accountNumber': [''],
-      'checkNumber': [''],
-      'routingCode': [''],
-      'receiptNumber': [''],
-      'bankNumber': [''],
-      'comments': ['']
+      officeId: [
+        '',
+        Validators.required
+      ],
+      currencyCode: [
+        '',
+        Validators.required
+      ],
+      debits: this.formBuilder.array([this.createAffectedGLEntryForm()]),
+      credits: this.formBuilder.array([this.createAffectedGLEntryForm()]),
+      referenceNumber: [''],
+      transactionDate: [
+        '',
+        Validators.required
+      ],
+      paymentTypeId: [''],
+      accountNumber: [''],
+      checkNumber: [''],
+      routingCode: [''],
+      receiptNumber: [''],
+      bankNumber: [''],
+      comments: ['']
     });
   }
 
@@ -110,10 +147,29 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    */
   createAffectedGLEntryForm(): UntypedFormGroup {
     const formGroup = this.formBuilder.group({
-      'glAccountId': ['', Validators.required],
-      'amount': ['', Validators.required],
-      'glCode': [{value: '', disabled: true}],
-      'glName': [{value: '', disabled: true}],
+      glAccountId: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        [
+          Validators.required,
+          Validators.min(1)
+        ]
+      ],
+      glCode: [
+        {
+          value: '',
+          disabled: true
+        }
+      ],
+      glName: [
+        {
+          value: '',
+          disabled: true
+        }
+      ]
     });
 
     formGroup.get('glAccountId')?.valueChanges.subscribe(glAccountId => {
@@ -174,10 +230,22 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
     journalEntry.locale = this.settingsService.language.code;
     journalEntry.dateFormat = this.settingsService.dateFormat;
     if (journalEntry.transactionDate) {
-      journalEntry.transactionDate = this.dateUtils.formatDate(journalEntry.transactionDate, this.settingsService.dateFormat);
+      journalEntry.transactionDate = this.dateUtils.formatDate(
+        journalEntry.transactionDate,
+        this.settingsService.dateFormat
+      );
     }
-    this.accountingService.createJournalEntry(journalEntry).subscribe(response => {
-      this.router.navigate(['../transactions/view', response.transactionId], { relativeTo: this.route });
+    if (!journalEntry['externalAssetOwner']) {
+      delete journalEntry['externalAssetOwner'];
+    }
+    this.accountingService.createJournalEntry(journalEntry).subscribe((response) => {
+      this.router.navigate(
+        [
+          '../transactions/view',
+          response.transactionId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
 
@@ -188,7 +256,12 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -200,6 +273,10 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
       setTimeout(() => {
         this.showPopover(this.templateCreateJournalFormRef, this.createJournalFormRef.nativeElement, 'top', true);
       });
+    }
+    this.assetExternalizationEnabled = this.assetExternalizationConfig.enabled;
+    if (this.assetExternalizationEnabled) {
+      this.journalEntryForm.addControl('externalAssetOwner', new UntypedFormControl());
     }
   }
 
@@ -222,21 +299,21 @@ export class CreateJournalEntryComponent implements OnInit, AfterViewInit {
    * Next Step (Products) Dialog Configuration Wizard.
    */
   openNextStepDialog() {
-    const nextStepDialogRef = this.dialog.open( NextStepDialogComponent, {
+    const nextStepDialogRef = this.dialog.open(NextStepDialogComponent, {
       data: {
         nextStepName: 'Setup Products',
         previousStepName: 'Accounting',
         stepPercentage: 74
-      },
+      }
     });
     nextStepDialogRef.afterClosed().subscribe((response: { nextStep: boolean }) => {
-    if (response.nextStep) {
-      this.configurationWizardService.showCreateJournalEntries = false;
-      this.configurationWizardService.showCharges = true;
-      this.router.navigate(['/products']);
+      if (response.nextStep) {
+        this.configurationWizardService.showCreateJournalEntries = false;
+        this.configurationWizardService.showCharges = true;
+        this.router.navigate(['/products']);
       } else {
-      this.configurationWizardService.showCreateJournalEntries = false;
-      this.router.navigate(['/home']);
+        this.configurationWizardService.showCreateJournalEntries = false;
+        this.router.navigate(['/home']);
       }
     });
   }

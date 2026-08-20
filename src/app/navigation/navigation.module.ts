@@ -27,9 +27,7 @@ import { MemberGroupsComponent } from './member-groups/member-groups.component';
   imports: [
     SharedModule,
     PipesModule,
-    NavigationRoutingModule
-  ],
-  declarations: [
+    NavigationRoutingModule,
     NavigationComponent,
     OfficeNavigationComponent,
     StaffNavigationComponent,
@@ -42,4 +40,4 @@ import { MemberGroupsComponent } from './member-groups/member-groups.component';
     MemberGroupsComponent
   ]
 })
-export class NavigationModule { }
+export class NavigationModule {}

@@ -1,6 +1,10 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { YesnoPipe } from '../../../pipes/yesno.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View Employee Component.
@@ -8,9 +12,16 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-view-employee',
   templateUrl: './view-employee.component.html',
-  styleUrls: ['./view-employee.component.scss']
+  styleUrls: ['./view-employee.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    DateFormatPipe,
+    YesnoPipe
+  ]
 })
-export class ViewEmployeeComponent implements OnInit {
+export class ViewEmployeeComponent {
+  private route = inject(ActivatedRoute);
 
   /** Employee data. */
   employeeData: any;
@@ -19,13 +30,9 @@ export class ViewEmployeeComponent implements OnInit {
    * Retrieves the employee data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { employee: any }) => {
       this.employeeData = data.employee;
     });
   }
-
-  ngOnInit() {
-  }
-
 }

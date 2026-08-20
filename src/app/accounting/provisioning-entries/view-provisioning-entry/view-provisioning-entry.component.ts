@@ -1,16 +1,32 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 
 /** rxjs Imports */
 import { startWith, map, debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 
 /** Custom Services */
 import { AccountingService } from '../../accounting.service';
+import { AsyncPipe } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatAutocompleteTrigger, MatAutocomplete, MatOption } from '@angular/material/autocomplete';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View provisioning entry component.
@@ -18,9 +34,32 @@ import { AccountingService } from '../../accounting.service';
 @Component({
   selector: 'mifosx-view-provisioning-entry',
   templateUrl: './view-provisioning-entry.component.html',
-  styleUrls: ['./view-provisioning-entry.component.scss']
+  styleUrls: ['./view-provisioning-entry.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatAutocompleteTrigger,
+    MatAutocomplete,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    AsyncPipe
+  ]
 })
 export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
+  private accountingService = inject(AccountingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Provisioning entry id. */
   provisioningEntryId: string;
@@ -47,7 +86,15 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
   /** Filtered provisioning category data for autocomplete. */
   filteredProvisioningCategoryData: any;
   /** Columns to be displayed in provisioning entry entries table. */
-  displayedColumns: string[] = ['officeName', 'productName', 'currencyCode', 'categoryName', 'amountreserved', 'liabilityAccountName', 'expenseAccountName'];
+  displayedColumns: string[] = [
+    'officeName',
+    'productName',
+    'currencyCode',
+    'categoryName',
+    'amountreserved',
+    'liabilityAccountName',
+    'expenseAccountName'
+  ];
   /** Data source for provisioning entry entries table. */
   dataSource: MatTableDataSource<any>;
   /** Provisioning entry entries filter. */
@@ -69,15 +116,14 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private accountingService: AccountingService,
-              private route: ActivatedRoute,
-              private router: Router) {
-    this.route.data.subscribe((data: {
-        provisioningEntry: any,
-        provisioningEntryEntries: any,
-        offices: any,
-        loanProducts: any,
-        provisiningCategories: any
+  constructor() {
+    this.route.data.subscribe(
+      (data: {
+        provisioningEntry: any;
+        provisioningEntryEntries: any;
+        offices: any;
+        loanProducts: any;
+        provisiningCategories: any;
       }) => {
         this.provisioningEntryId = data.provisioningEntry.id;
         this.provisioningEntry = data.provisioningEntry;
@@ -85,7 +131,8 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
         this.officeData = data.offices;
         this.loanProductData = data.loanProducts;
         this.provisioningCategoryData = data.provisiningCategories;
-      });
+      }
+    );
   }
 
   /**
@@ -106,7 +153,7 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.officeName.valueChanges
       .pipe(
-        map(value => value.toLowerCase()),
+        map((value) => value.toLowerCase()),
         debounceTime(500),
         distinctUntilChanged(),
         tap((filterValue) => {
@@ -117,7 +164,7 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
 
     this.loanProduct.valueChanges
       .pipe(
-        map(value => value.toLowerCase()),
+        map((value) => value.toLowerCase()),
         debounceTime(500),
         distinctUntilChanged(),
         tap((filterValue) => {
@@ -128,7 +175,7 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
 
     this.provisioningCategory.valueChanges
       .pipe(
-        map(value => value.toLowerCase()),
+        map((value) => value.toLowerCase()),
         debounceTime(500),
         distinctUntilChanged(),
         tap((filterValue) => {
@@ -144,9 +191,11 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * @param {any} filterValue Values to filter data by.
    */
   filterPredicate(data: any, filterValue: any) {
-    return data.officeName.toLowerCase().indexOf(filterValue['officeName']) !== -1
-      && data.productName.toLowerCase().indexOf(filterValue['productName']) !== -1
-      && data.categoryName.toLowerCase().indexOf(filterValue['categoryName']) !== -1;
+    return (
+      data.officeName.toLowerCase().indexOf(filterValue['officeName']) !== -1 &&
+      data.productName.toLowerCase().indexOf(filterValue['productName']) !== -1 &&
+      data.categoryName.toLowerCase().indexOf(filterValue['categoryName']) !== -1
+    );
   }
 
   /**
@@ -174,11 +223,10 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * Sets filtered offices for autocomplete.
    */
   setFilteredOffices() {
-    this.filteredOfficeData = this.officeName.valueChanges
-    .pipe(
+    this.filteredOfficeData = this.officeName.valueChanges.pipe(
       startWith(''),
-      map((office: any) => typeof office === 'string' ? office : office.name),
-      map((officeName: string) => officeName ? this.filterOfficeAutocompleteData(officeName) : this.officeData)
+      map((office: any) => (typeof office === 'string' ? office : office.name)),
+      map((officeName: string) => (officeName ? this.filterOfficeAutocompleteData(officeName) : this.officeData))
     );
   }
 
@@ -186,11 +234,12 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * Sets filtered loan products for autocomplete.
    */
   setFilteredLoanProducts() {
-    this.filteredLoanProductData = this.loanProduct.valueChanges
-    .pipe(
+    this.filteredLoanProductData = this.loanProduct.valueChanges.pipe(
       startWith(''),
-      map((loanProduct: any) => typeof loanProduct === 'string' ? loanProduct : loanProduct.name),
-      map((loanProductName: string) => loanProductName ? this.filterLoanProductAutocompleteData(loanProductName) : this.loanProductData)
+      map((loanProduct: any) => (typeof loanProduct === 'string' ? loanProduct : loanProduct.name)),
+      map((loanProductName: string) =>
+        loanProductName ? this.filterLoanProductAutocompleteData(loanProductName) : this.loanProductData
+      )
     );
   }
 
@@ -198,11 +247,16 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * Sets filtered provisioning categories for autocomplete.
    */
   setFilteredProvisioningCategories() {
-    this.filteredProvisioningCategoryData = this.provisioningCategory.valueChanges
-    .pipe(
+    this.filteredProvisioningCategoryData = this.provisioningCategory.valueChanges.pipe(
       startWith(''),
-      map((provisioningCategory: any) => typeof provisioningCategory === 'string' ? provisioningCategory : provisioningCategory.categoryName),
-      map((provisioningCategoryName: string) => provisioningCategoryName ? this.filterProvisioningCategoryAutocompleteData(provisioningCategoryName) : this.provisioningCategoryData)
+      map((provisioningCategory: any) =>
+        typeof provisioningCategory === 'string' ? provisioningCategory : provisioningCategory.categoryName
+      ),
+      map((provisioningCategoryName: string) =>
+        provisioningCategoryName
+          ? this.filterProvisioningCategoryAutocompleteData(provisioningCategoryName)
+          : this.provisioningCategoryData
+      )
     );
   }
 
@@ -221,7 +275,9 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * @returns {any} Filtered loan products.
    */
   private filterLoanProductAutocompleteData(loanProductName: string): any {
-    return this.loanProductData.filter((loanProduct: any) => loanProduct.name.toLowerCase().includes(loanProductName.toLocaleLowerCase()));
+    return this.loanProductData.filter((loanProduct: any) =>
+      loanProduct.name.toLowerCase().includes(loanProductName.toLocaleLowerCase())
+    );
   }
 
   /**
@@ -230,7 +286,9 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * @returns {any} Filtered provisioning categories.
    */
   private filterProvisioningCategoryAutocompleteData(provisioningCategoryName: string): any {
-    return this.provisioningCategoryData.filter((provisioningCategory: any) => provisioningCategory.categoryName.toLowerCase().includes(provisioningCategoryName.toLocaleLowerCase()));
+    return this.provisioningCategoryData.filter((provisioningCategory: any) =>
+      provisioningCategory.categoryName.toLowerCase().includes(provisioningCategoryName.toLocaleLowerCase())
+    );
   }
 
   /**
@@ -238,10 +296,14 @@ export class ViewProvisioningEntryComponent implements OnInit, AfterViewInit {
    * and redirects to created entries.
    */
   createProvisioningJournalEntries() {
-    this.accountingService.createProvisioningJournalEntries(this.provisioningEntryId)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../journal-entries/view', response.resourceId], { relativeTo: this.route });
-      });
+    this.accountingService.createProvisioningJournalEntries(this.provisioningEntryId).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          '../../journal-entries/view',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
   }
-
 }

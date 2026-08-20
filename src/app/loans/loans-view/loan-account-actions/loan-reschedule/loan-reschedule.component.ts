@@ -1,18 +1,36 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import { LoansService } from 'app/loans/loans.service';
-import { UntypedFormBuilder, UntypedFormGroup, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-loan-reschedule',
   templateUrl: './loan-reschedule.component.html',
-  styleUrls: ['./loan-reschedule.component.scss']
+  styleUrls: ['./loan-reschedule.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class LoanRescheduleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   loanId: any;
@@ -36,14 +54,9 @@ export class LoanRescheduleComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+  }
 
   ngOnInit() {
     this.maxDate = this.settingsService.businessDate;
@@ -53,17 +66,25 @@ export class LoanRescheduleComponent implements OnInit {
 
   setRescheduleLoanForm() {
     this.rescheduleLoanForm = this.formBuilder.group({
-      'rescheduleFromDate': [new Date(), Validators.required],
-      'rescheduleReasonId': ['', Validators.required],
-      'submittedOnDate': [new Date(), Validators.required],
-      'rescheduleReasonComment': [''],
-      'adjustedDueDate': [''],
-      'graceOnPrincipal': [''],
-      'graceOnInterest': [''],
-      'extraTerms': [''],
-      'newInterestRate': ['']
+      rescheduleFromDate: [
+        new Date(),
+        Validators.required
+      ],
+      rescheduleReasonId: [
+        '',
+        Validators.required
+      ],
+      submittedOnDate: [
+        new Date(),
+        Validators.required
+      ],
+      rescheduleReasonComment: [''],
+      adjustedDueDate: [''],
+      graceOnPrincipal: [''],
+      graceOnInterest: [''],
+      extraTerms: [''],
+      newInterestRate: ['']
     });
-
   }
 
   submit() {
@@ -89,12 +110,10 @@ export class LoanRescheduleComponent implements OnInit {
     };
     data.loanId = this.loanId;
     this.loanService.submitRescheduleData(data).subscribe((response: any) => {
-
       // TODO: needs to be updated
       // mentioned in Community App:
       // location.path('/loans-accounts/' + scope.loanId + '/viewreschedulerequest/'+ data.resourceId);
-        this.router.navigate(['../../general'], { relativeTo: this.route });
+      this.router.navigate(['../../general'], { relativeTo: this.route });
     });
   }
-
 }

@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { ProductsService } from '../../products.service';
  * Tax Group template data resolver.
  */
 @Injectable()
-export class ManageTaxGroupTemplateResolver implements Resolve<Object> {
+export class ManageTaxGroupTemplateResolver {
+  private productsService = inject(ProductsService);
 
-    /**
-     * @param {ProductsService} productsService Products service.
-     */
-    constructor(private productsService: ProductsService) { }
-
-    /**
-     * Returns the tax groups template data.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.productsService.getTaxGroupTemplate();
-    }
-
+  /**
+   * Returns the tax groups template data.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.productsService.getTaxGroupTemplate();
+  }
 }

@@ -1,9 +1,18 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 /** Custom Service */
 import { SettingsService } from './settings.service';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle
+} from '@angular/material/expansion';
+import { FileUploadComponent } from '../shared/file-upload/file-upload.component';
+import { ThemePickerComponent } from '../shared/theme-picker/theme-picker.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Settings component.
@@ -11,9 +20,19 @@ import { UntypedFormControl } from '@angular/forms';
 @Component({
   selector: 'mifosx-settings',
   templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss']
+  styleUrls: ['./settings.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    FileUploadComponent,
+    ThemePickerComponent
+  ]
 })
 export class SettingsComponent implements OnInit {
+  private settingsService = inject(SettingsService);
 
   /** Placeholder for languages. update once translations are set up */
   languages: any[] = [
@@ -34,32 +53,27 @@ export class SettingsComponent implements OnInit {
     'MM-dd-yy',
     'yyyy-MM-dd'
   ];
-    /** Decimals. */
-    decimals: string[] = [
-      '0',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-   ];
+  /** Decimals. */
+  decimals: string[] = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8'
+  ];
   /** Placeholder for fonts. */
   fonts: any;
 
   /** Language Setting */
   language = new UntypedFormControl('');
   /** Date Format Setting */
-  dateFormat =  new UntypedFormControl('');
+  dateFormat = new UntypedFormControl('');
   /** Decimals to Display Setting */
-  decimalsToDisplay =  new UntypedFormControl('');
-
-  /**
-   * @param {SettingsService} settingsService Settings Service
-   */
-  constructor(private settingsService: SettingsService) { }
+  decimalsToDisplay = new UntypedFormControl('');
 
   ngOnInit() {
     this.language.patchValue(this.settingsService.language);
@@ -92,5 +106,4 @@ export class SettingsComponent implements OnInit {
   compareOptions(option1: any, option2: any) {
     return option1 && option2 && option1.code === option2.code;
   }
-
 }

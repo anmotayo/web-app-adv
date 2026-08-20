@@ -1,10 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { OrganizationService } from '../organization.service';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Password preferences component.
@@ -12,9 +14,18 @@ import { OrganizationService } from '../organization.service';
 @Component({
   selector: 'mifosx-password-preferences',
   templateUrl: './password-preferences.component.html',
-  styleUrls: ['./password-preferences.component.scss']
+  styleUrls: ['./password-preferences.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatRadioGroup,
+    MatRadioButton
+  ]
 })
 export class PasswordPreferencesComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private organizationService = inject(OrganizationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Password preferences form. */
   passwordPreferencesForm: UntypedFormGroup;
@@ -28,11 +39,8 @@ export class PasswordPreferencesComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private organizationService: OrganizationService,
-              private route: ActivatedRoute,
-              private router: Router) {
-    this.route.data.subscribe((data: { passwordPreferencesTemplate: any}) => {
+  constructor() {
+    this.route.data.subscribe((data: { passwordPreferencesTemplate: any }) => {
       this.passwordPreferencesData = data.passwordPreferencesTemplate;
     });
   }
@@ -50,7 +58,7 @@ export class PasswordPreferencesComponent implements OnInit {
    */
   createPasswordPreferencesForm() {
     this.passwordPreferencesForm = this.formBuilder.group({
-      'validationPolicyId': ['']
+      validationPolicyId: ['']
     });
   }
 
@@ -75,5 +83,4 @@ export class PasswordPreferencesComponent implements OnInit {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

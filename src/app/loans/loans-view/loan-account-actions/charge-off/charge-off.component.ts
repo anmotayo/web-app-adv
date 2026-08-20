@@ -1,16 +1,29 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Dates } from 'app/core/utils/dates';
 import { LoansService } from 'app/loans/loans.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-charge-off',
   templateUrl: './charge-off.component.html',
-  styleUrls: ['./charge-off.component.scss']
+  styleUrls: ['./charge-off.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class ChargeOffComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
+
   @Input() dataObject: any;
 
   /** Loan Id */
@@ -35,14 +48,9 @@ export class ChargeOffComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private settingsService: SettingsService) {
-      this.loanId = this.route.snapshot.params['loanId'];
-    }
+  constructor() {
+    this.loanId = this.route.snapshot.params['loanId'];
+  }
 
   /**
    * Creates the repayment loan form
@@ -59,10 +67,13 @@ export class ChargeOffComponent implements OnInit {
    */
   createChargeoffLoanForm() {
     this.chargeoffLoanForm = this.formBuilder.group({
-      'transactionDate': [this.settingsService.businessDate, Validators.required],
-      'externalId': '',
-      'chargeOffReasonId': '',
-      'note': ''
+      transactionDate: [
+        this.settingsService.businessDate,
+        Validators.required
+      ],
+      externalId: '',
+      chargeOffReasonId: '',
+      note: ''
     });
   }
 
@@ -80,10 +91,8 @@ export class ChargeOffComponent implements OnInit {
       locale
     };
     const command = 'charge-off';
-    this.loanService.submitLoanActionButton(this.loanId, data, command)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../transactions'], { relativeTo: this.route });
+    this.loanService.submitLoanActionButton(this.loanId, data, command).subscribe((response: any) => {
+      this.router.navigate(['../../transactions'], { relativeTo: this.route });
     });
   }
-
 }

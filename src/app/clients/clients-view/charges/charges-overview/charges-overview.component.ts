@@ -1,9 +1,25 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { NgClass } from '@angular/common';
+import { StatusLookupPipe } from '../../../../pipes/status-lookup.pipe';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Client Charge Overview component.
@@ -11,12 +27,38 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'mifosx-charges-overview',
   templateUrl: './charges-overview.component.html',
-  styleUrls: ['./charges-overview.component.scss']
+  styleUrls: ['./charges-overview.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    NgClass,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    StatusLookupPipe,
+    DateFormatPipe
+  ]
 })
 export class ChargesOverviewComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  dialog = inject(MatDialog);
 
   /** Columns to be displayed in charge overview table. */
-  displayedColumns: string[] = ['name', 'dueAsOf', 'due', 'paid', 'waived', 'outstanding'];
+  displayedColumns: string[] = [
+    'name',
+    'dueAsOf',
+    'due',
+    'paid',
+    'waived',
+    'outstanding'
+  ];
   /** Data source for charge overview table. */
   dataSource: MatTableDataSource<any>;
   /** Charge Overview data */
@@ -30,10 +72,9 @@ export class ChargesOverviewComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private route: ActivatedRoute,
-              public dialog: MatDialog) {
-      this.route.data.subscribe((data: { clientChargesData: any }) => {
-        this.chargeOverviewData = data.clientChargesData;
+  constructor() {
+    this.route.data.subscribe((data: { clientChargesData: any }) => {
+      this.chargeOverviewData = data.clientChargesData;
     });
   }
 
@@ -48,5 +89,4 @@ export class ChargesOverviewComponent implements OnInit {
     this.dataSource = new MatTableDataSource(this.chargeOverviewData.pageItems);
     this.dataSource.paginator = this.paginator;
   }
-
 }

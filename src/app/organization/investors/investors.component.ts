@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -11,6 +11,20 @@ import { ExternalAssetOwner } from 'app/loans/services/external-asset-owner';
 import { ExternalAssetOwnerService } from 'app/loans/services/external-asset-owner.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { CancelDialogComponent } from 'app/shared/cancel-dialog/cancel-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { NgClass } from '@angular/common';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle
+} from '@angular/material/expansion';
+import { ExternalIdentifierComponent } from '../../shared/external-identifier/external-identifier.component';
+import { MatDivider } from '@angular/material/divider';
+import { MatTooltip } from '@angular/material/tooltip';
+import { DateFormatPipe } from '../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-investors',
@@ -18,13 +32,34 @@ import { CancelDialogComponent } from 'app/shared/cancel-dialog/cancel-dialog.co
   styleUrls: ['./investors.component.scss'],
   animations: [
     trigger('detailExpand', [
-      state('collapsed', style({height: '0px', minHeight: '0'})),
-      state('expanded', style({height: '*'})),
-      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
-    ]),
+      state('collapsed', style({ height: '0px', minHeight: '0' })),
+      state('expanded', style({ height: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)'))
+    ])
   ],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    NgClass,
+    ExternalIdentifierComponent,
+    MatDivider,
+    MatTooltip,
+    MatPaginator,
+    DateFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class InvestorsComponent implements OnInit {
+  private settingsService = inject(SettingsService);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private externalAssetOwner = inject(ExternalAssetOwner);
+  private externalAssetOwnerService = inject(ExternalAssetOwnerService);
+  private dateUtils = inject(Dates);
 
   /** Minimum transaction date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -74,13 +109,17 @@ export class InvestorsComponent implements OnInit {
   ];
 
   /** Columns to be displayed in investors table. */
-  displayedColumns: string[] = ['status', 'effectiveFrom', 'ownerExternalId', 'loanAccount', 'transferExternalId', 'settlementDate', 'purchasePriceRatio', 'totalAmount', 'actions'];
-  constructor(private settingsService: SettingsService,
-    private router: Router,
-    private dialog: MatDialog,
-    private externalAssetOwner: ExternalAssetOwner,
-    private externalAssetOwnerService: ExternalAssetOwnerService,
-    private dateUtils: Dates) { }
+  displayedColumns: string[] = [
+    'status',
+    'effectiveFrom',
+    'ownerExternalId',
+    'loanAccount',
+    'transferExternalId',
+    'settlementDate',
+    'purchasePriceRatio',
+    'totalAmount',
+    'actions'
+  ];
 
   ngOnInit(): void {
     this.maxDate = this.settingsService.maxAllowedDate;
@@ -118,9 +157,9 @@ export class InvestorsComponent implements OnInit {
   searchEAO(): void {
     this.isLoading = true;
     const payload: any = {
-      'request': {},
-      'page': this.currentPage,
-      'size': this.pageSize
+      request: {},
+      page: this.currentPage,
+      size: this.pageSize
     };
     const dateFormat = 'yyyy-MM-dd';
     const request: any = {};
@@ -142,12 +181,11 @@ export class InvestorsComponent implements OnInit {
     payload['request'] = request;
     this.externalAssetOwnerService.searchExternalAssetOwnerTransfer(payload).subscribe((response: any) => {
       this.totalRows = response.totalElements;
-      this.existsDataToFilter = (response.totalElements > 0);
+      this.existsDataToFilter = response.totalElements > 0;
       this.dataSource.data = response.content;
       this.searchResults = response.content;
       this.isLoading = false;
     });
-
   }
 
   transform(data: any): any {
@@ -169,18 +207,18 @@ export class InvestorsComponent implements OnInit {
         const payload: any = {
           transferExternalId: transfer.transferExternalId
         };
-        this.externalAssetOwnerService.executeExternalAssetOwnerTransferCommand(transfer.transferId, payload, 'cancel')
+        this.externalAssetOwnerService
+          .executeExternalAssetOwnerTransferCommand(transfer.transferId, payload, 'cancel')
           .subscribe((result: any) => {
             this.reload();
-        });
+          });
       }
     });
   }
 
   reload() {
     const url: string = this.router.url;
-    this.router.navigateByUrl(`/`, {skipLocationChange: true})
-      .then(() => this.router.navigate([url]));
+    this.router.navigateByUrl(`/`, { skipLocationChange: true }).then(() => this.router.navigate([url]));
   }
 
   private resetPaginator() {

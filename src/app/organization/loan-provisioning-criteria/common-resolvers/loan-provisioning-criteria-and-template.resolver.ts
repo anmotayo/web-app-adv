@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { OrganizationService } from '../../organization.service';
  * Provisioning criteria and template resolver.
  */
 @Injectable()
-export class LoanProvisioningCriteriaAndTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Products service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class LoanProvisioningCriteriaAndTemplateResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the Pprovisioning criteria and template data.
@@ -27,5 +23,4 @@ export class LoanProvisioningCriteriaAndTemplateResolver implements Resolve<Obje
     const provisioningId = route.paramMap.get('id');
     return this.organizationService.getProvisioningCriteria(provisioningId, true);
   }
-
 }

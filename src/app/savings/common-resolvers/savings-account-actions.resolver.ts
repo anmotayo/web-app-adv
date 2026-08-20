@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable, forkJoin } from 'rxjs';
@@ -12,12 +12,8 @@ import { SavingsService } from '../savings.service';
  * Savings Account Actions data resolver.
  */
 @Injectable()
-export class SavingsAccountActionsResolver implements Resolve<Object> {
-
-  /**
-   * @param {SavingsService} SavingsService Savings service.
-   */
-  constructor(private savingsService: SavingsService) { }
+export class SavingsAccountActionsResolver {
+  private savingsService = inject(SavingsService);
 
   /**
    * Returns the Savings account actions data.
@@ -26,7 +22,8 @@ export class SavingsAccountActionsResolver implements Resolve<Object> {
    */
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const actionName = route.paramMap.get('name');
-    const savingAccountId = route.paramMap.get('savingAccountId') || route.parent.parent.paramMap.get('savingAccountId');
+    const savingAccountId =
+      route.paramMap.get('savingAccountId') || route.parent.parent.paramMap.get('savingAccountId');
     switch (actionName) {
       case 'Assign Staff':
         return this.savingsService.getSavingsAccountAndTemplate(savingAccountId, true);
@@ -47,5 +44,4 @@ export class SavingsAccountActionsResolver implements Resolve<Object> {
         return undefined;
     }
   }
-
 }

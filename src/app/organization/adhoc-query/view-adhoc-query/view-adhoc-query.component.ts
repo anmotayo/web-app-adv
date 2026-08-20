@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Services */
@@ -8,6 +8,8 @@ import { OrganizationService } from 'app/organization/organization.service';
 
 /** Custom Components */
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View Adhoc Query Component.
@@ -15,9 +17,17 @@ import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.co
 @Component({
   selector: 'mifosx-view-adhoc-query',
   templateUrl: './view-adhoc-query.component.html',
-  styleUrls: ['./view-adhoc-query.component.scss']
+  styleUrls: ['./view-adhoc-query.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent
+  ]
 })
-export class ViewAdhocQueryComponent implements OnInit {
+export class ViewAdhocQueryComponent {
+  private organizationService = inject(OrganizationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   /** Adhoc query data. */
   adhocQueryData: any;
@@ -29,16 +39,10 @@ export class ViewAdhocQueryComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private organizationService: OrganizationService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { adhocQuery: any }) => {
       this.adhocQueryData = data.adhocQuery;
     });
-  }
-
-  ngOnInit() {
   }
 
   /**
@@ -62,12 +66,10 @@ export class ViewAdhocQueryComponent implements OnInit {
     });
     deleteAdhocQueryDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.organizationService.deleteAdhocQuery(this.adhocQueryData.id)
-        .subscribe(() => {
+        this.organizationService.deleteAdhocQuery(this.adhocQueryData.id).subscribe(() => {
           this.router.navigate(['/organization/adhoc-query']);
         });
       }
     });
   }
-
 }

@@ -1,9 +1,11 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 /** rxjs Imports */
-import { Observable } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+
 /**
  * Clients service.
  */
@@ -11,12 +13,15 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ClientsService {
-  /**
-   * @param {HttpClient} http Http Client to send requests.
-   */
-  constructor(private http: HttpClient) { }
+  private http = inject(HttpClient);
 
-  getFilteredClients(orderBy: string, sortOrder: string, orphansOnly: boolean, displayName: string, officeId?: any): Observable<any> {
+  getFilteredClients(
+    orderBy: string,
+    sortOrder: string,
+    orphansOnly: boolean,
+    displayName: string,
+    officeId?: any
+  ): Observable<any> {
     let httpParams = new HttpParams()
       .set('displayName', displayName)
       .set('orphansOnly', orphansOnly.toString())
@@ -62,9 +67,7 @@ export class ClientsService {
   }
 
   getClientDataAndTemplate(clientId: string) {
-    const httpParams = new HttpParams()
-        .set('template', 'true')
-        .set('staffInSelectedOfficeOnly', 'true');
+    const httpParams = new HttpParams().set('template', 'true').set('staffInSelectedOfficeOnly', 'true');
     return this.http.get(`/clients/${clientId}`, { params: httpParams });
   }
 
@@ -112,7 +115,9 @@ export class ClientsService {
    */
   waiveClientCharge(chargeData: any) {
     const httpParams = new HttpParams().set('command', 'waive');
-    return this.http.post(`/clients/${chargeData.clientId}/charges/${chargeData.resourceType}`, chargeData, { params: httpParams });
+    return this.http.post(`/clients/${chargeData.clientId}/charges/${chargeData.resourceType}`, chargeData, {
+      params: httpParams
+    });
   }
 
   getAllClientCharges(clientId: string) {
@@ -123,7 +128,10 @@ export class ClientsService {
    * @param transactionData Transaction Data to be undone.
    */
   undoTransaction(transactionData: any) {
-    return this.http.post(`/clients/${transactionData.clientId}/transactions/${transactionData.transactionId}?command=undo`, transactionData);
+    return this.http.post(
+      `/clients/${transactionData.clientId}/transactions/${transactionData.transactionId}?command=undo`,
+      transactionData
+    );
   }
 
   /**
@@ -149,18 +157,35 @@ export class ClientsService {
    */
   payClientCharge(clientId: string, chargeId: string, payment: any) {
     const httpParams = new HttpParams().set('command', 'paycharge');
-    return this.http.post(`/clients/${clientId}/charges/${chargeId}?command=paycharge`, payment, { params: httpParams });
+    return this.http.post(`/clients/${clientId}/charges/${chargeId}?command=paycharge`, payment, {
+      params: httpParams
+    });
   }
 
   getClientSummary(clientId: string) {
-    const httpParams = new HttpParams().set('R_clientId', clientId)
-      .set('genericResultSet', 'false');
+    const httpParams = new HttpParams().set('R_clientId', clientId).set('genericResultSet', 'false');
     return this.http.get(`/runreports/ClientSummary`, { params: httpParams });
   }
 
   getClientProfileImage(clientId: string) {
     const httpParams = new HttpParams().set('maxHeight', '150');
-    return this.http.skipErrorHandler().get(`/clients/${clientId}/images`, { params: httpParams, responseType: 'text' });
+    // Keep it simple since our interceptor will handle the 404 errors
+    return this.http
+      .get(`/clients/${clientId}/images`, {
+        params: httpParams,
+        responseType: 'text'
+      })
+      .pipe(
+        // Handle the error here and return null when no image is found (404)
+        catchError((error) => {
+          if (error.status === 404) {
+            // Client has no profile image - return null without propagating error
+            return of(null);
+          }
+          // For other errors, rethrow the error
+          return throwError(() => error);
+        })
+      );
   }
 
   uploadClientProfileImage(clientId: string, image: File) {
@@ -181,13 +206,13 @@ export class ClientsService {
   uploadClientSignatureImage(clientId: string, signature: File) {
     const formData = new FormData();
     formData.append('file', signature);
-    formData.append('filename', signature.name);
-    return this.http.post(`/clients/${clientId}/images`, formData);
+    formData.append('name', 'clientSignature');
+    formData.append('description', 'Client signature');
+    return this.http.post(`/clients/${clientId}/documents`, formData);
   }
 
   getClientSignatureImage(clientId: string, documentId: string) {
-    const httpParams = new HttpParams().set('tenantIdentifier', 'default');
-    return this.http.get(`/clients/${clientId}/documents/${documentId}/attachment`, { params: httpParams, responseType: 'blob' });
+    return this.http.get(`/clients/${clientId}/documents/${documentId}/attachment`, { responseType: 'blob' });
   }
 
   getClientFamilyMembers(clientId: string) {
@@ -231,7 +256,9 @@ export class ClientsService {
   }
 
   downloadClientIdentificationDocument(parentEntityId: string, documentId: string) {
-    return this.http.get(`/client_identifiers/${parentEntityId}/documents/${documentId}/attachment`, { responseType: 'blob' });
+    return this.http.get(`/client_identifiers/${parentEntityId}/documents/${documentId}/attachment`, {
+      responseType: 'blob'
+    });
   }
 
   uploadClientIdentifierDocument(identifierId: string, documentData: any) {
@@ -318,9 +345,7 @@ export class ClientsService {
   }
 
   getClientReportTemplates() {
-    const httpParams = new HttpParams()
-          .set('entityId', '0')
-          .set('typeId', '0');
+    const httpParams = new HttpParams().set('entityId', '0').set('typeId', '0');
     return this.http.get('/templates', { params: httpParams });
   }
 
@@ -384,19 +409,19 @@ export class ClientsService {
 
   searchByText(text: string, page: number, pageSize: number, sortAttribute: string = '', sortDirection: string = '') {
     let request: any = {
-        request: {
-          text
-        },
-        page,
-        size: pageSize
+      request: {
+        text
+      },
+      page,
+      size: pageSize
     };
     if (sortAttribute !== '' && sortDirection !== '') {
       request = {
         ...request,
         sorts: [
           {
-          direction: sortDirection,
-          property: sortAttribute
+            direction: sortDirection,
+            property: sortAttribute
           }
         ]
       };

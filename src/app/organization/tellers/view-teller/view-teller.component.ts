@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Services */
@@ -8,6 +8,10 @@ import { OrganizationService } from 'app/organization/organization.service';
 
 /** Custom Components */
 import { DeleteDialogComponent } from '../../../shared/delete-dialog/delete-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { TitleCasePipe } from '@angular/common';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * View Teller Component.
@@ -15,9 +19,19 @@ import { DeleteDialogComponent } from '../../../shared/delete-dialog/delete-dial
 @Component({
   selector: 'mifosx-view-teller',
   templateUrl: './view-teller.component.html',
-  styleUrls: ['./view-teller.component.scss']
+  styleUrls: ['./view-teller.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    TitleCasePipe,
+    DateFormatPipe
+  ]
 })
-export class ViewTellerComponent implements OnInit {
+export class ViewTellerComponent {
+  private organizationService = inject(OrganizationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
 
   /** Teller data. */
   tellerData: any;
@@ -29,16 +43,10 @@ export class ViewTellerComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {MatDialog} dialog Dialog reference.
    */
-  constructor(private organizationService: OrganizationService,
-              private route: ActivatedRoute,
-              private router: Router,
-              public dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { teller: any }) => {
       this.tellerData = data.teller;
     });
-  }
-
-  ngOnInit() {
   }
 
   /**
@@ -50,12 +58,10 @@ export class ViewTellerComponent implements OnInit {
     });
     deleteTellerDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.organizationService.deleteTeller(this.tellerData.id)
-          .subscribe(() => {
-            this.router.navigate(['/organization/tellers']);
-          });
+        this.organizationService.deleteTeller(this.tellerData.id).subscribe(() => {
+          this.router.navigate(['/organization/tellers']);
+        });
       }
     });
   }
-
 }

@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLinkActive, RouterLink, RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Dialogs */
@@ -16,15 +16,66 @@ import { ConfirmationDialogComponent } from 'app/shared/confirmation-dialog/conf
 import { Currency } from 'app/shared/models/general.model';
 import { TranslateService } from '@ngx-translate/core';
 
+/** Environment Configuration */
+import { environment } from '../../../environments/environment';
+import {
+  MatCard,
+  MatCardHeader,
+  MatCardTitleGroup,
+  MatCardMdImage,
+  MatCardTitle,
+  MatCardContent
+} from '@angular/material/card';
+import { MatTooltip } from '@angular/material/tooltip';
+import { NgClass, CurrencyPipe } from '@angular/common';
+import { LongTextComponent } from '../../shared/long-text/long-text.component';
+import { AccountNumberComponent } from '../../shared/account-number/account-number.component';
+import { MatIconButton } from '@angular/material/button';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatIcon } from '@angular/material/icon';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTabNav, MatTabLink, MatTabNavPanel } from '@angular/material/tabs';
+import { StatusLookupPipe } from '../../pipes/status-lookup.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+
 /**
  * Savings Account View Component
  */
 @Component({
   selector: 'mifosx-savings-account-view',
   templateUrl: './savings-account-view.component.html',
-  styleUrls: ['./savings-account-view.component.scss']
+  styleUrls: ['./savings-account-view.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCardHeader,
+    MatCardTitleGroup,
+    MatCardMdImage,
+    MatTooltip,
+    MatCardTitle,
+    NgClass,
+    LongTextComponent,
+    AccountNumberComponent,
+    MatIconButton,
+    MatMenuTrigger,
+    MatIcon,
+    FaIconComponent,
+    MatMenu,
+    MatMenuItem,
+    MatTabNav,
+    MatTabLink,
+    RouterLinkActive,
+    MatTabNavPanel,
+    RouterOutlet,
+    CurrencyPipe,
+    StatusLookupPipe
+  ]
 })
 export class SavingsAccountViewComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private savingsService = inject(SavingsService);
+  private translateService = inject(TranslateService);
+  dialog = inject(MatDialog);
 
   /** Savings Account Data */
   savingsAccountData: any;
@@ -44,12 +95,8 @@ export class SavingsAccountViewComponent implements OnInit {
    * @param {Router} router Router
    * @param {SavingsService} savingsService Savings Service
    */
-  constructor(private route: ActivatedRoute,
-    private router: Router,
-    private savingsService: SavingsService,
-    private translateService: TranslateService,
-    public dialog: MatDialog) {
-    this.route.data.subscribe((data: { savingsAccountData: any, savingsDatatables: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { savingsAccountData: any; savingsDatatables: any }) => {
       this.savingsAccountData = data.savingsAccountData;
       this.currency = this.savingsAccountData.currency;
       this.savingsDatatables = data.savingsDatatables;
@@ -72,12 +119,18 @@ export class SavingsAccountViewComponent implements OnInit {
    */
   setConditionalButtons() {
     const status = this.savingsAccountData.status.value;
-    this.isActive = (status === 'Active');
+    this.isActive = status === 'Active';
     const subStatus = this.savingsAccountData.subStatus;
     this.buttonConfig = new SavingsButtonsConfiguration(status, subStatus);
     if (this.savingsAccountData.clientId) {
       this.buttonConfig.addOption({
         name: 'Transfer Funds',
+        taskPermissionName: 'CREATE_ACCOUNTTRANSFER'
+      });
+    }
+    if (this.savingsAccountData.externalId && environment.interbankTransfers) {
+      this.buttonConfig.addOption({
+        name: 'Interbank Transfer',
         taskPermissionName: 'CREATE_ACCOUNTTRANSFER'
       });
     }
@@ -124,9 +177,11 @@ export class SavingsAccountViewComponent implements OnInit {
    */
   private reload() {
     const url: string = this.router.url;
-    const refreshUrl: string = this.router.url.slice(0, this.router.url.indexOf('savings-accounts') + 'savings-accounts'.length);
-    this.router.navigateByUrl(refreshUrl, { skipLocationChange: true })
-      .then(() => this.router.navigate([url]));
+    const refreshUrl: string = this.router.url.slice(
+      0,
+      this.router.url.indexOf('savings-accounts') + 'savings-accounts'.length
+    );
+    this.router.navigateByUrl(refreshUrl, { skipLocationChange: true }).then(() => this.router.navigate([url]));
   }
 
   /**
@@ -175,9 +230,26 @@ export class SavingsAccountViewComponent implements OnInit {
         this.disableWithHoldTax();
         break;
       case 'Transfer Funds':
-        const queryParams: any = { savingsId: this.savingsAccountData.id, accountType: 'fromsavings' };
-        this.router.navigate(['transfer-funds/make-account-transfer'], { relativeTo: this.route, queryParams: queryParams });
+        const queryParams: any = {
+          interbank: false,
+          savingsId: this.savingsAccountData.id,
+          accountType: 'fromsavings'
+        };
+        this.router.navigate(['transfer-funds/make-account-transfer'], {
+          relativeTo: this.route,
+          queryParams: queryParams,
+          state: { balance: this.savingsAccountData.summary.availableBalance }
+        });
         break;
+      case 'Interbank Transfer': {
+        const queryParams: any = { interbank: true, savingsId: this.savingsAccountData.id, accountType: 'interbank' };
+        this.router.navigate(['transfer-funds/make-account-transfer'], {
+          relativeTo: this.route,
+          queryParams: queryParams,
+          state: { balance: this.savingsAccountData.summary.availableBalance }
+        });
+        break;
+      }
       case 'Unblock Account':
       case 'Unblock Deposit':
       case 'Unblock Withdrawal':
@@ -209,9 +281,11 @@ export class SavingsAccountViewComponent implements OnInit {
     const calculateInterestAccountDialogRef = this.dialog.open(CalculateInterestDialogComponent);
     calculateInterestAccountDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountCommand(this.savingsAccountData.id, 'calculateInterest', {}).subscribe(() => {
-          this.reload();
-        });
+        this.savingsService
+          .executeSavingsAccountCommand(this.savingsAccountData.id, 'calculateInterest', {})
+          .subscribe(() => {
+            this.reload();
+          });
       }
     });
   }
@@ -223,9 +297,11 @@ export class SavingsAccountViewComponent implements OnInit {
     const postInterestAccountDialogRef = this.dialog.open(PostInterestDialogComponent);
     postInterestAccountDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountCommand(this.savingsAccountData.id, 'postInterest', {}).subscribe(() => {
-          this.reload();
-        });
+        this.savingsService
+          .executeSavingsAccountCommand(this.savingsAccountData.id, 'postInterest', {})
+          .subscribe(() => {
+            this.reload();
+          });
       }
     });
   }
@@ -239,7 +315,8 @@ export class SavingsAccountViewComponent implements OnInit {
     });
     deleteSavingsAccountDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountUpdateCommand(this.savingsAccountData.id, 'updateWithHoldTax', { withHoldTax: true })
+        this.savingsService
+          .executeSavingsAccountUpdateCommand(this.savingsAccountData.id, 'updateWithHoldTax', { withHoldTax: true })
           .subscribe(() => {
             this.reload();
           });
@@ -256,7 +333,8 @@ export class SavingsAccountViewComponent implements OnInit {
     });
     disableWithHoldTaxDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountUpdateCommand(this.savingsAccountData.id, 'updateWithHoldTax', { withHoldTax: false })
+        this.savingsService
+          .executeSavingsAccountUpdateCommand(this.savingsAccountData.id, 'updateWithHoldTax', { withHoldTax: false })
           .subscribe(() => {
             this.reload();
           });
@@ -269,7 +347,13 @@ export class SavingsAccountViewComponent implements OnInit {
    */
   private unblockSavingsAccount(action: string) {
     const unblockSavingsAccountDialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: { heading: this.translateService.instant('labels.heading.Savings Account'), dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want') + action + this.translateService.instant('this Savings Account') }
+      data: {
+        heading: this.translateService.instant('labels.heading.Savings Account'),
+        dialogContext:
+          this.translateService.instant('labels.dialogContext.Are you sure you want') +
+          action +
+          this.translateService.instant('this Savings Account')
+      }
     });
     let command = 'unblock';
     if (action === 'Unblock Deposit') {
@@ -280,10 +364,9 @@ export class SavingsAccountViewComponent implements OnInit {
     }
     unblockSavingsAccountDialogRef.afterClosed().subscribe((response: { confirm: any }) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountCommand(this.savingsAccountData.id, command, {})
-          .subscribe(() => {
-            this.reload();
-          });
+        this.savingsService.executeSavingsAccountCommand(this.savingsAccountData.id, command, {}).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }

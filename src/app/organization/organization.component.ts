@@ -1,10 +1,15 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, TemplateRef, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
-import { PopoverService } from '../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../configuration-wizard/configuration-wizard.service';
+import { PopoverService } from '../configuration-wizard/popover/popover.service';
+import { MatNavList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatLine } from '@angular/material/grid-list';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Organization component.
@@ -12,9 +17,21 @@ import { ConfigurationWizardService } from '../configuration-wizard/configuratio
 @Component({
   selector: 'mifosx-products',
   templateUrl: './organization.component.html',
-  styleUrls: ['./organization.component.scss']
+  styleUrls: ['./organization.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatNavList,
+    MatListItem,
+    MatIcon,
+    FaIconComponent,
+    MatLine
+  ]
 })
-export class OrganizationComponent implements OnInit, AfterViewInit {
+export class OrganizationComponent implements AfterViewInit {
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   shouldShowFundMapping = false;
   /* Reference of manage offices */
@@ -41,20 +58,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   @ViewChild('manageFunds') manageFunds: ElementRef<any>;
   /* Template for popover on manage funds */
   @ViewChild('templateManageFunds') templateManageFunds: TemplateRef<any>;
-
-  /**
-   * @param {ActivatedRoute} activatedRoute ActivatedRoute.
-   * @param {Router} router Router.
-   * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
-   * @param {PopoverService} popoverService PopoverService.
-   */
-  constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) { }
-
-  ngOnInit() {
-  }
+  // Initialize an array of 18 boolean values, all set to false
+  arrowBooleans: boolean[] = new Array(18).fill(false);
 
   /**
    * Popover function
@@ -62,8 +67,14 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
    * @param target HTMLElement | ElementRef<any>.
    * @param position String.
    * @param backdrop Boolean.
+   * @param arrowNumber - The index of the boolean value to toggle.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -73,32 +84,32 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     if (this.configurationWizardService.showCreateOffice === true) {
       setTimeout(() => {
-          this.showPopover(this.templateOffice, this.office.nativeElement, 'bottom', true);
+        this.showPopover(this.templateOffice, this.office.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showAddEditCurrency === true) {
       setTimeout(() => {
-          this.showPopover(this.templateAddEditCurrency, this.addEditCurrency.nativeElement, 'bottom', true);
+        this.showPopover(this.templateAddEditCurrency, this.addEditCurrency.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showCreateHoliday === true) {
       setTimeout(() => {
-          this.showPopover(this.templateHolidays, this.holidays.nativeElement, 'bottom', true);
+        this.showPopover(this.templateHolidays, this.holidays.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showCreateEmployee === true) {
       setTimeout(() => {
-          this.showPopover(this.templateEmployee, this.employee.nativeElement, 'bottom', true);
+        this.showPopover(this.templateEmployee, this.employee.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showDefineWorkingDays === true) {
       setTimeout(() => {
-          this.showPopover(this.templateWorkingDays, this.workingDays.nativeElement, 'bottom', true);
+        this.showPopover(this.templateWorkingDays, this.workingDays.nativeElement, 'bottom', true);
       });
     }
     if (this.configurationWizardService.showManageFunds === true) {
       setTimeout(() => {
-          this.showPopover(this.templateManageFunds, this.manageFunds.nativeElement, 'bottom', true);
+        this.showPopover(this.templateManageFunds, this.manageFunds.nativeElement, 'bottom', true);
       });
     }
   }
@@ -205,5 +216,10 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     this.configurationWizardService.showManageFunds = false;
     this.configurationWizardService.showRecurringDepositProductsList = true;
     this.router.navigate(['/products/recurring-deposit-products']);
+  }
+
+  arrowBooleansToggle(arrowNumber: number) {
+    // Toggle the boolean value at the given index
+    this.arrowBooleans[arrowNumber] = !this.arrowBooleans[arrowNumber];
   }
 }

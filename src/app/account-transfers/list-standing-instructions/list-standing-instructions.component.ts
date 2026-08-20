@@ -1,10 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatTableDataSource, MatTable } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { AccountTransfersService } from '../account-transfers.service';
@@ -12,6 +24,10 @@ import { AccountTransfersService } from '../account-transfers.service';
 /** Dialog Components */
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatDivider } from '@angular/material/divider';
+import { MatTooltip } from '@angular/material/tooltip';
+import { DateFormatPipe } from '../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Lists all the standing intructions of particular ID
@@ -19,9 +35,30 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-list-standing-instructions',
   templateUrl: './list-standing-instructions.component.html',
-  styleUrls: ['./list-standing-instructions.component.scss']
+  styleUrls: ['./list-standing-instructions.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDivider,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    DateFormatPipe
+  ]
 })
-export class ListStandingInstructionsComponent implements OnInit {
+export class ListStandingInstructionsComponent {
+  private route = inject(ActivatedRoute);
+  private accountTransfersService = inject(AccountTransfersService);
+  private settingsService = inject(SettingsService);
+  private dialog = inject(MatDialog);
 
   /** Recurring Deposits Data */
   standingIntructionsTemplateData: any;
@@ -50,13 +87,20 @@ export class ListStandingInstructionsComponent implements OnInit {
   /** Data source for instructions table. */
   dataSource = new MatTableDataSource();
   /** Columns to be displayed in instructions table. */
-  displayedColumns: string[] = ['client', 'fromAccount', 'beneficiary', 'toAccount', 'amount', 'validity', 'actions'];
+  displayedColumns: string[] = [
+    'client',
+    'fromAccount',
+    'beneficiary',
+    'toAccount',
+    'amount',
+    'validity',
+    'actions'
+  ];
 
   /** Instruction Table Reference */
   @ViewChild('instructionsTable', { static: true }) instructionTableRef: MatTable<Element>;
   /** Paginator for centers table. */
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-
 
   /**
    * Retrieves Standing Instructions Data from `resolve`.
@@ -65,10 +109,7 @@ export class ListStandingInstructionsComponent implements OnInit {
    * @param {SettingsService} settingsService Settings Service
    * @param {AccountTransfersService} accountTransfersService Account Transfers Service
    */
-  constructor(private route: ActivatedRoute,
-    private accountTransfersService: AccountTransfersService,
-    private settingsService: SettingsService,
-    private dialog: MatDialog) {
+  constructor() {
     this.route.data.subscribe((data: { standingIntructionsTemplate: any }) => {
       this.standingIntructionsTemplateData = data.standingIntructionsTemplate;
       if (data.standingIntructionsTemplate.fromClient) {
@@ -78,9 +119,6 @@ export class ListStandingInstructionsComponent implements OnInit {
       this.setParams();
       this.transferTypeDatas = this.standingIntructionsTemplateData.transferTypeOptions;
     });
-  }
-
-  ngOnInit() {
   }
 
   setParams() {
@@ -109,7 +147,7 @@ export class ListStandingInstructionsComponent implements OnInit {
     const dateFormat = this.settingsService.dateFormat;
     const locale = this.settingsService.language.code;
     const searchData = {
-      clientId : this.standingIntructionsTemplateData.fromClient.id || this.fromClientId.value,
+      clientId: this.standingIntructionsTemplateData.fromClient.id || this.fromClientId.value,
       clientName: this.standingIntructionsTemplateData.fromClient.displayName || this.clientNameControl.value,
       locale,
       dateFormat,
@@ -133,11 +171,8 @@ export class ListStandingInstructionsComponent implements OnInit {
     });
     deleteStandingInstructionDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.accountTransfersService.deleteStandingInstrucions(instructionId)
-          .subscribe(() => {});
+        this.accountTransfersService.deleteStandingInstrucions(instructionId).subscribe(() => {});
       }
     });
   }
-
 }
-

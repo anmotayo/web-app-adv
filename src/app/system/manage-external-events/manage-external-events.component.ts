@@ -1,16 +1,51 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SystemService } from '../system.service';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-manage-external-events',
   templateUrl: './manage-external-events.component.html',
-  styleUrls: ['./manage-external-events.component.scss']
+  styleUrls: ['./manage-external-events.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatSlideToggle,
+    FormsModule,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ManageExternalEventsComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private systemService = inject(SystemService);
 
   /** Events Data. */
   eventsData: any;
@@ -19,17 +54,19 @@ export class ManageExternalEventsComponent implements OnInit {
   existAnyUpdate = false;
 
   /** Columns to be displayed in events table. */
-  displayedColumns: string[] = ['eventType', 'status'];
+  displayedColumns: string[] = [
+    'eventType',
+    'status'
+  ];
   /** Data source for reports table. */
   dataSource: MatTableDataSource<any>;
 
-   /** Paginator for reports table. */
-   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-   /** Sorter for reports table. */
-   @ViewChild(MatSort, { static: true }) sort: MatSort;
+  /** Paginator for reports table. */
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  /** Sorter for reports table. */
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(private route: ActivatedRoute,
-    private systemService: SystemService) {
+  constructor() {
     this.route.data.subscribe((data: { events: any }) => {
       this.eventsData = data.events.externalEventConfiguration;
     });
@@ -52,7 +89,7 @@ export class ManageExternalEventsComponent implements OnInit {
    * Enables/Disables respective event
    */
   toggleStatus(event: any) {
-    this.externalEventConfigurations[event.type] = !event.enabled;
+    this.externalEventConfigurations[event.type] = event.enabled;
     this.existAnyUpdate = true;
   }
 

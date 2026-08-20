@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 /** Custom Components */
@@ -6,21 +6,28 @@ import { ActivatedRoute } from '@angular/router';
 /** Custom Services */
 import { LoansService } from '../../loans.service';
 import { AuthenticationService } from '../../../core/authentication/authentication.service';
+import { EntityNotesTabComponent } from '../../../shared/tabs/entity-notes-tab/entity-notes-tab.component';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-notes-tab',
   templateUrl: './notes-tab.component.html',
-  styleUrls: ['./notes-tab.component.scss']
+  styleUrls: ['./notes-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    EntityNotesTabComponent
+  ]
 })
 export class NotesTabComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private loansService = inject(LoansService);
+  private authenticationService = inject(AuthenticationService);
 
   entityId: string;
   username: string;
   entityNotes: any;
 
-  constructor(private route: ActivatedRoute,
-    private loansService: LoansService,
-    private authenticationService: AuthenticationService) {
+  constructor() {
     const savedCredentials = this.authenticationService.getCredentials();
     this.username = savedCredentials.username;
     this.entityId = this.route.parent.snapshot.params['loanId'];
@@ -29,7 +36,11 @@ export class NotesTabComponent implements OnInit {
     });
   }
 
-  ngOnInit() { }
+  ngOnInit(): void {
+    this.route.parent.params.subscribe((params) => {
+      this.entityId = params['loanId'];
+    });
+  }
 
   addNote(noteContent: any) {
     this.loansService.createLoanNote(this.entityId, noteContent).subscribe((response: any) => {
@@ -49,10 +60,8 @@ export class NotesTabComponent implements OnInit {
   }
 
   deleteNote(noteId: string, index: number) {
-    this.loansService.deleteLoanNote(this.entityId, noteId)
-      .subscribe(() => {
-        this.entityNotes.splice(index, 1);
+    this.loansService.deleteLoanNote(this.entityId, noteId).subscribe(() => {
+      this.entityNotes.splice(index, 1);
     });
   }
-
 }

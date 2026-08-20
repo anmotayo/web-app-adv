@@ -1,9 +1,30 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services. */
 import { ClientsService } from 'app/clients/clients.service';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { NgClass } from '@angular/common';
+import { AccountNumberComponent } from '../../../shared/account-number/account-number.component';
+import { LongTextComponent } from '../../../shared/long-text/long-text.component';
+import { MatTooltip } from '@angular/material/tooltip';
+import { StatusLookupPipe } from '../../../pipes/status-lookup.pipe';
+import { AccountsFilterPipe } from '../../../pipes/accounts-filter.pipe';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * General Tab component.
@@ -11,26 +32,102 @@ import { ClientsService } from 'app/clients/clients.service';
 @Component({
   selector: 'mifosx-general-tab',
   templateUrl: './general-tab.component.html',
-  styleUrls: ['./general-tab.component.scss']
+  styleUrls: ['./general-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    NgClass,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    AccountNumberComponent,
+    LongTextComponent,
+    MatTooltip,
+    StatusLookupPipe,
+    AccountsFilterPipe,
+    DateFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class GeneralTabComponent {
+  private route = inject(ActivatedRoute);
+  private clientService = inject(ClientsService);
+  private router = inject(Router);
 
   /** Open Loan Accounts Columns */
-  openLoansColumns: string[] = ['Account No', 'Loan Account', 'Original Loan', 'Loan Balance', 'Amount Paid', 'Type', 'Actions'];
+  openLoansColumns: string[] = [
+    'Account No',
+    'Loan Account',
+    'Original Loan',
+    'Loan Balance',
+    'Amount Paid',
+    'Type',
+    'Actions'
+  ];
   /** Closed Loan Accounts Columns */
-  closedLoansColumns: string[] = ['Account No', 'Loan Account', 'Original Loan', 'Loan Balance', 'Amount Paid', 'Type', 'Closed Date'];
+  closedLoansColumns: string[] = [
+    'Account No',
+    'Loan Account',
+    'Original Loan',
+    'Loan Balance',
+    'Amount Paid',
+    'Type',
+    'Closed Date'
+  ];
   /** Open Savings Accounts Columns */
-  openSavingsColumns: string[] = ['Account No', 'Saving Account', 'Last Active', 'Balance', 'Actions'];
+  openSavingsColumns: string[] = [
+    'Account No',
+    'Saving Account',
+    'Last Active',
+    'Balance',
+    'Actions'
+  ];
   /** Closed Savings Accounts Columns */
-  closedSavingsColumns: string[] = ['Account No', 'Saving Account', 'Closed Date'];
+  closedSavingsColumns: string[] = [
+    'Account No',
+    'Saving Account',
+    'Closed Date'
+  ];
   /** Open Shares Accounts Columns */
-  openSharesColumns: string[] = ['Account No', 'Share Account', 'Approved Shares', 'Pending For Approval Shares', 'Actions'];
+  openSharesColumns: string[] = [
+    'Account No',
+    'Share Account',
+    'Approved Shares',
+    'Pending For Approval Shares',
+    'Actions'
+  ];
   /** Closed Shares Accounts Columns */
-  closedSharesColumns: string[] = ['Account No', 'Share Account', 'Approved Shares', 'Pending For Approval Shares', 'Closed Date'];
+  closedSharesColumns: string[] = [
+    'Account No',
+    'Share Account',
+    'Approved Shares',
+    'Pending For Approval Shares',
+    'Closed Date'
+  ];
   /** Upcoming Charges Columns */
-  upcomingChargesColumns: string[] = ['Name', 'Due as of', 'Due', 'Paid', 'Waived', 'Outstanding', 'Actions'];
+  upcomingChargesColumns: string[] = [
+    'Name',
+    'Due as of',
+    'Due',
+    'Paid',
+    'Waived',
+    'Outstanding',
+    'Actions'
+  ];
   /** Collaterals Column */
-  collateralsColumns: string[] = ['ID', 'Name', 'Quantity', 'Total Value', 'Total Collateral Value'];
+  collateralsColumns: string[] = [
+    'ID',
+    'Name',
+    'Quantity',
+    'Total Value',
+    'Total Collateral Value'
+  ];
 
   /** Client Account Data */
   clientAccountData: any;
@@ -66,21 +163,19 @@ export class GeneralTabComponent {
    * @param {ClientsService} clientService Clients Service
    * @param {Router} router Router
    */
-  constructor(
-    private route: ActivatedRoute,
-    private clientService: ClientsService,
-    private router: Router
-  ) {
-    this.route.data.subscribe((data: { clientAccountsData: any, clientChargesData: any, clientSummary: any, clientCollateralData: any }) => {
-      this.clientAccountData = data.clientAccountsData;
-      this.savingAccounts = data.clientAccountsData.savingsAccounts;
-      this.loanAccounts = data.clientAccountsData.loanAccounts;
-      this.shareAccounts = data.clientAccountsData.shareAccounts;
-      this.upcomingCharges = data.clientChargesData.pageItems;
-      this.collaterals = data.clientCollateralData;
-      this.clientSummary = data.clientSummary ? data.clientSummary[0] : [];
-      this.clientid = this.route.parent.snapshot.params['clientId'];
-  });
+  constructor() {
+    this.route.data.subscribe(
+      (data: { clientAccountsData: any; clientChargesData: any; clientSummary: any; clientCollateralData: any }) => {
+        this.clientAccountData = data.clientAccountsData;
+        this.savingAccounts = data.clientAccountsData.savingsAccounts;
+        this.loanAccounts = data.clientAccountsData.loanAccounts;
+        this.shareAccounts = data.clientAccountsData.shareAccounts;
+        this.upcomingCharges = data.clientChargesData.pageItems;
+        this.collaterals = data.clientCollateralData;
+        this.clientSummary = data.clientSummary ? data.clientSummary[0] : [];
+        this.clientid = this.route.parent.snapshot.params['clientId'];
+      }
+    );
   }
 
   /**
@@ -124,7 +219,7 @@ export class GeneralTabComponent {
    * @param clientId Selected Client Id.
    */
   waiveCharge(chargeId: string, clientId: string) {
-    const charge = { clientId: clientId.toString(), resourceType: chargeId};
+    const charge = { clientId: clientId.toString(), resourceType: chargeId };
     this.clientService.waiveClientCharge(charge).subscribe(() => {
       this.getChargeData(clientId);
     });
@@ -153,7 +248,16 @@ export class GeneralTabComponent {
    */
   routeTransferFund(loanId: any) {
     const queryParams: any = { loanId: loanId, accountType: 'fromloans' };
-    this.router.navigate(['../', 'loans-accounts', loanId, 'transfer-funds', 'make-account-transfer'], { relativeTo: this.route, queryParams: queryParams });
+    this.router.navigate(
+      [
+        '../',
+        'loans-accounts',
+        loanId,
+        'transfer-funds',
+        'make-account-transfer'
+      ],
+      { relativeTo: this.route, queryParams: queryParams }
+    );
   }
 
   viewAccountsLabel(closed: boolean): string {
@@ -163,5 +267,4 @@ export class GeneralTabComponent {
       return 'labels.buttons.View Closed Accounts';
     }
   }
-
 }

@@ -1,11 +1,15 @@
 /** Angular Imports */
-import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, FormControl, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { GroupsService } from 'app/groups/groups.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { MatOption, MatAutocompleteTrigger, MatAutocomplete } from '@angular/material/autocomplete';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Group Transfer Clients component.
@@ -13,9 +17,21 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-group-transfer-clients',
   templateUrl: './group-transfer-clients.component.html',
-  styleUrls: ['./group-transfer-clients.component.scss']
+  styleUrls: ['./group-transfer-clients.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatAutocompleteTrigger,
+    MatAutocomplete,
+    DateFormatPipe
+  ]
 })
 export class GroupTransferClientsComponent implements OnInit, AfterViewInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private groupsService = inject(GroupsService);
+  private settingsService = inject(SettingsService);
 
   /** Transfer Clients form. */
   transferClientsForm: UntypedFormGroup;
@@ -36,11 +52,7 @@ export class GroupTransferClientsComponent implements OnInit, AfterViewInit {
    * @param {GroupsService} groupsService GroupsService.
    * @param {SettingsService} settingsService SettingsService
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private groupsService: GroupsService,
-              private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { groupActionData: any }) => {
       this.groupData = data.groupActionData;
       this.clientMembers = this.groupData.clientMembers;
@@ -55,12 +67,11 @@ export class GroupTransferClientsComponent implements OnInit, AfterViewInit {
    * Subscribes to Groups search filter:
    */
   ngAfterViewInit() {
-    this.transferClientsForm.get('destinationGroupId').valueChanges.subscribe( (value: string) => {
+    this.transferClientsForm.get('destinationGroupId').valueChanges.subscribe((value: string) => {
       if (value.length >= 2) {
-        this.groupsService.getFilteredGroups('name', 'ASC', value, this.groupData.officeId)
-          .subscribe( (data: any) => {
-            this.groupsData = data;
-          });
+        this.groupsService.getFilteredGroups('name', 'ASC', value, this.groupData.officeId).subscribe((data: any) => {
+          this.groupsData = data;
+        });
       }
     });
   }
@@ -70,9 +81,15 @@ export class GroupTransferClientsComponent implements OnInit, AfterViewInit {
    */
   createTransferClientsForm() {
     this.transferClientsForm = this.formBuilder.group({
-      'clients': ['', Validators.required],
-      'inheritDestinationGroupLoanOfficer': [false],
-      'destinationGroupId': ['', Validators.required]
+      clients: [
+        '',
+        Validators.required
+      ],
+      inheritDestinationGroupLoanOfficer: [false],
+      destinationGroupId: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -100,5 +117,4 @@ export class GroupTransferClientsComponent implements OnInit, AfterViewInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

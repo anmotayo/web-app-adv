@@ -1,6 +1,15 @@
 /** Angular Imports */
-import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogTitle,
+  MatDialogContent,
+  MatDialogActions,
+  MatDialogClose
+} from '@angular/material/dialog';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Waive charge dialog component.
@@ -8,15 +17,17 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 @Component({
   selector: 'mifosx-waive-charge-dialog',
   templateUrl: './waive-charge-dialog.component.html',
-  styleUrls: ['./waive-charge-dialog.component.scss']
+  styleUrls: ['./waive-charge-dialog.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDialogTitle,
+    CdkScrollable,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose
+  ]
 })
 export class WaiveChargeDialogComponent {
-
-  /**
-   * @param {MatDialogRef} dialogRef Component reference to dialog.
-   * @param {any} data.
-   */
-  constructor(public dialogRef: MatDialogRef<WaiveChargeDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any) { }
-
+  dialogRef = inject<MatDialogRef<WaiveChargeDialogComponent>>(MatDialogRef);
+  data = inject(MAT_DIALOG_DATA);
 }

@@ -1,12 +1,27 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { Router, ActivatedRoute } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { AccountingService } from '../accounting.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Provisioning entries component.
@@ -14,14 +29,42 @@ import { AccountingService } from '../accounting.service';
 @Component({
   selector: 'mifosx-provisioning-entries',
   templateUrl: './provisioning-entries.component.html',
-  styleUrls: ['./provisioning-entries.component.scss']
+  styleUrls: ['./provisioning-entries.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatCheckbox,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class ProvisioningEntriesComponent implements OnInit {
+  private accountingService = inject(AccountingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Provisioning entry data. */
   provisioningEntryData: any;
   /** Columns to be displayed in provisioning entries table. */
-  displayedColumns: string[] = ['createdUser', 'createdDate', 'journalEntry', 'viewReport', 'recreateProvisioning', 'viewJournalEntry'];
+  displayedColumns: string[] = [
+    'createdUser',
+    'createdDate',
+    'journalEntry',
+    'viewReport',
+    'recreateProvisioning',
+    'viewJournalEntry'
+  ];
   /** Data source for provisioning entries table. */
   dataSource: MatTableDataSource<any>;
 
@@ -36,9 +79,7 @@ export class ProvisioningEntriesComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private accountingService: AccountingService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { provisioningEntries: any }) => {
       this.provisioningEntryData = data.provisioningEntries.pageItems;
     });
@@ -74,10 +115,15 @@ export class ProvisioningEntriesComponent implements OnInit {
    * @param {string} provisioningEntryId Provisioning entry id.
    */
   recreateProvisioning($event: Event, provisioningEntryId: string) {
-    this.accountingService.recreateProvisioningEntries(provisioningEntryId)
-      .subscribe((response: any) => {
-        this.router.navigate(['view', response.resourceId], { relativeTo: this.route });
-      });
+    this.accountingService.recreateProvisioningEntries(provisioningEntryId).subscribe((response: any) => {
+      this.router.navigate(
+        [
+          'view',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
+    });
     $event.stopPropagation();
   }
 
@@ -87,8 +133,13 @@ export class ProvisioningEntriesComponent implements OnInit {
    * @param {number} provisioningEntryId Provisioning entry id.
    */
   viewJournalEntry($event: Event, provisioningEntryId: number) {
-    this.router.navigate(['journal-entries/view', provisioningEntryId], { relativeTo: this.route });
+    this.router.navigate(
+      [
+        'journal-entries/view',
+        provisioningEntryId
+      ],
+      { relativeTo: this.route }
+    );
     $event.stopPropagation();
   }
-
 }

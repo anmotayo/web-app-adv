@@ -1,10 +1,24 @@
 /** Angular Imports */
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
 /** Custom Components */
+import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { ClientFamilyMemberDialogComponent } from './client-family-member-dialog/client-family-member-dialog.component';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+  MatExpansionPanelDescription
+} from '@angular/material/expansion';
+import { MatDivider } from '@angular/material/divider';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FindPipe } from '../../../pipes/find.pipe';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Client Family Members Step
@@ -12,9 +26,25 @@ import { ClientFamilyMemberDialogComponent } from './client-family-member-dialog
 @Component({
   selector: 'mifosx-client-family-members-step',
   templateUrl: './client-family-members-step.component.html',
-  styleUrls: ['./client-family-members-step.component.scss']
+  styleUrls: ['./client-family-members-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    MatDivider,
+    MatStepperPrevious,
+    MatStepperNext,
+    FindPipe,
+    DateFormatPipe
+  ]
 })
 export class ClientFamilyMembersStepComponent {
+  dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Cient Template */
   @Input() clientTemplate: any;
@@ -22,18 +52,13 @@ export class ClientFamilyMembersStepComponent {
   clientFamilyMembers: any[] = [];
 
   /**
-   * @param {MatDialog} dialog Mat Dialog
-   */
-  constructor(public dialog: MatDialog) { }
-
-  /**
    * Adds a family member.
    */
   addFamilyMember() {
     const addFamilyMemberDialogRef = this.dialog.open(ClientFamilyMemberDialogComponent, {
       data: {
-        context: 'Add',
-        options: this.clientTemplate.familyMemberOptions,
+        context: this.translateService.instant('labels.buttons.Add'),
+        options: this.clientTemplate.familyMemberOptions
       },
       width: '50rem'
     });
@@ -54,7 +79,7 @@ export class ClientFamilyMembersStepComponent {
       data: {
         context: 'Edit',
         member: member,
-        options: this.clientTemplate.familyMemberOptions,
+        options: this.clientTemplate.familyMemberOptions
       },
       width: '50rem'
     });
@@ -85,5 +110,4 @@ export class ClientFamilyMembersStepComponent {
   get familyMembers() {
     return { familyMembers: this.clientFamilyMembers };
   }
-
 }

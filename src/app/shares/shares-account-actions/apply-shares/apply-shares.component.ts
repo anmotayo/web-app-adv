@@ -1,12 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SharesService } from 'app/shares/shares.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Apply Shares Component
@@ -14,9 +15,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-apply-shares',
   templateUrl: './apply-shares.component.html',
-  styleUrls: ['./apply-shares.component.scss']
+  styleUrls: ['./apply-shares.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class ApplySharesComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private sharesService = inject(SharesService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Shares account data. */
   sharesAccountData: any;
@@ -38,12 +48,7 @@ export class ApplySharesComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private sharesService: SharesService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['shareAccountId'];
     this.route.data.subscribe((data: { shareAccountActionData: any }) => {
       this.sharesAccountData = data.shareAccountActionData;
@@ -66,9 +71,15 @@ export class ApplySharesComponent implements OnInit {
    */
   createApplySharesAccountForm() {
     this.applySharesForm = this.formBuilder.group({
-      'requestedDate': ['', Validators.required],
-      'requestedShares': ['', Validators.required],
-      'unitPrice': [{value: '', disabled: true}]
+      requestedDate: [
+        '',
+        Validators.required
+      ],
+      requestedShares: [
+        '',
+        Validators.required
+      ],
+      unitPrice: [{ value: '', disabled: true }]
     });
   }
 
@@ -94,5 +105,4 @@ export class ApplySharesComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

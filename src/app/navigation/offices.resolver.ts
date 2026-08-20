@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { NavigationService } from './navigation.service';
  * Offices data resolver.
  */
 @Injectable()
-export class OfficesResolver implements Resolve<Object> {
-
-  /**
-   * @param {NavigationService} navigationService Navigation service.
-   */
-  constructor(private navigationService: NavigationService) {}
+export class OfficesResolver {
+  private navigationService = inject(NavigationService);
 
   /**
    * Returns the Offices data.
@@ -26,5 +21,4 @@ export class OfficesResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.navigationService.getOffices();
   }
-
 }

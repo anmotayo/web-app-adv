@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { TemplatesService } from '../templates.service';
  * Create Template data resolver.
  */
 @Injectable()
-export class CreateTemplateResolver implements Resolve<Object> {
-
-  /**
-   * @param {TemplatesService} templatesService Templates service.
-   */
-  constructor(private templatesService: TemplatesService) {}
+export class CreateTemplateResolver {
+  private templatesService = inject(TemplatesService);
 
   /**
    * Returns the template data.
@@ -26,5 +21,4 @@ export class CreateTemplateResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.templatesService.getCreateTemplateData();
   }
-
 }

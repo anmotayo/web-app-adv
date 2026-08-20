@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,19 +11,14 @@ import { TasksService } from '../tasks.service';
  * Maker Checker Template resolver.
  */
 @Injectable()
-export class MakerCheckerTemplate implements Resolve<Object> {
+export class MakerCheckerTemplate {
+  private tasksService = inject(TasksService);
 
-    /**
-     * @param {TasksService} tasksService Tasks service.
-     */
-    constructor(private tasksService: TasksService) { }
-
-    /**
-     * Returns the maker checker template data.
-     * @returns {Observable<any>}
-     */
-    resolve(): Observable<any> {
-        return this.tasksService.getMakerCheckerTemplate();
-    }
-
+  /**
+   * Returns the maker checker template data.
+   * @returns {Observable<any>}
+   */
+  resolve(): Observable<any> {
+    return this.tasksService.getMakerCheckerTemplate();
+  }
 }

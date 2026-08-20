@@ -1,26 +1,31 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-edit-range',
   templateUrl: './edit-range.component.html',
-  styleUrls: ['./edit-range.component.scss']
+  styleUrls: ['./edit-range.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditRangeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private productsService = inject(ProductsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Delinquency Range Data. */
   delinquencyRangeData: any;
   /** Delinquency Range form. */
   delinquencyRangeForm: UntypedFormGroup;
 
-  constructor(private formBuilder: UntypedFormBuilder,
-    private productsService: ProductsService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private settingsService: SettingsService) {
+  constructor() {
     this.route.data.subscribe((data: { delinquencyRange: any }) => {
       this.delinquencyRangeData = data.delinquencyRange;
     });
@@ -35,9 +40,25 @@ export class EditRangeComponent implements OnInit {
    */
   setInputForm(): void {
     this.delinquencyRangeForm = this.formBuilder.group({
-      'classification': [this.delinquencyRangeData.classification, [Validators.required]],
-      'minimumAgeDays': [this.delinquencyRangeData.minimumAgeDays, [Validators.required, Validators.pattern('^(0*[1-9][0-9]*?)$'), Validators.max(1000)]],
-      'maximumAgeDays': [this.delinquencyRangeData.maximumAgeDays, [Validators.pattern('^(0*[1-9][0-9]*?)$'), Validators.max(10000)]],
+      classification: [
+        this.delinquencyRangeData.classification,
+        [Validators.required]
+      ],
+      minimumAgeDays: [
+        this.delinquencyRangeData.minimumAgeDays,
+        [
+          Validators.required,
+          Validators.pattern('^(0*[1-9][0-9]*?)$'),
+          Validators.max(1000)
+        ]
+      ],
+      maximumAgeDays: [
+        this.delinquencyRangeData.maximumAgeDays,
+        [
+          Validators.pattern('^(0*[1-9][0-9]*?)$'),
+          Validators.max(10000)
+        ]
+      ]
     });
   }
 
@@ -49,8 +70,13 @@ export class EditRangeComponent implements OnInit {
       locale
     };
     this.productsService.updateDelinquencyRange(this.delinquencyRangeData.id, data).subscribe((response: any) => {
-      this.router.navigate(['../../', response.resourceId], { relativeTo: this.route });
+      this.router.navigate(
+        [
+          '../../',
+          response.resourceId
+        ],
+        { relativeTo: this.route }
+      );
     });
   }
-
 }

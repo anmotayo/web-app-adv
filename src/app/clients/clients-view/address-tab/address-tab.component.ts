@@ -1,7 +1,7 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
@@ -10,7 +10,19 @@ import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
 import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.component';
 
 /** Custom Services */
+import { TranslateService } from '@ngx-translate/core';
 import { ClientsService } from '../../clients.service';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+  MatExpansionPanelDescription
+} from '@angular/material/expansion';
+import { MatDivider } from '@angular/material/divider';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Clients Address Tab Component
@@ -18,9 +30,24 @@ import { ClientsService } from '../../clients.service';
 @Component({
   selector: 'mifosx-address-tab',
   templateUrl: './address-tab.component.html',
-  styleUrls: ['./address-tab.component.scss']
+  styleUrls: ['./address-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    MatDivider,
+    MatSlideToggle
+  ]
 })
 export class AddressTabComponent {
+  private route = inject(ActivatedRoute);
+  private clientService = inject(ClientsService);
+  private dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Client Address Data */
   clientAddressData: any;
@@ -35,20 +62,17 @@ export class AddressTabComponent {
    * @param {ActivatedRoute} route Activated Route
    * @param {ClientsService} clientService Clients Service
    * @param {MatDialog} dialog Mat Dialog
+   * @param {TranslateService} translateService Translate Service.
    */
-  constructor(private route: ActivatedRoute,
-              private clientService: ClientsService,
-              private dialog: MatDialog) {
-    this.route.data.subscribe((data: {
-      clientAddressData: any,
-      clientAddressFieldConfig: any,
-      clientAddressTemplateData: any
-    }) => {
-      this.clientAddressData = data.clientAddressData;
-      this.clientAddressFieldConfig = data.clientAddressFieldConfig;
-      this.clientAddressTemplate = data.clientAddressTemplateData;
-      this.clientId = this.route.parent.snapshot.paramMap.get('clientId');
-    });
+  constructor() {
+    this.route.data.subscribe(
+      (data: { clientAddressData: any; clientAddressFieldConfig: any; clientAddressTemplateData: any }) => {
+        this.clientAddressData = data.clientAddressData;
+        this.clientAddressFieldConfig = data.clientAddressFieldConfig;
+        this.clientAddressTemplate = data.clientAddressTemplateData;
+        this.clientId = this.route.parent.snapshot.paramMap.get('clientId');
+      }
+    );
   }
 
   /**
@@ -56,20 +80,26 @@ export class AddressTabComponent {
    */
   addAddress() {
     const data = {
-      title: 'Add Client Address',
+      title:
+        this.translateService.instant('labels.buttons.Add') +
+        ' ' +
+        this.translateService.instant('labels.catalogs.Client') +
+        ' ' +
+        this.translateService.instant('labels.heading.Address'),
       formfields: this.getAddressFormFields('add')
     };
     const addAddressDialogRef = this.dialog.open(FormDialogComponent, { data });
     addAddressDialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
-        this.clientService.createClientAddress(this.clientId, response.data.value.addressType, response.data.value).subscribe((res: any) => {
-          const addressData = response.data.value;
-          addressData.addressId = res.resourceId;
-          addressData.addressType = this.getSelectedValue('addressTypeIdOptions', addressData.addressType).name;
-          addressData.isActive = false;
-          this.clientAddressData.push(addressData);
-        });
-
+        this.clientService
+          .createClientAddress(this.clientId, response.data.value.addressType, response.data.value)
+          .subscribe((res: any) => {
+            const addressData = response.data.value;
+            addressData.addressId = res.resourceId;
+            addressData.addressType = this.getSelectedValue('addressTypeIdOptions', addressData.addressType).name;
+            addressData.isActive = false;
+            this.clientAddressData.push(addressData);
+          });
       }
     });
   }
@@ -81,7 +111,12 @@ export class AddressTabComponent {
    */
   editAddress(address: any, index: number) {
     const data = {
-      title: 'Edit Client Address',
+      title:
+        this.translateService.instant('labels.buttons.Edit') +
+        ' ' +
+        this.translateService.instant('labels.catalogs.Client') +
+        ' ' +
+        this.translateService.instant('labels.heading.Address'),
       formfields: this.getAddressFormFields('edit', address),
       layout: { addButtonText: 'Edit' }
     };
@@ -91,11 +126,13 @@ export class AddressTabComponent {
         const addressData = response.data.value;
         addressData.addressId = address.addressId;
         addressData.isActive = address.isActive;
-        this.clientService.editClientAddress(this.clientId, address.addressTypeId, addressData).subscribe((res: any) => {
-          addressData.addressTypeId = address.addressTypeId;
-          addressData.addressType = address.addressType;
-          this.clientAddressData[index] = addressData;
-        });
+        this.clientService
+          .editClientAddress(this.clientId, address.addressTypeId, addressData)
+          .subscribe((res: any) => {
+            addressData.addressTypeId = address.addressTypeId;
+            addressData.addressType = address.addressType;
+            this.clientAddressData[index] = addressData;
+          });
       }
     });
   }
@@ -106,8 +143,8 @@ export class AddressTabComponent {
    */
   toggleAddress(address: any) {
     const addressData = {
-      'addressId': address.addressId,
-      'isActive': address.isActive ? false : true
+      addressId: address.addressId,
+      isActive: address.isActive ? false : true
     };
     this.clientService.editClientAddress(this.clientId, address.addressTypeId, addressData).subscribe(() => {
       address.isActive = address.isActive ? false : true;
@@ -119,7 +156,7 @@ export class AddressTabComponent {
    * @param {any} fieldName Field Name
    */
   isFieldEnabled(fieldName: any) {
-    return (this.clientAddressFieldConfig.find((fieldObj: any) => fieldObj.field === fieldName))?.isEnabled;
+    return this.clientAddressFieldConfig.find((fieldObj: any) => fieldObj.field === fieldName)?.isEnabled;
   }
 
   /**
@@ -128,7 +165,7 @@ export class AddressTabComponent {
    * @param {any} fieldId Field Id
    */
   getSelectedValue(fieldName: any, fieldId: any) {
-    return (this.clientAddressTemplate[fieldName].find((fieldObj: any) => fieldObj.id === fieldId));
+    return this.clientAddressTemplate[fieldName].find((fieldObj: any) => fieldObj.id === fieldId);
   }
 
   /**
@@ -138,88 +175,138 @@ export class AddressTabComponent {
    */
   getAddressFormFields(formType?: string, address?: any) {
     let formfields: FormfieldBase[] = [];
-    if (formType === 'add') {
-      formfields.push(this.isFieldEnabled('addressType') ? new SelectBase({
-        controlName: 'addressType',
-        label: 'Address Type',
-        value: address ? address.addressType : '',
-        options: { label: 'name', value: 'id', data: this.clientAddressTemplate.addressTypeIdOptions },
-        order: 1
-      }) : null);
+
+    for (let index = 0; index < this.clientAddressTemplate.addressTypeIdOptions.length; index++) {
+      this.clientAddressTemplate.addressTypeIdOptions[index].name = this.translateService.instant(
+        `labels.catalogs.${this.clientAddressTemplate.addressTypeIdOptions[index].name}`
+      );
     }
-    formfields.push(this.isFieldEnabled('street') ? new InputBase({
-      controlName: 'street',
-      label: 'Street',
-      value: address ? address.street : '',
-      type: 'text',
-      required: false,
-      order: 2
-    }) : null);
-    formfields.push(this.isFieldEnabled('addressLine1') ? new InputBase({
-      controlName: 'addressLine1',
-      label: 'Address Line 1',
-      value: address ? address.addressLine1 : '',
-      type: 'text',
-      order: 3
-    }) : null);
-    formfields.push(this.isFieldEnabled('addressLine2') ? new InputBase({
-      controlName: 'addressLine2',
-      label: 'Address Line 2',
-      value: address ? address.addressLine2 : '',
-      type: 'text',
-      order: 4
-    }) : null);
-    formfields.push(this.isFieldEnabled('addressLine3') ? new InputBase({
-      controlName: 'addressLine3',
-      label: 'Address Line 3',
-      value: address ? address.addressLine3 : '',
-      type: 'text',
-      order: 5
-    }) : null);
-    formfields.push(this.isFieldEnabled('townVillage') ? new InputBase({
-      controlName: 'townVillage',
-      label: 'Town / Village',
-      value: address ? address.townVillage : '',
-      type: 'text',
-      order: 6
-    }) : null);
-    formfields.push(this.isFieldEnabled('city') ? new InputBase({
-      controlName: 'city',
-      label: 'City',
-      value: address ? address.city : '',
-      type: 'text',
-      order: 7
-    }) : null);
-    formfields.push(this.isFieldEnabled('stateProvinceId') ? new SelectBase({
-      controlName: 'stateProvinceId',
-      label: 'State / Province',
-      value: address ? address.stateProvinceId : '',
-      options: { label: 'name', value: 'id', data: this.clientAddressTemplate.stateProvinceIdOptions },
-      order: 8
-    }) : null);
-    formfields.push(this.isFieldEnabled('countyDistrict') ? new InputBase({
-      controlName: 'countryDistrict',
-      label: 'Country District',
-      value: address ? address.countyDistrict : '',
-      type: 'text',
-      order: 11
-    }) : null);
-    formfields.push(this.isFieldEnabled('countryId') ? new SelectBase({
-      controlName: 'countryId',
-      label: 'Country',
-      value: address ? address.countryId : '',
-      options: { label: 'name', value: 'id', data: this.clientAddressTemplate.countryIdOptions },
-      order: 10
-    }) : null);
-    formfields.push(this.isFieldEnabled('postalCode') ? new InputBase({
-      controlName: 'postalCode',
-      label: 'Postal Code',
-      value: address ? address.postalCode : '',
-      type: 'text',
-      order: 11
-    }) : null);
-    formfields = formfields.filter(field => field !== null);
+
+    if (formType === 'add') {
+      formfields.push(
+        this.isFieldEnabled('addressType')
+          ? new SelectBase({
+              controlName: 'addressType',
+              label: this.translateService.instant('labels.inputs.Address Type'),
+              value: address ? address.addressType : '',
+              options: { label: 'name', value: 'id', data: this.clientAddressTemplate.addressTypeIdOptions },
+              order: 1
+            })
+          : null
+      );
+    }
+    formfields.push(
+      this.isFieldEnabled('street')
+        ? new InputBase({
+            controlName: 'street',
+            label: this.translateService.instant('labels.inputs.Street'),
+            value: address ? address.street : '',
+            type: 'text',
+            required: false,
+            order: 2
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('addressLine1')
+        ? new InputBase({
+            controlName: 'addressLine1',
+            label: this.translateService.instant('labels.inputs.Address Line') + ' 1',
+            value: address ? address.addressLine1 : '',
+            type: 'text',
+            order: 3
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('addressLine2')
+        ? new InputBase({
+            controlName: 'addressLine2',
+            label: this.translateService.instant('labels.inputs.Address Line') + ' 2',
+            value: address ? address.addressLine2 : '',
+            type: 'text',
+            order: 4
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('addressLine3')
+        ? new InputBase({
+            controlName: 'addressLine3',
+            label: this.translateService.instant('labels.inputs.Address Line') + ' 3',
+            value: address ? address.addressLine3 : '',
+            type: 'text',
+            order: 5
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('townVillage')
+        ? new InputBase({
+            controlName: 'townVillage',
+            label: this.translateService.instant('labels.inputs.Town / Village'),
+            value: address ? address.townVillage : '',
+            type: 'text',
+            order: 6
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('city')
+        ? new InputBase({
+            controlName: 'city',
+            label: this.translateService.instant('labels.inputs.City'),
+            value: address ? address.city : '',
+            type: 'text',
+            order: 7
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('stateProvinceId')
+        ? new SelectBase({
+            controlName: 'stateProvinceId',
+            label: this.translateService.instant('labels.inputs.State / Province'),
+            value: address ? address.stateProvinceId : '',
+            options: { label: 'name', value: 'id', data: this.clientAddressTemplate.stateProvinceIdOptions },
+            order: 8
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('countyDistrict')
+        ? new InputBase({
+            controlName: 'countryDistrict',
+            label: this.translateService.instant('labels.inputs.State / Province'),
+            value: address ? address.countyDistrict : '',
+            type: 'text',
+            order: 11
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('countryId')
+        ? new SelectBase({
+            controlName: 'countryId',
+            label: this.translateService.instant('labels.inputs.Country'),
+            value: address ? address.countryId : '',
+            options: { label: 'name', value: 'id', data: this.clientAddressTemplate.countryIdOptions },
+            order: 10
+          })
+        : null
+    );
+    formfields.push(
+      this.isFieldEnabled('postalCode')
+        ? new InputBase({
+            controlName: 'postalCode',
+            label: this.translateService.instant('labels.inputs.Postal Code'),
+            value: address ? address.postalCode : '',
+            type: 'text',
+            order: 11
+          })
+        : null
+    );
+    formfields = formfields.filter((field) => field !== null);
     return formfields;
   }
-
 }

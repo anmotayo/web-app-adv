@@ -1,16 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLinkActive, RouterLink, RouterOutlet } from '@angular/router';
+import { MatTabNav, MatTabLink, MatTabNavPanel } from '@angular/material/tabs';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-view-share-product',
   templateUrl: './view-share-product.component.html',
-  styleUrls: ['./view-share-product.component.scss']
+  styleUrls: ['./view-share-product.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTabNav,
+    MatTabLink,
+    RouterLinkActive,
+    MatTabNavPanel,
+    RouterOutlet
+  ]
 })
-export class ViewShareProductComponent implements OnInit {
+export class ViewShareProductComponent {
+  private route = inject(ActivatedRoute);
 
   shareProductDatatables: any = [];
 
-  constructor(private route: ActivatedRoute) {
+  constructor() {
     this.route.data.subscribe((data: { shareProductDatatables: any }) => {
       this.shareProductDatatables = [];
       data.shareProductDatatables.forEach((datatable: any) => {
@@ -18,8 +29,4 @@ export class ViewShareProductComponent implements OnInit {
       });
     });
   }
-
-  ngOnInit() {
-  }
-
 }

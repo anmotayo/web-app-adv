@@ -1,41 +1,82 @@
-<form fxLayout="column" [formGroup]="loginForm" (ngSubmit)="login()" id="login-form">
+<!-- Basic Auth: Username/password form -->
+@if (!oauthEnabled) {
+  <div>
+    <form class="layout-column" [formGroup]="loginForm" (ngSubmit)="login()" id="login-form">
+      <mat-form-field class="login-input flex-align-center">
+        <span matPrefix class="m-r-10">
+          <fa-icon icon="user-circle" size="lg"></fa-icon>
+        </span>
+        <mat-label>{{ 'labels.inputs.Username' | translate }}</mat-label>
+        <input matInput type="text" autocomplete="off" formControlName="username" />
+        @if (loginForm.controls.username.hasError('required')) {
+          <mat-error>
+            {{ 'labels.inputs.Username' | translate }} <strong>{{ 'labels.commons.is required' | translate }}</strong>
+          </mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field class="login-input flex-align-center">
+        @if (!loginForm.controls.password.value) {
+          <span matPrefix class="m-r-10">
+            <fa-icon icon="lock" size="lg"></fa-icon>
+          </span>
+        }
+        <mat-label>{{ 'labels.inputs.Password' | translate }}</mat-label>
+        <input matInput type="{{ passwordInputType }}" formControlName="password" />
+        @if (loginForm.controls.password.value && !loading) {
+          <button
+            type="button"
+            matSuffix
+            mat-icon-button
+            (mousedown)="togglePasswordVisibility()"
+            (mouseup)="togglePasswordVisibility()"
+          >
+            @if (passwordInputType === 'password') {
+              <fa-icon icon="eye"></fa-icon>
+            }
+            @if (passwordInputType === 'text') {
+              <fa-icon icon="eye-slash"></fa-icon>
+            }
+          </button>
+        }
+        @if (loginForm.controls.password.hasError('required')) {
+          <mat-error>
+            {{ 'labels.inputs.Password' | translate }}
+            <strong>{{ 'labels.commons.pass is required' | translate }}</strong>
+          </mat-error>
+        }
+      </mat-form-field>
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+      <button
+        mat-raised-button
+        color="primary"
+        class="login-button-first flex-align-center"
+        [disabled]="!loginForm.valid"
+      >
+        {{ 'labels.buttons.Login' | translate }}
+        @if (loading) {
+          <mat-spinner [diameter]="20"></mat-spinner>
+        }
+      </button>
+    </form>
+  </div>
+}
 
-  <mat-form-field fxFlexAlign="center" class="login-input">
-    <span matPrefix class="m-r-10">
-      <fa-icon icon="user-circle" size="lg"></fa-icon>
-    </span>
-    <mat-label>{{'labels.inputs.Username' | translate}}</mat-label>
-    <input matInput type="text" autocomplete="off" formControlName="username">
-    <mat-error *ngIf="loginForm.controls.username.hasError('required')">
-      {{'labels.inputs.Username' | translate}} <strong>{{'labels.commons.is required' | translate}}</strong>
-    </mat-error>
-  </mat-form-field>
-
-  <mat-form-field fxFlexAlign="center" class="login-input">
-    <span matPrefix class="m-r-10">
-      <fa-icon icon="lock" size="lg"></fa-icon>
-    </span>
-    <mat-label>{{'labels.inputs.Password' | translate}}</mat-label>
-    <input matInput type="{{ passwordInputType }}" formControlName="password">
-    <button mat-button *ngIf="loginForm.controls.password.value && !loading" matSuffix mat-icon-button
-      (mousedown)="passwordInputType = 'text'" (mouseup)="passwordInputType = 'password'">
-      <fa-icon *ngIf="passwordInputType === 'password'" icon="eye"></fa-icon>
-      <fa-icon *ngIf="passwordInputType === 'text'" icon="eye-slash"></fa-icon>
+<!-- OAuth/OIDC: Simple login button (no credentials needed) -->
+@if (oauthEnabled) {
+  <div class="layout-column">
+    <button
+      mat-raised-button
+      color="primary"
+      class="login-button-first flex-align-center"
+      (click)="loginOAuth()"
+      [disabled]="loading"
+    >
+      {{ 'labels.buttons.Login' | translate }}
+      @if (loading) {
+        <mat-spinner [diameter]="20"></mat-spinner>
+      }
     </button>
-    <mat-error *ngIf="loginForm.controls.password.hasError('required')">
-      {{'labels.inputs.Password' | translate}} <strong>{{'labels.commons.is required' | translate}}</strong>
-    </mat-error>
-  </mat-form-field>
-
-  <mat-checkbox fxFlexAlign="center" formControlName="remember" class="m-t-10">{{'labels.inputs.Remember me' | translate}}</mat-checkbox>
-
-  <button mat-raised-button color="primary" fxFlexAlign="center" class="login-button" [disabled]="!loginForm.valid">
-    {{'labels.buttons.Login' | translate}}
-    <mat-spinner [diameter]="20" *ngIf="loading"></mat-spinner>
-  </button>
-
-  <button type="button" mat-button fxFlexAlign="center" class="login-button" (click)="forgotPassword()" [disabled]="loading">
-    {{'labels.links.Forgot Password?' | translate}}
-  </button>
-
-</form>
+  </div>
+}

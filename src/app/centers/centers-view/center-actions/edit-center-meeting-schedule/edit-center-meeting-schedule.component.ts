@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { CentersService } from 'app/centers/centers.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Center Meetings Schedule Component
@@ -14,9 +16,19 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-edit-center-meeting-schedule',
   templateUrl: './edit-center-meeting-schedule.component.html',
-  styleUrls: ['./edit-center-meeting-schedule.component.scss']
+  styleUrls: ['./edit-center-meeting-schedule.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    DateFormatPipe
+  ]
 })
 export class EditCenterMeetingScheduleComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private centersService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -42,12 +54,7 @@ export class EditCenterMeetingScheduleComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route
    * @param {Router} router Router
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private centersService: CentersService,
-              private settingsService: SettingsService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { centersActionData: any }) => {
       this.calendarTemplate = data.centersActionData;
       this.nextMeetingDates = this.calendarTemplate.nextTenRecurringDates;
@@ -66,8 +73,14 @@ export class EditCenterMeetingScheduleComponent implements OnInit {
    */
   createEditMeetingScheduleForm() {
     this.centerEditMeetingScheduleForm = this.formBuilder.group({
-      'presentMeetingDate': ['', Validators.required],
-      'newMeetingDate': ['', Validators.required]
+      presentMeetingDate: [
+        '',
+        Validators.required
+      ],
+      newMeetingDate: [
+        '',
+        Validators.required
+      ]
     });
   }
 
@@ -97,5 +110,4 @@ export class EditCenterMeetingScheduleComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

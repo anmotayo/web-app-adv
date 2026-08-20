@@ -1,23 +1,70 @@
 /** Angular Imports. */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatSort } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { ErrorDialogComponent } from 'app/shared/error-dialog/error-dialog.component';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { DatetimeFormatPipe } from '../../../../pipes/datetime-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-view-history-scheduler-job',
   templateUrl: './view-history-scheduler-job.component.html',
-  styleUrls: ['./view-history-scheduler-job.component.scss']
+  styleUrls: ['./view-history-scheduler-job.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    FaIconComponent,
+    MatTooltip,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    DatetimeFormatPipe
+  ]
 })
 export class ViewHistorySchedulerJobComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   /** Job History data. */
   jobHistoryData: any;
   /** Columns to be displayed in Scheduler Job History. */
-  displayedColumns: string[] = ['version', 'run_start_time', 'run_end_time', 'status', 'run_type', 'error_log'];
+  displayedColumns: string[] = [
+    'version',
+    'run_start_time',
+    'run_end_time',
+    'status',
+    'run_type',
+    'error_log'
+  ];
   /** Data source for Scheduler Job History table. */
   dataSource: MatTableDataSource<any>;
 
@@ -30,23 +77,23 @@ export class ViewHistorySchedulerJobComponent implements OnInit {
    * Retrieves the scheduler Job History data from `resolve`.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute,
-              private dialog: MatDialog,
-              private router: Router ) {
-    this.route.data.subscribe(( data: { jobsSchedulerHistory: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { jobsSchedulerHistory: any }) => {
       this.jobHistoryData = data.jobsSchedulerHistory;
     });
-   }
+  }
 
   /**
    * Filters data in scheduler Job History table based on passed value.
    * @param {string} filterValue Value to filter data.
    */
   applyFilter(filterValue: string) {
-    const filterObject = [{
-      id: 'version',
-      value: filterValue
-    }];
+    const filterObject = [
+      {
+        id: 'version',
+        value: filterValue
+      }
+    ];
     this.dataSource.filter = JSON.stringify(filterObject);
   }
 
@@ -61,19 +108,18 @@ export class ViewHistorySchedulerJobComponent implements OnInit {
     this.dataSource = new MatTableDataSource(this.jobHistoryData.pageItems);
     this.dataSource.paginator = this.paginator;
     /** Search By Version */
-    this.dataSource.filterPredicate =
-    (data: any, filtersJson: string) => {
+    this.dataSource.filterPredicate = (data: any, filtersJson: string) => {
       const matchFilter: any[] = [];
       const filters = JSON.parse(filtersJson);
       filters.forEach((filter: any) => {
         const val = data[filter.id] === null ? '' : data[filter.id];
-        if (filter.value !== '') {
-          matchFilter.push(val === parseInt(filter.value, 10));
-        } else if (filter.value === '') {
+        if (filter.value !== '' && val !== '') {
+          matchFilter.push(parseInt(val.toString(), 10) === parseInt(filter.value, 10));
+        } else if (filter.value === '' || val === '') {
           matchFilter.push(val.toString().toLowerCase().includes(filter.value.toLowerCase()));
         }
       });
-        return matchFilter.every(Boolean);
+      return matchFilter.every(Boolean);
     };
   }
 
@@ -84,11 +130,10 @@ export class ViewHistorySchedulerJobComponent implements OnInit {
   openError(version: any) {
     const openErrorLogDialog = this.dialog.open(ErrorDialogComponent, {
       width: '400px',
-      data: this.jobHistoryData.pageItems.filter( (data: any) => data.version === version )[0].jobRunErrorLog
+      data: this.jobHistoryData.pageItems.filter((data: any) => data.version === version)[0].jobRunErrorLog
     });
     openErrorLogDialog.afterClosed().subscribe((response: any) => {
       this.router.navigate(['']);
     });
   }
-
 }

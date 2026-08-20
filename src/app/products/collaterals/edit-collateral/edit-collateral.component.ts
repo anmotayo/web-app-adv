@@ -1,18 +1,27 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ProductsService } from 'app/products/products.service';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-edit-collateral',
   templateUrl: './edit-collateral.component.html',
-  styleUrls: ['./edit-collateral.component.scss']
+  styleUrls: ['./edit-collateral.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditCollateralComponent implements OnInit {
+  private productsService = inject(ProductsService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Colalteral Data */
   collateralData: any;
@@ -29,16 +38,12 @@ export class EditCollateralComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service.
    */
-  constructor(private productsService: ProductsService,
-              private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
-                this.route.data.subscribe((data: { collateral: any, collateralTemplate: any }) => {
-                  this.collateralData = data.collateral;
-                  this.collateralTemplateData = data.collateralTemplate;
-                });
-               }
+  constructor() {
+    this.route.data.subscribe((data: { collateral: any; collateralTemplate: any }) => {
+      this.collateralData = data.collateral;
+      this.collateralTemplateData = data.collateralTemplate;
+    });
+  }
 
   ngOnInit(): void {
     this.editCollateralForm();
@@ -49,12 +54,30 @@ export class EditCollateralComponent implements OnInit {
    */
   editCollateralForm() {
     this.collateralForm = this.formBuilder.group({
-      'name': [this.collateralData.name, Validators.required],
-      'quality': [this.collateralData.quality, Validators.required],
-      'unitType': [this.collateralData.unitType, Validators.required],
-      'basePrice': [this.collateralData.basePrice, Validators.required],
-      'pctToBase': [this.collateralData.pctToBase, Validators.required],
-      'currency': [this.collateralData.currency, Validators.required],
+      name: [
+        this.collateralData.name,
+        Validators.required
+      ],
+      quality: [
+        this.collateralData.quality,
+        Validators.required
+      ],
+      unitType: [
+        this.collateralData.unitType,
+        Validators.required
+      ],
+      basePrice: [
+        this.collateralData.basePrice,
+        Validators.required
+      ],
+      pctToBase: [
+        this.collateralData.pctToBase,
+        Validators.required
+      ],
+      currency: [
+        this.collateralData.currency,
+        Validators.required
+      ]
     });
   }
 
@@ -64,10 +87,8 @@ export class EditCollateralComponent implements OnInit {
   submit() {
     const collateral = this.collateralForm.value;
     collateral.locale = this.settingsService.language.code;
-    this.productsService.updateCollateral(this.collateralData.id.toString(), collateral)
-      .subscribe((response: any) => {
-        this.router.navigate(['../'], { relativeTo: this.route });
-      });
+    this.productsService.updateCollateral(this.collateralData.id.toString(), collateral).subscribe((response: any) => {
+      this.router.navigate(['../'], { relativeTo: this.route });
+    });
   }
-
 }

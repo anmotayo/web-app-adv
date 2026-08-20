@@ -1,11 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
@@ -18,6 +30,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.component';
 import { ColumnDialogComponent } from '../column-dialog/column-dialog.component';
 import { DatatableColumn } from '../datatable-column.model';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Data Table Component.
@@ -25,9 +41,34 @@ import { DatatableColumn } from '../datatable-column.model';
 @Component({
   selector: 'mifosx-edit-data-table',
   templateUrl: './edit-data-table.component.html',
-  styleUrls: ['./edit-data-table.component.scss']
+  styleUrls: ['./edit-data-table.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class EditDataTableComponent implements OnInit {
+  private systemService = inject(SystemService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private translateService = inject(TranslateService);
 
   /** Data Table Form. */
   dataTableForm: UntypedFormGroup;
@@ -43,29 +84,58 @@ export class EditDataTableComponent implements OnInit {
   isFormEdited = false;
   /** Data Table Changes Data. */
   dataTableChangesData: {
-    apptableName: string,
-    entitySubType: string,
-    dropColumns?: { name: string }[],
-    changeColumns: { name: string, newName?: string, code?: string, newCode?: string, mandatory: boolean, length?: number, unique?: boolean, indexed?: boolean  }[],
-    addColumns?: { name?: string, type?: string, code?: string, mandatory?: boolean, length?: number, unique?: boolean, indexed?: boolean }[]
+    apptableName: string;
+    entitySubType: string;
+    dropColumns?: { name: string }[];
+    changeColumns: {
+      name: string;
+      newName?: string;
+      code?: string;
+      newCode?: string;
+      mandatory: boolean;
+      length?: number;
+      unique?: boolean;
+      indexed?: boolean;
+    }[];
+    addColumns?: {
+      name?: string;
+      type?: string;
+      code?: string;
+      mandatory?: boolean;
+      length?: number;
+      unique?: boolean;
+      indexed?: boolean;
+    }[];
   } = {
-    apptableName: '', changeColumns: [], addColumns: [], dropColumns: [],
+    apptableName: '',
+    changeColumns: [],
+    addColumns: [],
+    dropColumns: [],
     entitySubType: ''
   };
   /** Data passed to dialog. */
   dataForDialog: DatatableColumn = {
-      columnName: undefined,
-      columnDisplayType: undefined,
-      isColumnNullable: undefined,
-      columnLength: undefined,
-      columnCode: undefined,
-      columnCodes: undefined,
-      type: undefined,
-      isColumnUnique: undefined,
-      isColumnIndexed: undefined
-    };
+    columnName: undefined,
+    columnDisplayType: undefined,
+    isColumnNullable: undefined,
+    columnLength: undefined,
+    columnCode: undefined,
+    columnCodes: undefined,
+    type: undefined,
+    isColumnUnique: undefined,
+    isColumnIndexed: undefined
+  };
   /** Columns to be displayed in columns table. */
-  displayedColumns: string[] = ['name', 'type', 'length', 'code', 'mandatory', 'unique', 'indexed', 'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'type',
+    'length',
+    'code',
+    'mandatory',
+    'unique',
+    'indexed',
+    'actions'
+  ];
   /** Data source for columns table. */
   dataSource: MatTableDataSource<any>;
   /** Paginator for columns table. */
@@ -81,16 +151,20 @@ export class EditDataTableComponent implements OnInit {
    * @param {FormBuilder} formBuilder Form Builder.
    * @param {MatDialog} dialog Dialog Reference.
    */
-  constructor(private systemService: SystemService,
-              private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private dialog: MatDialog,
-              private translateService: TranslateService) {
-    this.route.data.subscribe((data: { dataTable: any, columnCodes: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { dataTable: any; columnCodes: any }) => {
       this.dataTableData = data.dataTable;
+
+      // Get the relationship column name based on application table
+      const relationshipColumnName = this.getRelationshipColumnName(this.dataTableData.applicationTableName);
+
       this.dataTableData.columnHeaderData.forEach((item: any) => {
-        item.system = ['created_at', 'updated_at'].includes(item.columnName);
+        // Mark system columns (id, created_at, updated_at) and relationship column as system
+        item.system = [
+            'id',
+            'created_at',
+            'updated_at'
+          ].includes(item.columnName) || item.columnName === relationshipColumnName;
       });
       this.columnData = this.dataTableData.columnHeaderData;
       this.dataForDialog.columnCodes = data.columnCodes;
@@ -98,14 +172,37 @@ export class EditDataTableComponent implements OnInit {
   }
 
   /**
-   * Creates and sets data table form and columns table.
+   * Gets the relationship column name.
+   * @param {string} appTableName Application table name.
+   * @returns {string} Relationship column name.
+   */
+  getRelationshipColumnName(appTableName: string): string {
+    // Map application table names to their relationship column names
+    const tableToColumnMap: { [key: string]: string } = {
+      m_client: 'client_id',
+      m_group: 'group_id',
+      m_center: 'center_id',
+      m_office: 'office_id',
+      m_loan: 'loan_id',
+      m_savings_account: 'savings_account_id',
+      m_savings_account_transaction: 'savings_transaction_id',
+      m_product_loan: 'product_loan_id',
+      m_savings_product: 'savings_product_id',
+      m_share_product: 'share_product_id'
+    };
+
+    return tableToColumnMap[appTableName] || '';
+  }
+
+  /**
+   * Create and set data table form and columns table.
    */
   ngOnInit() {
     this.initData();
     this.createDataTableForm();
     this.setColumns();
     this.dataTableForm.controls.apptableName.valueChanges.subscribe((value: any) => {
-      this.showEntitySubType = (value === 'm_client');
+      this.showEntitySubType = value === 'm_client';
     });
   }
 
@@ -122,14 +219,19 @@ export class EditDataTableComponent implements OnInit {
    * Initializes data table changes and column data.
    */
   initData() {
-    this.columnData.shift();
+    // Remove the 'id' column if it exists (primary key for multi-row datatables)
+    // but keep the relationship column visible (it's already marked as system)
+    if (this.columnData.length > 0 && this.columnData[0].columnName === 'id') {
+      this.columnData.shift();
+    }
+
     this.dataTableChangesData.apptableName = this.dataTableData.applicationTableName;
     this.dataTableChangesData.entitySubType = this.dataTableData.entitySubType;
     for (let index = 0; index < this.columnData.length; index++) {
       this.columnData[index].columnDisplayType = this.getColumnType(this.columnData[index].columnDisplayType);
       this.columnData[index].type = 'existing';
     }
-    this.showEntitySubType = (this.dataTableData.applicationTableName === 'm_client');
+    this.showEntitySubType = this.dataTableData.applicationTableName === 'm_client';
   }
 
   /**
@@ -137,9 +239,15 @@ export class EditDataTableComponent implements OnInit {
    */
   createDataTableForm() {
     this.dataTableForm = this.formBuilder.group({
-      'datatableName': [{ value: this.dataTableData.registeredTableName, disabled: true }, Validators.required],
-      'apptableName': [{ value: this.dataTableData.applicationTableName, disabled: true }, Validators.required],
-      'entitySubType': [{ value: this.dataTableData.entitySubType, disabled: true }]
+      datatableName: [
+        { value: this.dataTableData.registeredTableName, disabled: true },
+        Validators.required
+      ],
+      apptableName: [
+        { value: this.dataTableData.applicationTableName, disabled: true },
+        Validators.required
+      ],
+      entitySubType: [{ value: this.dataTableData.entitySubType, disabled: true }]
     });
   }
 
@@ -175,11 +283,14 @@ export class EditDataTableComponent implements OnInit {
         };
         let alreadyExist = false;
         this.columnData.forEach((column: DatatableColumn) => {
-          if ((newColumn.columnName === column.columnName) || (newColumn.columnName === column.columnName
-            && newColumn.columnDisplayType === column.columnDisplayType
-            && newColumn.isColumnNullable === column.isColumnNullable)) {
-              alreadyExist = true;
-            }
+          if (
+            newColumn.columnName === column.columnName ||
+            (newColumn.columnName === column.columnName &&
+              newColumn.columnDisplayType === column.columnDisplayType &&
+              newColumn.isColumnNullable === column.isColumnNullable)
+          ) {
+            alreadyExist = true;
+          }
         });
         if (!alreadyExist) {
           this.dataTableChangesData.addColumns.push({
@@ -220,10 +331,14 @@ export class EditDataTableComponent implements OnInit {
       if (response !== '') {
         this.isFormEdited = true;
         if (column.type === 'new') {
-          this.dataTableChangesData.addColumns[this.dataTableChangesData.addColumns
-            .findIndex(newColumn => newColumn.name === column.columnName
-                                    && newColumn.type === column.columnDisplayType
-                                    && newColumn.mandatory === column.isColumnNullable)] = {
+          this.dataTableChangesData.addColumns[
+            this.dataTableChangesData.addColumns.findIndex(
+              (newColumn) =>
+                newColumn.name === column.columnName &&
+                newColumn.type === column.columnDisplayType &&
+                newColumn.mandatory === column.isColumnNullable
+            )
+          ] = {
             name: response.name,
             type: response.type,
             code: response.code,
@@ -252,7 +367,9 @@ export class EditDataTableComponent implements OnInit {
             type: 'existing'
           };
 
-          const index = this.dataTableChangesData.changeColumns.findIndex(newColumn => newColumn.newName === column.columnName);
+          const index = this.dataTableChangesData.changeColumns.findIndex(
+            (newColumn) => newColumn.newName === column.columnName
+          );
           if (index === -1) {
             this.dataTableChangesData.changeColumns.push({
               name: column.columnName,
@@ -284,7 +401,7 @@ export class EditDataTableComponent implements OnInit {
    */
   deleteColumn(column: any) {
     const deleteColumnDialogRef = this.dialog.open(DeleteDialogComponent, {
-      data: { deleteContext:  this.translateService.instant('labels.inputs.Column') + ' ' + column.columnName}
+      data: { deleteContext: this.translateService.instant('labels.inputs.Column') + ' ' + column.columnName }
     });
     deleteColumnDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
@@ -296,10 +413,15 @@ export class EditDataTableComponent implements OnInit {
             name: column.columnName
           });
         } else if (column.type === 'new') {
-          this.dataTableChangesData.addColumns.splice(this.dataTableChangesData.addColumns
-            .findIndex(newColumn => newColumn.name === column.columnName
-                                    && newColumn.type === column.columnDisplayType
-                                    && newColumn.mandatory === column.isColumnNullable), 1);
+          this.dataTableChangesData.addColumns.splice(
+            this.dataTableChangesData.addColumns.findIndex(
+              (newColumn) =>
+                newColumn.name === column.columnName &&
+                newColumn.type === column.columnDisplayType &&
+                newColumn.mandatory === column.isColumnNullable
+            ),
+            1
+          );
         }
       }
     });
@@ -338,10 +460,10 @@ export class EditDataTableComponent implements OnInit {
     if (!this.dataTableChangesData.dropColumns || this.dataTableChangesData.dropColumns.length === 0) {
       this.dataTableChangesData.dropColumns = undefined;
     }
-    this.systemService.updateDataTable(this.dataTableChangesData, this.dataTableData.registeredTableName)
+    this.systemService
+      .updateDataTable(this.dataTableChangesData, this.dataTableData.registeredTableName)
       .subscribe((response: any) => {
         this.router.navigate(['../'], { relativeTo: this.route });
       });
   }
-
 }

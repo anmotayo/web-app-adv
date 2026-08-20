@@ -1,6 +1,28 @@
 /** Angular Imports */
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatDivider } from '@angular/material/divider';
+import { ExternalIdentifierComponent } from '../../../shared/external-identifier/external-identifier.component';
+import { MatStepperPrevious } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FindPipe } from '../../../pipes/find.pipe';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { YesnoPipe } from '../../../pipes/yesno.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings account preview step
@@ -8,9 +30,31 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-savings-account-preview-step',
   templateUrl: './savings-account-preview-step.component.html',
-  styleUrls: ['./savings-account-preview-step.component.scss']
+  styleUrls: ['./savings-account-preview-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDivider,
+    ExternalIdentifierComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatStepperPrevious,
+    FaIconComponent,
+    FindPipe,
+    DateFormatPipe,
+    FormatNumberPipe,
+    YesnoPipe
+  ]
 })
-export class SavingsAccountPreviewStepComponent {
+export class SavingsAccountPreviewStepComponent implements OnChanges {
+  private translateService = inject(TranslateService);
 
   /** Savings Account Product Template */
   @Input() savingsAccountProductTemplate: any;
@@ -20,14 +64,35 @@ export class SavingsAccountPreviewStepComponent {
   @Input() savingsAccountTermsForm: any;
   /** Savings Account */
   @Input() savingsAccount: any;
+  /** active Client Members in case of GSIM Account */
+  @Input() activeClientMembers?: any;
+
+  /** Table Data Source */
+  dataSource: any;
 
   /** Display columns for charges table */
-  chargesDisplayedColumns: string[] = ['name', 'chargeCalculationType', 'amount', 'chargeTimeType', 'date', 'repaymentsEvery'];
+  chargesDisplayedColumns: string[] = [
+    'name',
+    'chargeCalculationType',
+    'amount',
+    'chargeTimeType',
+    'date',
+    'repaymentsEvery'
+  ];
+  /** Columns to be displayed in active members table. */
+  membersDisplayedColumns: string[] = [
+    'id',
+    'name'
+  ];
 
   /** Form submission event */
-  @Output() submit = new EventEmitter();
+  @Output() submitEvent = new EventEmitter();
 
-  constructor(private translateService: TranslateService) { }
+  ngOnChanges(): void {
+    if (this.activeClientMembers?.length > 0) {
+      this.dataSource = new MatTableDataSource<any>(this.activeClientMembers.filter((member: any) => member.selected));
+    }
+  }
 
   getCatalogTranslation(text: string): string {
     return this.translateService.instant('labels.catalogs.' + text);

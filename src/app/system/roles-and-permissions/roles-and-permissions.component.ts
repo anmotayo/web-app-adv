@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** rxjs Imports */
 import { of } from 'rxjs';
@@ -11,6 +23,10 @@ import { of } from 'rxjs';
 /** Custom Services */
 import { PopoverService } from '../../configuration-wizard/popover/popover.service';
 import { ConfigurationWizardService } from '../../configuration-wizard/configuration-wizard.service';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Roles and Permissions component.
@@ -18,14 +34,42 @@ import { ConfigurationWizardService } from '../../configuration-wizard/configura
 @Component({
   selector: 'mifosx-roles-and-permissions',
   templateUrl: './roles-and-permissions.component.html',
-  styleUrls: ['./roles-and-permissions.component.scss']
+  styleUrls: ['./roles-and-permissions.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator
+  ]
 })
 export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
 
   /** Role data. */
   roleData: any;
   /** Columns to be displayed in roles and permissions table. */
-  displayedColumns: string[] = ['name', 'description', 'disabled', 'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'description',
+    'disabled',
+    'actions'
+  ];
   /** Data source for roles and permissions table. */
   dataSource: MatTableDataSource<any>;
 
@@ -49,11 +93,8 @@ export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService) {
-    this.route.data.subscribe(( data: { roles: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { roles: any }) => {
       this.roleData = data.roles;
     });
   }
@@ -97,7 +138,12 @@ export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -112,7 +158,12 @@ export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
     }
     if (this.configurationWizardService.showRolesandPermissionList === true) {
       setTimeout(() => {
-        this.showPopover(this.templateTableRolesandPermissions, this.tableRolesandPermissions.nativeElement, 'top', true);
+        this.showPopover(
+          this.templateTableRolesandPermissions,
+          this.tableRolesandPermissions.nativeElement,
+          'top',
+          true
+        );
       });
     }
   }
@@ -124,7 +175,7 @@ export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
     this.configurationWizardService.showRolesandPermissionPage = false;
     this.configurationWizardService.showRolesandPermissionList = false;
     this.configurationWizardService.showUsers = true;
-    this.router.navigate(['/users']);
+    this.router.navigate(['/appusers']);
   }
 
   /**
@@ -136,5 +187,4 @@ export class RolesAndPermissionsComponent implements OnInit, AfterViewInit {
     this.configurationWizardService.showRolesandPermission = true;
     this.router.navigate(['/system']);
   }
-
 }

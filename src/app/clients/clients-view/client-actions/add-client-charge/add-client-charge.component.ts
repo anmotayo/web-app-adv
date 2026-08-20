@@ -1,12 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { ClientsService } from 'app/clients/clients.service';
 import { Dates } from 'app/core/utils/dates';
 import { SettingsService } from 'app/settings/settings.service';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Add Clients Charge component.
@@ -14,9 +21,18 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-add-client-charge',
   templateUrl: './add-client-charge.component.html',
-  styleUrls: ['./add-client-charge.component.scss']
+  styleUrls: ['./add-client-charge.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class AddClientChargeComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private clientsService = inject(ClientsService);
+  private settingsService = inject(SettingsService);
 
   /** Minimum Due Date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -40,14 +56,7 @@ export class AddClientChargeComponent implements OnInit {
    * @param {ClientsService} clientsService Clients Service
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(
-    private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private clientsService: ClientsService,
-    private settingsService: SettingsService
-  ) {
+  constructor() {
     this.route.data.subscribe((data: { clientActionData: any }) => {
       this.clientChargeOptions = data.clientActionData.chargeOptions;
     });
@@ -64,7 +73,7 @@ export class AddClientChargeComponent implements OnInit {
    * Subscribe to form controls value changes
    */
   buildDependencies() {
-    this.clientChargeForm.controls.chargeId.valueChanges.subscribe(chargeId => {
+    this.clientChargeForm.controls.chargeId.valueChanges.subscribe((chargeId) => {
       this.clientsService.getChargeAndTemplate(chargeId).subscribe((data: any) => {
         this.chargeDetails = data;
         const chargeTimeType = data.chargeTimeType.id;
@@ -85,14 +94,17 @@ export class AddClientChargeComponent implements OnInit {
           this.clientChargeForm.removeControl('feeOnMonthDay');
         }
         if (chargeTimeType.value === 'Monthly Fee') {
-          this.clientChargeForm.addControl('feeInterval', new UntypedFormControl(data.feeInterval, Validators.required));
+          this.clientChargeForm.addControl(
+            'feeInterval',
+            new UntypedFormControl(data.feeInterval, Validators.required)
+          );
         } else {
           this.clientChargeForm.removeControl('feeInterval');
         }
         this.clientChargeForm.patchValue({
-          'amount': data.amount,
-          'chargeCalculationType': data.chargeCalculationType.id,
-          'chargeTimeType': data.chargeTimeType.id
+          amount: data.amount,
+          chargeCalculationType: data.chargeCalculationType.id,
+          chargeTimeType: data.chargeTimeType.id
         });
       });
     });
@@ -103,10 +115,16 @@ export class AddClientChargeComponent implements OnInit {
    */
   createClientsChargeForm() {
     this.clientChargeForm = this.formBuilder.group({
-      'chargeId': ['', Validators.required],
-      'amount': ['', Validators.required],
-      'chargeCalculationType': [{ value: '', disabled: true }],
-      'chargeTimeType': [{ value: '', disabled: true }]
+      chargeId: [
+        '',
+        Validators.required
+      ],
+      amount: [
+        '',
+        Validators.required
+      ],
+      chargeCalculationType: [{ value: '', disabled: true }],
+      chargeTimeType: [{ value: '', disabled: true }]
     });
   }
 
@@ -136,9 +154,8 @@ export class AddClientChargeComponent implements OnInit {
         }
       }
     }
-    this.clientsService.createClientCharge(this.clientId, clientCharge).subscribe( () => {
+    this.clientsService.createClientCharge(this.clientId, clientCharge).subscribe(() => {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

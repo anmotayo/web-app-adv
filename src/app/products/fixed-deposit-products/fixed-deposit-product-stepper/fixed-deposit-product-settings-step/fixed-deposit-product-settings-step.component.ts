@@ -1,19 +1,36 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
-import { TooltipPosition } from '@angular/material/tooltip';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import {Component, OnInit, Input, inject} from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatDivider } from '@angular/material/divider';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-fixed-deposit-product-settings-step',
   templateUrl: './fixed-deposit-product-settings-step.component.html',
-  styleUrls: ['./fixed-deposit-product-settings-step.component.scss']
+  styleUrls: ['./fixed-deposit-product-settings-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTooltip,
+    MatDivider,
+    MatCheckbox,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
-export class FixedDepositProductSettingsStepComponent implements OnInit, OnDestroy {
+export class FixedDepositProductSettingsStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
 
   @Input() fixedDepositProductsTemplate: any;
-
-  private $destroy = new Subject<void>()
 
   fixedDepositProductSettingsForm: UntypedFormGroup;
 
@@ -23,7 +40,7 @@ export class FixedDepositProductSettingsStepComponent implements OnInit, OnDestr
   taxGroupData: any;
   withHoldTaxPostingTypeData: any;
 
-  constructor(private formBuilder: UntypedFormBuilder) {
+  constructor() {
     this.createFixedDepositProductSettingsForm();
     this.setConditionalControls();
   }
@@ -37,61 +54,80 @@ export class FixedDepositProductSettingsStepComponent implements OnInit, OnDestr
 
     if (!(this.fixedDepositProductsTemplate === undefined) && this.fixedDepositProductsTemplate.id) {
       this.fixedDepositProductSettingsForm.patchValue({
-        'isMandatoryDeposit': this.fixedDepositProductsTemplate.isMandatoryDeposit,
-        'adjustAdvanceTowardsFuturePayments': this.fixedDepositProductsTemplate.adjustAdvanceTowardsFuturePayments,
-        'allowWithdrawal': this.fixedDepositProductsTemplate.allowWithdrawal,
-        'lockinPeriodFrequency': this.fixedDepositProductsTemplate.lockinPeriodFrequency,
-        'lockinPeriodFrequencyType': this.fixedDepositProductsTemplate.lockinPeriodFrequencyType ? this.fixedDepositProductsTemplate.lockinPeriodFrequencyType.id : '',
-        'minDepositTerm': this.fixedDepositProductsTemplate.minDepositTerm,
-        'minDepositTermTypeId': this.fixedDepositProductsTemplate.minDepositTermType ? this.fixedDepositProductsTemplate.minDepositTermType.id : '',
-        'inMultiplesOfDepositTerm': this.fixedDepositProductsTemplate.inMultiplesOfDepositTerm,
-        'inMultiplesOfDepositTermTypeId': this.fixedDepositProductsTemplate.inMultiplesOfDepositTermType ? this.fixedDepositProductsTemplate.inMultiplesOfDepositTerm.id : '',
-        'maxDepositTerm': this.fixedDepositProductsTemplate.maxDepositTerm,
-        'maxDepositTermTypeId': this.fixedDepositProductsTemplate.maxDepositTermType ? this.fixedDepositProductsTemplate.minDepositTermType.id : '',
-        'preClosurePenalApplicable': this.fixedDepositProductsTemplate.preClosurePenalApplicable,
-        'preClosurePenalInterest': this.fixedDepositProductsTemplate.preClosurePenalInterest,
-        'preClosurePenalInterestOnTypeId': this.fixedDepositProductsTemplate.preClosurePenalInterestOnType ? this.fixedDepositProductsTemplate.preClosurePenalInterestOnType.id : '',
-        'withHoldTax': this.fixedDepositProductsTemplate.withHoldTax
+        isMandatoryDeposit: this.fixedDepositProductsTemplate.isMandatoryDeposit,
+        adjustAdvanceTowardsFuturePayments: this.fixedDepositProductsTemplate.adjustAdvanceTowardsFuturePayments,
+        allowWithdrawal: this.fixedDepositProductsTemplate.allowWithdrawal,
+        lockinPeriodFrequency: this.fixedDepositProductsTemplate.lockinPeriodFrequency,
+        lockinPeriodFrequencyType: this.fixedDepositProductsTemplate.lockinPeriodFrequencyType
+          ? this.fixedDepositProductsTemplate.lockinPeriodFrequencyType.id
+          : '',
+        minDepositTerm: this.fixedDepositProductsTemplate.minDepositTerm,
+        minDepositTermTypeId: this.fixedDepositProductsTemplate.minDepositTermType
+          ? this.fixedDepositProductsTemplate.minDepositTermType.id
+          : '',
+        inMultiplesOfDepositTerm: this.fixedDepositProductsTemplate.inMultiplesOfDepositTerm,
+        inMultiplesOfDepositTermTypeId: this.fixedDepositProductsTemplate.inMultiplesOfDepositTermType
+          ? this.fixedDepositProductsTemplate.inMultiplesOfDepositTerm.id
+          : '',
+        maxDepositTerm: this.fixedDepositProductsTemplate.maxDepositTerm,
+        maxDepositTermTypeId: this.fixedDepositProductsTemplate.maxDepositTermType
+          ? this.fixedDepositProductsTemplate.minDepositTermType.id
+          : '',
+        preClosurePenalApplicable: this.fixedDepositProductsTemplate.preClosurePenalApplicable,
+        preClosurePenalInterest: this.fixedDepositProductsTemplate.preClosurePenalInterest,
+        preClosurePenalInterestOnTypeId: this.fixedDepositProductsTemplate.preClosurePenalInterestOnType
+          ? this.fixedDepositProductsTemplate.preClosurePenalInterestOnType.id
+          : '',
+        withHoldTax: this.fixedDepositProductsTemplate.withHoldTax
+      });
+    }
+
+    if (this.fixedDepositProductsTemplate.withHoldTax) {
+      this.fixedDepositProductSettingsForm.patchValue({
+        taxGroupId: this.fixedDepositProductsTemplate.taxGroup ? this.fixedDepositProductsTemplate.taxGroup.id : ''
       });
     }
   }
 
-  ngOnDestroy() {
-    this.$destroy.next();
-    this.$destroy.complete();
-  }
-
   createFixedDepositProductSettingsForm() {
     this.fixedDepositProductSettingsForm = this.formBuilder.group({
-      'lockinPeriodFrequency': [''],
-      'lockinPeriodFrequencyType': [''],
-      'minDepositTerm': ['', Validators.required],
-      'minDepositTermTypeId': ['', Validators.required],
-      'inMultiplesOfDepositTerm': [''],
-      'inMultiplesOfDepositTermTypeId': [''],
-      'maxDepositTerm': [''],
-      'maxDepositTermTypeId': [''],
-      'preClosurePenalApplicable': [false],
-      'preClosurePenalInterest': [''],
-      'preClosurePenalInterestOnTypeId': [''],
-      'withHoldTax': [false]
+      lockinPeriodFrequency: [''],
+      lockinPeriodFrequencyType: [''],
+      minDepositTerm: [
+        '',
+        Validators.required
+      ],
+      minDepositTermTypeId: [
+        '',
+        Validators.required
+      ],
+      inMultiplesOfDepositTerm: [''],
+      inMultiplesOfDepositTermTypeId: [''],
+      maxDepositTerm: [''],
+      maxDepositTermTypeId: [''],
+      preClosurePenalApplicable: [false],
+      preClosurePenalInterest: [''],
+      preClosurePenalInterestOnTypeId: [''],
+      withHoldTax: [false]
     });
   }
 
   setConditionalControls() {
-    this.fixedDepositProductSettingsForm.get('withHoldTax').valueChanges
-      .pipe(takeUntil(this.$destroy))
-      .subscribe((withHoldTax: any) => {
-        if (withHoldTax) {
-          this.fixedDepositProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
-          this.fixedDepositProductSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
-          this.fixedDepositProductSettingsForm.get('taxGroupId').patchValue(this.fixedDepositProductsTemplate.taxGroup && this.fixedDepositProductsTemplate.taxGroup.id);
-          this.fixedDepositProductSettingsForm.get('withHoldTaxPostingTypeId').patchValue(this.fixedDepositProductsTemplate.withHoldTaxPostingType && this.fixedDepositProductsTemplate.withHoldTaxPostingType.id);
-        } else {
-          this.fixedDepositProductSettingsForm.removeControl('taxGroupId');
-          this.fixedDepositProductSettingsForm.removeControl('withHoldTaxPostingTypeId');
-        }
-      });
+    this.fixedDepositProductSettingsForm.get('withHoldTax').valueChanges.subscribe((withHoldTax: any) => {
+      if (withHoldTax) {
+        this.fixedDepositProductSettingsForm.addControl('taxGroupId', new UntypedFormControl('', Validators.required));
+        this.fixedDepositProductSettingsForm.addControl('withHoldTaxPostingTypeId', new UntypedFormControl('', Validators.required));
+        this.fixedDepositProductSettingsForm
+          .get('taxGroupId')
+          .patchValue(this.fixedDepositProductsTemplate.taxGroup && this.fixedDepositProductsTemplate.taxGroup.id);
+        this.fixedDepositProductSettingsForm
+          .get('withHoldTaxPostingTypeId')
+          .patchValue(this.fixedDepositProductsTemplate.withHoldTaxPostingType && this.fixedDepositProductsTemplate.withHoldTaxPostingType.id);
+      } else {
+        this.fixedDepositProductSettingsForm.removeControl('taxGroupId');
+        this.fixedDepositProductSettingsForm.removeControl('withHoldTaxPostingTypeId');
+      }
+    });
   }
 
   get fixedDepositProductSettings() {
@@ -103,5 +139,4 @@ export class FixedDepositProductSettingsStepComponent implements OnInit, OnDestr
     }
     return fixedDepositProductSettings;
   }
-
 }

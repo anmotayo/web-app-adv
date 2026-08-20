@@ -1,16 +1,25 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, inject } from '@angular/core';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { GLAccount } from 'app/shared/models/general.model';
 import { ReplaySubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { AsyncPipe } from '@angular/common';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-gl-account-selector',
   templateUrl: './gl-account-selector.component.html',
-  styleUrls: ['./gl-account-selector.component.scss']
+  styleUrls: ['./gl-account-selector.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    NgxMatSelectSearchModule,
+    AsyncPipe
+  ]
 })
 export class GlAccountSelectorComponent implements OnInit, OnChanges, OnDestroy {
+  private translateService = inject(TranslateService);
 
   @Input() inputFormControl: UntypedFormControl;
   @Input() glAccountList: GLAccount[] = [];
@@ -29,17 +38,13 @@ export class GlAccountSelectorComponent implements OnInit, OnChanges, OnDestroy 
   placeHolderLabel = '';
   noEntriesFoundLabel = '';
 
-  constructor(private translateService: TranslateService) { }
-
   ngOnInit(): void {
     // listen for search field value changes
-    this.filterFormCtrl.valueChanges
-      .pipe(takeUntil(this._onDestroy))
-      .subscribe(() => {
-        this.searchGLAccount();
-      });
+    this.filterFormCtrl.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
+      this.searchGLAccount();
+    });
 
-    this.placeHolderLabel = this.translateService.instant('labels.inputs.Filter');
+    this.placeHolderLabel = this.translateService.instant('labels.text.Search');
     this.noEntriesFoundLabel = this.translateService.instant('labels.text.No data found');
   }
 
@@ -59,13 +64,14 @@ export class GlAccountSelectorComponent implements OnInit, OnChanges, OnDestroy 
       const search: string = this.filterFormCtrl.value.toLowerCase();
 
       if (!search) {
-          this.glAccountData.next(this.glAccountList.slice());
+        this.glAccountData.next(this.glAccountList.slice());
       } else {
-        this.glAccountData.next(this.glAccountList.filter((option: GLAccount) => {
-          return option.name.toLowerCase().indexOf(search) >= 0 || option.glCode.toLowerCase().indexOf(search) >= 0;
-        }));
+        this.glAccountData.next(
+          this.glAccountList.filter((option: GLAccount) => {
+            return option.name.toLowerCase().indexOf(search) >= 0 || option.glCode.toLowerCase().indexOf(search) >= 0;
+          })
+        );
       }
     }
   }
-
 }

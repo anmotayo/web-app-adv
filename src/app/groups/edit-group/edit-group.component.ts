@@ -1,12 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { GroupsService } from '../groups.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Group component.
@@ -14,9 +21,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-edit-group',
   templateUrl: './edit-group.component.html',
-  styleUrls: ['./edit-group.component.scss']
+  styleUrls: ['./edit-group.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditGroupComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private groupService = inject(GroupsService);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -40,16 +56,12 @@ export class EditGroupComponent implements OnInit {
    * @param {Dates} dateUtils Date Utils to format date.
    * @param {SettingsService} settingsService SettingsService
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private route: ActivatedRoute,
-              private router: Router,
-              private groupService: GroupsService,
-              private dateUtils: Dates,
-              private settingsService: SettingsService) {
-    this.route.data.subscribe( (data: { groupAndTemplateData: any, groupViewData: any } ) => {
+  constructor() {
+    this.route.data.subscribe((data: { groupAndTemplateData: any; groupViewData: any }) => {
       this.staffData = data.groupAndTemplateData.staffOptions;
       this.groupData = data.groupAndTemplateData;
-      this.submittedOnDate = data.groupViewData.timeline.submittedOnDate && new Date(data.groupViewData.timeline.submittedOnDate);
+      this.submittedOnDate =
+        data.groupViewData.timeline.submittedOnDate && new Date(data.groupViewData.timeline.submittedOnDate);
     });
   }
 
@@ -60,10 +72,10 @@ export class EditGroupComponent implements OnInit {
     this.maxDate = this.settingsService.businessDate;
     this.createEditGroupForm();
     this.editGroupForm.patchValue({
-      'name': this.groupData.name,
-      'submittedOnDate': this.submittedOnDate,
-      'staffId': this.groupData.staffId,
-      'externalId': this.groupData.externalId
+      name: this.groupData.name,
+      submittedOnDate: this.submittedOnDate,
+      staffId: this.groupData.staffId,
+      externalId: this.groupData.externalId
     });
   }
 
@@ -72,10 +84,19 @@ export class EditGroupComponent implements OnInit {
    */
   createEditGroupForm() {
     this.editGroupForm = this.formBuilder.group({
-      'name': ['', [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'submittedOnDate': ['', Validators.required],
-      'staffId': [''],
-      'externalId': ['']
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      submittedOnDate: [
+        '',
+        Validators.required
+      ],
+      staffId: [''],
+      externalId: ['']
     });
     this.buildDependencies();
   }
@@ -86,7 +107,9 @@ export class EditGroupComponent implements OnInit {
   buildDependencies() {
     if (this.groupData.active) {
       this.editGroupForm.addControl('activationDate', new UntypedFormControl('', Validators.required));
-      this.editGroupForm.get('activationDate').patchValue(this.groupData.activationDate && new Date(this.groupData.activationDate));
+      this.editGroupForm
+        .get('activationDate')
+        .patchValue(this.groupData.activationDate && new Date(this.groupData.activationDate));
     } else {
       this.editGroupForm.removeControl('activationDate');
     }
@@ -117,5 +140,4 @@ export class EditGroupComponent implements OnInit {
       this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

@@ -2,7 +2,13 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import {
+  HttpBackend,
+  HttpClient,
+  provideHttpClient,
+  withInterceptorsFromDi,
+  HTTP_INTERCEPTORS
+} from '@angular/common/http';
 
 /** Environment Configuration */
 
@@ -22,7 +28,6 @@ import { ClientsModule } from './clients/clients.module';
 import { GroupsModule } from './groups/groups.module';
 import { CentersModule } from './centers/centers.module';
 import { AccountingModule } from './accounting/accounting.module';
-import { SelfServiceModule } from './self-service/self-service.module';
 import { SystemModule } from './system/system.module';
 import { ProductsModule } from './products/products.module';
 import { OrganizationModule } from './organization/organization.module';
@@ -35,13 +40,32 @@ import { CollectionsModule } from './collections/collections.module';
 import { ProfileModule } from './profile/profile.module';
 import { TasksModule } from './tasks/tasks.module';
 import { ConfigurationWizardModule } from './configuration-wizard/configuration-wizard.module';
-import {PortalModule} from '@angular/cdk/portal';
+import { PortalModule } from '@angular/cdk/portal';
 
 /** Main Routing Module */
 import { AppRoutingModule } from './app-routing.module';
 import { DatePipe, LocationStrategy } from '@angular/common';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import {
+  TranslateLoader,
+  TranslateModule,
+  MissingTranslationHandler,
+  MissingTranslationHandlerParams
+} from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+
+import { AuthenticationInterceptor as TokenInterceptor } from './core/authentication/authentication.interceptor';
+import { TokenInterceptor as ZitadelTokenInterceptor } from './zitadel/token.interceptor';
+import { AuthService } from './zitadel/auth.service';
+import { environment } from '../environments/environment';
+import { CallbackComponent } from './zitadel/callback/callback.component';
+import { OAuthModule } from 'angular-oauth2-oidc';
+
+export class CustomMissingTranslationHandler implements MissingTranslationHandler {
+  handle(params: MissingTranslationHandlerParams): string {
+    // Remove the 'labels.catalogs.' prefix and return the fallback value
+    return params.key.replace('labels.catalogs.', '');
+  }
+}
 
 /**
  * App Module
@@ -54,19 +78,25 @@ export function HttpLoaderFactory(http: HttpClient) {
 }
 
 @NgModule({
+  declarations: [WebAppComponent],
+  bootstrap: [WebAppComponent],
   imports: [
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
-        useFactory: (http: HttpClient, locationStrategy: LocationStrategy) => {
-          return new TranslateHttpLoader(http, `${ window.location.protocol }//${ window.location.host }${locationStrategy.getBaseHref()}/assets/translations/`, '.json');
+        useFactory: (httpBackend: HttpBackend, locationStrategy: LocationStrategy) => {
+          const http = new HttpClient(httpBackend);
+          return new TranslateHttpLoader(http, `/assets/translations/`, '.json');
         },
-        deps: [HttpClient, LocationStrategy]
-      }
+        deps: [
+          HttpBackend,
+          LocationStrategy
+        ]
+      },
+      missingTranslationHandler: { provide: MissingTranslationHandler, useClass: CustomMissingTranslationHandler }
     }),
     BrowserModule,
     BrowserAnimationsModule,
-    HttpClientModule,
     PortalModule,
     CoreModule,
     HomeModule,
@@ -79,7 +109,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     GroupsModule,
     CentersModule,
     AccountingModule,
-    SelfServiceModule,
     SystemModule,
     ProductsModule,
     OrganizationModule,
@@ -90,10 +119,19 @@ export function HttpLoaderFactory(http: HttpClient) {
     CollectionsModule,
     TasksModule,
     ConfigurationWizardModule,
-    AppRoutingModule
+    AppRoutingModule,
+    NotFoundComponent,
+    CallbackComponent,
+    OAuthModule.forRoot()
   ],
-  declarations: [WebAppComponent, NotFoundComponent],
-  providers: [DatePipe],
-  bootstrap: [WebAppComponent]
+  providers: [
+    DatePipe,
+    AuthService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: !environment.OIDC.oidcServerEnabled ? TokenInterceptor : ZitadelTokenInterceptor,
+      multi: true
+    }
+  ]
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,9 +1,21 @@
 /** Angular Imports */
-import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** rxjs Imports */
 import { of } from 'rxjs';
@@ -14,6 +26,10 @@ import { ConfigurationWizardService } from '../../configuration-wizard/configura
 import { Charges } from 'app/core/utils/charges';
 import { OptionData } from 'app/shared/models/option-data.model';
 import { Charge } from './models/charge.model';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FormatNumberPipe } from '../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Charges component.
@@ -21,14 +37,46 @@ import { Charge } from './models/charge.model';
 @Component({
   selector: 'mifosx-charges',
   templateUrl: './charges.component.html',
-  styleUrls: ['./charges.component.scss']
+  styleUrls: ['./charges.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    FormatNumberPipe
+  ]
 })
 export class ChargesComponent implements OnInit, AfterViewInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configurationWizardService = inject(ConfigurationWizardService);
+  private popoverService = inject(PopoverService);
+  private charges = inject(Charges);
 
   /** Charge data. */
   chargeData: Charge[] = [];
   /** Columns to be displayed in charges table. */
-  displayedColumns: string[] = ['name', 'chargeAppliesTo', 'chargeTimeType', 'chargeCalculationType', 'amount', 'penalty', 'active'];
+  displayedColumns: string[] = [
+    'name',
+    'chargeAppliesTo',
+    'chargeTimeType',
+    'chargeCalculationType',
+    'amount',
+    'penalty',
+    'active'
+  ];
   /** Data source for charges table. */
   dataSource: MatTableDataSource<any>;
 
@@ -55,12 +103,8 @@ export class ChargesComponent implements OnInit, AfterViewInit {
    * @param {ConfigurationWizardService} configurationWizardService ConfigurationWizard Service.
    * @param {PopoverService} popoverService PopoverService.
    */
-  constructor(private route: ActivatedRoute,
-              private router: Router,
-              private configurationWizardService: ConfigurationWizardService,
-              private popoverService: PopoverService,
-              private charges: Charges) {
-    this.route.data.subscribe(( data: { charges: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { charges: any }) => {
       this.chargeData = data.charges;
     });
     this.chargeAppliesToOptions = this.charges.getChargeAppliesToOptions();
@@ -89,8 +133,10 @@ export class ChargesComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sortingDataAccessor = (charge: any, property: any) => {
       switch (property) {
-        case 'chargeAppliesTo': return charge.chargeAppliesTo.value;
-        default: return charge[property];
+        case 'chargeAppliesTo':
+          return charge.chargeAppliesTo.value;
+        default:
+          return charge[property];
       }
     };
     this.dataSource.sort = this.sort;
@@ -120,7 +166,12 @@ export class ChargesComponent implements OnInit, AfterViewInit {
    * @param position String.
    * @param backdrop Boolean.
    */
-  showPopover(template: TemplateRef<any>, target: HTMLElement | ElementRef<any>, position: string, backdrop: boolean): void {
+  showPopover(
+    template: TemplateRef<any>,
+    target: HTMLElement | ElementRef<any>,
+    position: string,
+    backdrop: boolean
+  ): void {
     setTimeout(() => this.popoverService.open(template, target, position, backdrop, {}), 200);
   }
 
@@ -145,11 +196,9 @@ export class ChargesComponent implements OnInit, AfterViewInit {
   }
 
   filterByAppliesTo(chargeAppliesTo: number) {
-    console.log(chargeAppliesTo);
     const filteredCharges: Charge[] = this.chargeData.filter((charge: Charge) => {
-      return (charge.chargeAppliesTo.id === chargeAppliesTo);
+      return charge.chargeAppliesTo.id === chargeAppliesTo;
     });
     this.dataSource = new MatTableDataSource(filteredCharges);
   }
-
 }

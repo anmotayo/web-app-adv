@@ -1,7 +1,13 @@
 /* Angular Imports */
-import { ComponentType, Overlay, OriginConnectionPosition, OverlayConnectionPosition, ConnectionPositionPair } from '@angular/cdk/overlay';
+import {
+  ComponentType,
+  Overlay,
+  OriginConnectionPosition,
+  OverlayConnectionPosition,
+  ConnectionPositionPair
+} from '@angular/cdk/overlay';
 import { ComponentPortal, TemplatePortal } from '@angular/cdk/portal';
-import { Injectable, InjectionToken, Injector, TemplateRef, ElementRef } from '@angular/core';
+import { Injectable, InjectionToken, Injector, TemplateRef, ElementRef, inject } from '@angular/core';
 
 /* Custom Imports */
 import { PopoverConfig } from './popover-config';
@@ -29,11 +35,8 @@ const defaultConfig: PopoverConfig = {
   providedIn: 'root'
 })
 export class PopoverService {
-  /**
-   * @param {Injector} injector Injector.
-   * @param {overlay} overlay Overlay.
-   */
-  constructor(private overlay: Overlay, private injector: Injector) { }
+  private overlay = inject(Overlay);
+  private injector = inject(Injector);
 
   /**
    * Opens the popover at target element
@@ -42,10 +45,13 @@ export class PopoverService {
    * @param {string} position String.
    * @param {Partial<PopoverConfig> = {}} config Partial<PopoverConfig> = {}.
    */
-  open<D = any>(componentOrTemplate: ComponentType<any> | TemplateRef<any>,
-      target: ElementRef | HTMLElement, position: string,
-      backdrop: boolean,
-      config: Partial<PopoverConfig> = {}): PopoverRef<D> {
+  open<D = any>(
+    componentOrTemplate: ComponentType<any> | TemplateRef<any>,
+    target: ElementRef | HTMLElement,
+    position: string,
+    backdrop: boolean,
+    config: Partial<PopoverConfig> = {}
+  ): PopoverRef<D> {
     const popoverConfig: PopoverConfig = Object.assign({}, defaultConfig, config);
 
     const arrowSize = popoverConfig.arrowSize;
@@ -55,14 +61,17 @@ export class PopoverService {
     let positions: ConnectionPositionPair[];
     // preferred positions, in order of priority
     if (position === 'bottom') {
-        positions = [
+      positions = [
         // bottom center
         {
           overlayX: 'center',
           overlayY: 'top',
           originX: 'center',
           originY: 'bottom',
-          panelClass: ['top', 'center'],
+          panelClass: [
+            'top',
+            'center'
+          ],
           offsetY: panelOffset
         },
         // bottom left
@@ -71,7 +80,10 @@ export class PopoverService {
           overlayY: 'top',
           originX: 'center',
           originY: 'bottom',
-          panelClass: ['top', 'left'],
+          panelClass: [
+            'top',
+            'left'
+          ],
           offsetX: -1 * arrowOffset,
           offsetY: panelOffset
         },
@@ -81,7 +93,10 @@ export class PopoverService {
           overlayY: 'top',
           originX: 'center',
           originY: 'bottom',
-          panelClass: ['top', 'right'],
+          panelClass: [
+            'top',
+            'right'
+          ],
           offsetX: arrowOffset,
           offsetY: panelOffset
         }
@@ -94,7 +109,10 @@ export class PopoverService {
           overlayY: 'bottom',
           originX: 'center',
           originY: 'top',
-          panelClass: ['bottom', 'center'],
+          panelClass: [
+            'bottom',
+            'center'
+          ],
           offsetY: -1 * panelOffset
         },
         // top left
@@ -103,7 +121,10 @@ export class PopoverService {
           overlayY: 'bottom',
           originX: 'center',
           originY: 'top',
-          panelClass: ['bottom', 'left'],
+          panelClass: [
+            'bottom',
+            'left'
+          ],
           offsetX: -1 * arrowOffset,
           offsetY: -1 * panelOffset
         },
@@ -113,7 +134,10 @@ export class PopoverService {
           overlayY: 'bottom',
           originX: 'center',
           originY: 'top',
-          panelClass: ['bottom', 'right'],
+          panelClass: [
+            'bottom',
+            'right'
+          ],
           offsetX: arrowOffset,
           offsetY: -1 * panelOffset
         }
@@ -122,27 +146,33 @@ export class PopoverService {
       positions = [
         // right
         {
-          originX : 'end',
-          originY : 'center',
+          originX: 'end',
+          originY: 'center',
           overlayX: 'start',
           overlayY: 'center',
-          panelClass: ['center', 'left'],
+          panelClass: [
+            'center',
+            'left'
+          ],
           offsetX: 0.5 * arrowOffset,
           offsetY: -1 * panelOffset
-        },
+        }
       ];
     } else if (position === 'left') {
       positions = [
         // left
         {
-          originX : 'start',
-          originY : 'center',
+          originX: 'start',
+          originY: 'center',
           overlayX: 'end',
           overlayY: 'center',
-          panelClass: ['center', 'right'],
+          panelClass: [
+            'center',
+            'right'
+          ],
           offsetX: -0.5 * arrowOffset,
           offsetY: -1 * panelOffset
-        },
+        }
       ];
     }
     if (backdrop === true) {
@@ -151,11 +181,11 @@ export class PopoverService {
       showbackdrop = false;
     }
     const positionStrategy = this.overlay
-        .position()
-        .flexibleConnectedTo(target)
-        .withPush(false)
-        .withFlexibleDimensions(false)
-        .withPositions(positions);
+      .position()
+      .flexibleConnectedTo(target)
+      .withPush(false)
+      .withFlexibleDimensions(false)
+      .withPositions(positions);
 
     const overlayRef = this.overlay.create({
       hasBackdrop: showbackdrop,
@@ -167,34 +197,31 @@ export class PopoverService {
 
     const popoverRef = new PopoverRef(overlayRef, positionStrategy, popoverConfig);
 
-    const popover = overlayRef.attach(new ComponentPortal(
-      PopoverComponent,
-      null,
-      Injector.create({
-        parent: this.injector,
-        providers: [
-          { provide: PopoverRef, useValue: popoverRef }
-        ]
-      })
-      // new PortalInjector(
-      //   this.injector,
-      //   new WeakMap<any, any>([
-      //     [PopoverRef, popoverRef]
-      //   ])
-      // )
-    )).instance;
+    const popover = overlayRef.attach(
+      new ComponentPortal(
+        PopoverComponent,
+        null,
+        Injector.create({
+          parent: this.injector,
+          providers: [
+            { provide: PopoverRef, useValue: popoverRef }]
+        })
+        // new PortalInjector(
+        //   this.injector,
+        //   new WeakMap<any, any>([
+        //     [PopoverRef, popoverRef]
+        //   ])
+        // )
+      )
+    ).instance;
 
     if (componentOrTemplate instanceof TemplateRef) {
       // rendering a provided template dynamically
       popover.attachTemplatePortal(
-        new TemplatePortal(
-          componentOrTemplate,
-          null,
-          {
-            $implicit: config.data,
-            popover: popoverRef
-          }
-        )
+        new TemplatePortal(componentOrTemplate, null, {
+          $implicit: config.data,
+          popover: popoverRef
+        })
       );
     } else {
       // rendering a provided component dynamically
@@ -206,7 +233,7 @@ export class PopoverService {
             parent: this.injector,
             providers: [
               { provide: POPOVER_DATA, useValue: config.data },
-              { provide: PopoverRef, useValue: popoverRef },
+              { provide: PopoverRef, useValue: popoverRef }
             ]
           })
           // new PortalInjector(
@@ -218,7 +245,6 @@ export class PopoverService {
           // )
         )
       );
-
     }
 
     return popoverRef;

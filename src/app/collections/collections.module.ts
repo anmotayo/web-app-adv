@@ -13,10 +13,8 @@ import { IndividualCollectionSheetComponent } from './individual-collection-shee
   imports: [
     SharedModule,
     PipesModule,
-    CollectionsRoutingModule
-  ],
-  declarations: [
+    CollectionsRoutingModule,
     IndividualCollectionSheetComponent
   ]
 })
-export class CollectionsModule { }
+export class CollectionsModule {}

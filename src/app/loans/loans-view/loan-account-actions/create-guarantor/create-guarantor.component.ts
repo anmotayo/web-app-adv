@@ -1,13 +1,22 @@
 /** Angular Imports */
-import { Component, OnInit, Input, AfterViewInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, UntypedFormControl } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, Input, AfterViewInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { LoansService } from 'app/loans/loans.service';
 import { ClientsService } from 'app/clients/clients.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatAutocompleteTrigger, MatAutocomplete, MatOption } from '@angular/material/autocomplete';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Guarantor Action
@@ -15,9 +24,22 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-create-guarantor',
   templateUrl: './create-guarantor.component.html',
-  styleUrls: ['./create-guarantor.component.scss']
+  styleUrls: ['./create-guarantor.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox,
+    MatAutocompleteTrigger,
+    MatAutocomplete
+  ]
 })
 export class CreateGuarantorComponent implements OnInit, AfterViewInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private loanService = inject(LoansService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private dateUtils = inject(Dates);
+  private clientsService = inject(ClientsService);
+  private settingsService = inject(SettingsService);
 
   @Input() dataObject: any;
   /** New Guarantor Form */
@@ -29,7 +51,7 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
   /** Show Client Details Form */
   showClientDetailsForm = false;
   /** Minimum date allowed. */
-  minDate = new Date(2000, 0, 1);
+  minDate = new Date(1900, 0, 1);
   /** Maximum date allowed. */
   maxDate = new Date();
   /** Client data. */
@@ -44,13 +66,7 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
    * @param {Router} router Router for navigation.
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private loanService: LoansService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private dateUtils: Dates,
-    private clientsService: ClientsService,
-    private settingsService: SettingsService) {
+  constructor() {
     this.loanId = this.route.snapshot.params['loanId'];
   }
 
@@ -64,11 +80,14 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
   /** Create Guarantor Details Form */
   createNewGuarantorForm() {
     this.newGuarantorForm = this.formBuilder.group({
-      'existingClient': [''],
-      'name': ['', Validators.required],
-      'clientRelationshipTypeId': [''],
-      'savingsId': [''],
-      'amount': ['']
+      existingClient: [''],
+      name: [
+        '',
+        Validators.required
+      ],
+      clientRelationshipTypeId: [''],
+      savingsId: [''],
+      amount: ['']
     });
   }
 
@@ -123,10 +142,9 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
     if (this.newGuarantorForm.value.existingClient) {
       this.newGuarantorForm.get('name').valueChanges.subscribe((value: string) => {
         if (value.length >= 2) {
-          this.clientsService.getFilteredClients('displayName', 'ASC', true, value)
-            .subscribe((data: any) => {
-              this.clientsData = data.pageItems;
-            });
+          this.clientsService.getFilteredClients('displayName', 'ASC', true, value).subscribe((data: any) => {
+            this.clientsData = data.pageItems;
+          });
         }
       });
     }
@@ -155,7 +173,9 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
     const dateFormat = this.settingsService.dateFormat;
 
     const prevdob: Date = this.newGuarantorForm.value.dob;
-    const guarantorTypeId: number = this.newGuarantorForm.value.existingClient ? this.dataObject.guarantorTypeOptions[0].id : this.dataObject.guarantorTypeOptions[2].id;
+    const guarantorTypeId: number = this.newGuarantorForm.value.existingClient
+      ? this.dataObject.guarantorTypeOptions[0].id
+      : this.dataObject.guarantorTypeOptions[2].id;
     const data = {
       ...newGuarantorFormData,
       locale,
@@ -174,10 +194,8 @@ export class CreateGuarantorComponent implements OnInit, AfterViewInit {
     delete data.existingClient;
     delete data.name;
 
-    this.loanService.createNewGuarantor(this.loanId, data)
-      .subscribe((response: any) => {
-        this.router.navigate(['../../general'], { relativeTo: this.route });
-      });
+    this.loanService.createNewGuarantor(this.loanId, data).subscribe((response: any) => {
+      this.router.navigate(['../../general'], { relativeTo: this.route });
+    });
   }
-
 }

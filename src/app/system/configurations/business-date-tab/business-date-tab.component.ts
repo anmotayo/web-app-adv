@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { Alert } from 'app/core/alert/alert.model';
 import { AlertService } from 'app/core/alert/alert.service';
@@ -10,13 +10,31 @@ import { Subscription } from 'rxjs';
 
 /** Custom Services */
 import { SystemService } from '../../system.service';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-business-date-tab',
   templateUrl: './business-date-tab.component.html',
-  styleUrls: ['./business-date-tab.component.scss']
+  styleUrls: ['./business-date-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    MatTooltip,
+    FaIconComponent,
+    DateFormatPipe
+  ]
 })
 export class BusinessDateTabComponent implements OnInit {
+  private systemService = inject(SystemService);
+  private settingsService = inject(SettingsService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dateUtils = inject(Dates);
+  private alertService = inject(AlertService);
+
   /** Subscription to alerts. */
   alert$: Subscription;
 
@@ -38,25 +56,11 @@ export class BusinessDateTabComponent implements OnInit {
   isBusinessDateEnabled = false;
   isEditInProgress = false;
 
-  /**
-   * Retrieves the configurations data from `resolve`.
-   * @param {SystemService} systemService System Service.
-   * @param {SettingsService} settingsService Settings Service.
-   * @param {FormBuilder} formBuilder Form Builder.
-   * @param {Dates} dateUtils Date Utils.
-   */
-  constructor(
-    private systemService: SystemService,
-    private settingsService: SettingsService,
-    private formBuilder: UntypedFormBuilder,
-    private dateUtils: Dates,
-    private alertService: AlertService) {}
-
   ngOnInit(): void {
     this.alert$ = this.alertService.alertEvent.subscribe((alertEvent: Alert) => {
       const alertType = alertEvent.type;
       if (alertType === SettingsService.businessDateType + ' Set Config') {
-        this.isBusinessDateEnabled = (alertEvent.message === 'enabled') ? true : false;
+        this.isBusinessDateEnabled = alertEvent.message === 'enabled' ? true : false;
         if (this.isBusinessDateEnabled) {
           this.setBusinessDates();
           this.createBusinessDateForm();
@@ -71,19 +75,19 @@ export class BusinessDateTabComponent implements OnInit {
   /**
    * Get the Configuration and the Business Date data
    */
-   getConfigurations(): void {
-    this.systemService.getConfigurationByName(SettingsService.businessDateConfigName)
-    .subscribe((configurationData: any) => {
-      this.isBusinessDateEnabled = configurationData.enabled;
-      if (this.isBusinessDateEnabled) {
-        this.setBusinessDates();
-      }
-    });
+  getConfigurations(): void {
+    this.systemService
+      .getConfigurationByName(SettingsService.businessDateConfigName)
+      .subscribe((configurationData: any) => {
+        this.isBusinessDateEnabled = configurationData.enabled;
+        if (this.isBusinessDateEnabled) {
+          this.setBusinessDates();
+        }
+      });
   }
 
   setBusinessDates(): void {
-    this.systemService.getBusinessDates()
-    .subscribe((businessDateData: any) => {
+    this.systemService.getBusinessDates().subscribe((businessDateData: any) => {
       businessDateData.forEach((data: any) => {
         if (data.type === SettingsService.businessDateType) {
           this.businessDate = new Date(data.date);
@@ -105,15 +109,21 @@ export class BusinessDateTabComponent implements OnInit {
    */
   createBusinessDateForm(): void {
     this.businessDateForm = this.formBuilder.group({
-      'businessDate': [new Date(), Validators.required],
-      'cobDate': [new Date(), Validators.required],
+      businessDate: [
+        new Date(),
+        Validators.required
+      ],
+      cobDate: [
+        new Date(),
+        Validators.required
+      ]
     });
   }
 
   /**
    * Flag to display or not the datepicker control to set the Business Date value
    */
-   editInProgressToggle(index: any): void {
+  editInProgressToggle(index: any): void {
     this.dateIndex = index;
     this.isEditInProgress = !this.isEditInProgress;
   }

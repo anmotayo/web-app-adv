@@ -15,22 +15,27 @@ import { MakeAccountTransfersComponent } from './make-account-transfers/make-acc
 import { ListStandingInstructionsComponent } from './list-standing-instructions/list-standing-instructions.component';
 import { ListTransactionsComponent } from './list-transactions/list-transactions.component';
 import { ViewAccountTransferComponent } from './view-account-transfer/view-account-transfer.component';
+import { MakeAccountInterbankTransfersComponent } from './make-account-interbank-transfers/make-account-interbank-transfers.component';
 /**
  * Account Transfers Module
  *
  * All components related to Account Transfers functions should be declared here.
  */
 @NgModule({
-  imports: [SharedModule, PipesModule, DirectivesModule, AccountTransfersRoutingModule],
-  declarations: [
+  imports: [
+    SharedModule,
+    PipesModule,
+    DirectivesModule,
+    AccountTransfersRoutingModule,
     ViewStandingInstructionsComponent,
     EditStandingInstructionsComponent,
     CreateStandingInstructionsComponent,
     MakeAccountTransfersComponent,
     ListStandingInstructionsComponent,
     ListTransactionsComponent,
-    ViewAccountTransferComponent
+    ViewAccountTransferComponent,
+    MakeAccountInterbankTransfersComponent
   ],
-  providers: [ ]
+  providers: []
 })
-export class AccountTransfersModule { }
+export class AccountTransfersModule {}

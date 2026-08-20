@@ -1,13 +1,24 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { TooltipPosition } from '@angular/material/tooltip';
+import { Component, OnInit, Input, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-share-product-currency-step',
   templateUrl: './share-product-currency-step.component.html',
-  styleUrls: ['./share-product-currency-step.component.scss']
+  styleUrls: ['./share-product-currency-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTooltip,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class ShareProductCurrencyStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
 
   @Input() shareProductsTemplate: any;
 
@@ -15,7 +26,7 @@ export class ShareProductCurrencyStepComponent implements OnInit {
 
   currencyData: any;
 
-  constructor(private formBuilder: UntypedFormBuilder) {
+  constructor() {
     this.createShareProductCurrencyForm();
   }
 
@@ -24,28 +35,36 @@ export class ShareProductCurrencyStepComponent implements OnInit {
 
     if (this.shareProductsTemplate.currency) {
       this.shareProductCurrencyForm.patchValue({
-        'currencyCode': this.shareProductsTemplate.currency.code,
-        'digitsAfterDecimal': this.shareProductsTemplate.currency.decimalPlaces,
-        'inMultiplesOf': this.shareProductsTemplate.currency.inMultiplesOf
+        currencyCode: this.shareProductsTemplate.currency.code,
+        digitsAfterDecimal: this.shareProductsTemplate.currency.decimalPlaces,
+        inMultiplesOf: this.shareProductsTemplate.currency.inMultiplesOf
       });
     } else {
       this.shareProductCurrencyForm.patchValue({
-        'currencyCode': this.currencyData[0].code,
-        'digitsAfterDecimal': 2
+        currencyCode: this.currencyData[0].code,
+        digitsAfterDecimal: 2
       });
     }
   }
 
   createShareProductCurrencyForm() {
     this.shareProductCurrencyForm = this.formBuilder.group({
-      'currencyCode': ['', Validators.required],
-      'digitsAfterDecimal': ['', Validators.required],
-      'inMultiplesOf': ['', Validators.required]
+      currencyCode: [
+        '',
+        Validators.required
+      ],
+      digitsAfterDecimal: [
+        '',
+        Validators.required
+      ],
+      inMultiplesOf: [
+        '',
+        Validators.required
+      ]
     });
   }
 
   get shareProductCurrency() {
     return this.shareProductCurrencyForm.value;
   }
-
 }

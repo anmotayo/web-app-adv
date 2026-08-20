@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { UntypedFormControl } from '@angular/forms';
 
@@ -11,8 +11,27 @@ import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-
 import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
 import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicker-base';
 import { Dates } from 'app/core/utils/dates';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 import { TranslateService } from '@ngx-translate/core';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { ChargesFilterPipe } from '../../../pipes/charges-filter.pipe';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Savings Account Charges Step
@@ -20,9 +39,32 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-savings-account-charges-step',
   templateUrl: './savings-account-charges-step.component.html',
-  styleUrls: ['./savings-account-charges-step.component.scss']
+  styleUrls: ['./savings-account-charges-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    FaIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatIconButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatStepperPrevious,
+    MatStepperNext,
+    ChargesFilterPipe,
+    DateFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
+  private dialog = inject(MatDialog);
+  private dateUtils = inject(Dates);
+  private translateService = inject(TranslateService);
 
   /** Savings Account Product Template */
   @Input() savingsAccountProductTemplate: any;
@@ -42,7 +84,15 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
   /** For Edit Savings Account Form */
   isChargesPatched = false;
   /** Display columns for charges table */
-  displayedColumns: string[] = ['name', 'chargeCalculationType', 'amount', 'chargeTimeType', 'date', 'repaymentsEvery', 'action'];
+  displayedColumns: string[] = [
+    'name',
+    'chargeCalculationType',
+    'amount',
+    'chargeTimeType',
+    'date',
+    'repaymentsEvery',
+    'action'
+  ];
   /** Table Data Source */
   dataSource: any;
   /** Check for select all the Clients List */
@@ -50,34 +100,31 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
   /** Loan Purpose Options */
   loanPurposeOptions: string[] = [];
   /** Table Displayed Columns */
-  displayedColumn: string[] = ['check', 'id', 'name'];
+  displayedColumn: string[] = [
+    'check',
+    'id',
+    'name'
+  ];
 
-
-  /**
-   * @param {MatDialog} dialog Mat Dialog
-   */
-  constructor(private dialog: MatDialog,
-              private dateUtils: Dates,
-            private translateService: TranslateService) {}
-
-   ngOnInit() {
+  ngOnInit() {
     if (this.savingsAccountTemplate) {
       if (!this.isChargesPatched && this.savingsAccountTemplate.charges) {
-        this.chargesDataSource = this.savingsAccountProductTemplate.charges.map((charge: any) => ({...charge, id: charge.chargeId})) || [];
+        this.chargesDataSource =
+          this.savingsAccountProductTemplate.charges.map((charge: any) => ({ ...charge, id: charge.chargeId })) || [];
         this.isChargesPatched = true;
       } else {
         this.chargesDataSource = [];
       }
-      this.dataSource = new MatTableDataSource<any>(this.activeClientMembers);
     }
-   }
+  }
 
-   ngOnChanges() {
+  ngOnChanges() {
     if (this.savingsAccountProductTemplate) {
       this.chargeData = this.savingsAccountProductTemplate.chargeOptions;
-      this.chargesDataSource = this.savingsAccountProductTemplate.charges.map((charge: any) => ({...charge, id: charge.chargeId})) || [];
+      this.chargesDataSource =
+        this.savingsAccountProductTemplate.charges.map((charge: any) => ({ ...charge, id: charge.chargeId })) || [];
     }
-   }
+  }
 
   /**
    * Adds the charge to charges table
@@ -101,7 +148,7 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
         value: charge.amount,
         type: 'number',
         required: false
-      }),
+      })
     ];
     const data = {
       title: this.translateService.instant('labels.heading.Edit Charge Amount'),
@@ -131,7 +178,7 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
         value: charge.dueDate || charge.feeOnMonthDay || '',
         type: 'datetime-local',
         required: false
-      }),
+      })
     ];
     const data = {
       title: this.translateService.instant('labels.heading.Edit Charge Date'),
@@ -148,14 +195,13 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
           case 'Specified due date':
           case 'Weekly Fee':
             newCharge = { ...charge, dueDate: date };
-          break;
+            break;
           case 'Annual Fee':
           case 'Monthly Fee':
             const dateMonthDay = this.dateUtils.formatDate(response.data.value.date, 'dd MMMM');
             newCharge = { ...charge, feeOnMonthDay: dateMonthDay };
-          break;
+            break;
         }
-        console.log(newCharge);
         this.chargesDataSource.splice(this.chargesDataSource.indexOf(charge), 1, newCharge);
         this.chargesDataSource = this.chargesDataSource.concat([]);
       }
@@ -175,7 +221,7 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
         value: charge.feeInterval,
         type: 'text',
         required: false
-      }),
+      })
     ];
     const data = {
       title: 'Edit Charge Fee Interval',
@@ -209,22 +255,4 @@ export class SavingsAccountChargesStepComponent implements OnInit, OnChanges {
   get savingsAccountCharges() {
     return { charges: this.chargesDataSource };
   }
-
-  get selectedClientMembers() {
-    return { selectedMembers: this.activeClientMembers.filter( (item: any) => item.selected ) };
-  }
-
-  /** Toggle all checks */
-  toggleSelects() {
-    for (const member of this.activeClientMembers) {
-      member.selected = this.selectAllItems;
-    }
-  }
-
-  /** Check if all the checks are selected */
-  toggleSelect() {
-    const len = this.activeClientMembers.length;
-    this.selectAllItems = len === 0 ? false : this.activeClientMembers.filter( (item: any) => item.selected ).length === len;
-  }
-
 }

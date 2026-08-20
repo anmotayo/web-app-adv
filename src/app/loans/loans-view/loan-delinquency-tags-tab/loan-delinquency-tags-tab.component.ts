@@ -1,30 +1,94 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { Dates } from 'app/core/utils/dates';
 import { LoanDelinquencyActionDialogComponent } from 'app/loans/custom-dialog/loan-delinquency-action-dialog/loan-delinquency-action-dialog.component';
 import { LoansService } from 'app/loans/loans.service';
-import { DelinquentData, InstallmentLevelDelinquency, LoanDelinquencyAction, LoanDelinquencyTags } from 'app/loans/models/loan-account.model';
+import {
+  DelinquentData,
+  InstallmentLevelDelinquency,
+  LoanDelinquencyAction,
+  LoanDelinquencyTags
+} from 'app/loans/models/loan-account.model';
 import { SettingsService } from 'app/settings/settings.service';
 import { ConfirmationDialogComponent } from 'app/shared/confirmation-dialog/confirmation-dialog.component';
 import { Currency } from 'app/shared/models/general.model';
+import { NgClass, CurrencyPipe } from '@angular/common';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { DatetimeFormatPipe } from '../../../pipes/datetime-format.pipe';
+import { FormatNumberPipe } from '../../../pipes/format-number.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-loan-delinquency-tags-tab',
   templateUrl: './loan-delinquency-tags-tab.component.html',
-  styleUrls: ['./loan-delinquency-tags-tab.component.scss']
+  styleUrls: ['./loan-delinquency-tags-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FaIconComponent,
+    NgClass,
+    MatTooltip,
+    CurrencyPipe,
+    DateFormatPipe,
+    DatetimeFormatPipe,
+    FormatNumberPipe
+  ]
 })
 export class LoanDelinquencyTagsTabComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private loansServices = inject(LoansService);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
+  dialog = inject(MatDialog);
 
   loanDelinquencyTags: LoanDelinquencyTags[] = [];
   loanDelinquencyActions: LoanDelinquencyAction[] = [];
   currentLoanDelinquencyAction: LoanDelinquencyAction | null;
   currency: Currency;
   installmentLevelDelinquency: InstallmentLevelDelinquency[] = [];
-  loanDelinquencyTagsColumns: string[] = ['classification', 'addedOn', 'liftedOn'];
-  loanDelinquencyActionsColumns: string[] = ['action', 'startDate', 'endDate', 'createdOn', 'actions'];
-  installmentDelinquencyTagsColumns: string[] = ['classification', 'minimumAgeDays', 'amount'];
+  loanDelinquencyTagsColumns: string[] = [
+    'classification',
+    'addedOn',
+    'liftedOn'
+  ];
+  loanDelinquencyActionsColumns: string[] = [
+    'action',
+    'startDate',
+    'endDate',
+    'createdOn',
+    'actions'
+  ];
+  installmentDelinquencyTagsColumns: string[] = [
+    'classification',
+    'minimumAgeDays',
+    'amount'
+  ];
 
   allowPause = true;
   loanId: any;
@@ -32,29 +96,26 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
   locale: string;
   dateFormat: string;
 
-  constructor(private route: ActivatedRoute,
-    private loansServices: LoansService,
-    private dateUtils: Dates,
-    private settingsService: SettingsService,
-    private translateService: TranslateService,
-    public dialog: MatDialog) {
+  constructor() {
     this.loanId = this.route.parent.parent.snapshot.params['loanId'];
 
-    this.route.parent.data.subscribe((data: {
-      loanDelinquencyTagsData: LoanDelinquencyTags[],
-      loanDelinquencyData: any,
-      loanDelinquencyActions: LoanDelinquencyAction[]
-    }) => {
-      this.loanDelinquencyTags = data.loanDelinquencyTagsData;
-      this.loanDelinquencyActions = data.loanDelinquencyActions || [];
-      this.validateDelinquencyActions();
-      const loanDelinquencyData: DelinquentData | null = data.loanDelinquencyData.delinquent || null;
-      this.currency = data.loanDelinquencyData.currency;
-      this.installmentLevelDelinquency = [];
-      if (loanDelinquencyData != null) {
-        this.installmentLevelDelinquency = loanDelinquencyData.installmentLevelDelinquency || [];
+    this.route.parent.data.subscribe(
+      (data: {
+        loanDelinquencyTagsData: LoanDelinquencyTags[];
+        loanDelinquencyData: any;
+        loanDelinquencyActions: LoanDelinquencyAction[];
+      }) => {
+        this.loanDelinquencyTags = data.loanDelinquencyTagsData;
+        this.loanDelinquencyActions = data.loanDelinquencyActions || [];
+        this.validateDelinquencyActions();
+        const loanDelinquencyData: DelinquentData | null = data.loanDelinquencyData.delinquent || null;
+        this.currency = data.loanDelinquencyData.currency;
+        this.installmentLevelDelinquency = [];
+        if (loanDelinquencyData != null) {
+          this.installmentLevelDelinquency = loanDelinquencyData.installmentLevelDelinquency || [];
+        }
       }
-    });
+    );
   }
 
   ngOnInit(): void {
@@ -68,7 +129,7 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
     if (this.loanDelinquencyActions.length > 0) {
       const businessDate: Date = this.settingsService.businessDate;
       this.currentLoanDelinquencyAction = this.loanDelinquencyActions[this.loanDelinquencyActions.length - 1];
-      this.allowPause = (this.currentLoanDelinquencyAction.action === 'RESUME');
+      this.allowPause = this.currentLoanDelinquencyAction.action === 'RESUME';
     }
   }
 
@@ -77,7 +138,7 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
     const loanDelinquencyActionDialogRef = this.dialog.open(LoanDelinquencyActionDialogComponent, {
       data: {
         action: action
-      },
+      }
     });
     loanDelinquencyActionDialogRef.afterClosed().subscribe((response: { data: any }) => {
       const startDate: Date = response.data.value.startDate;
@@ -91,7 +152,10 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
     const removePauseDialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
         heading: this.translateService.instant('labels.heading.Loan Delinquency Classification'),
-        dialogContext: this.translateService.instant('labels.dialogContext.Are you sure you want resume the Delinquency Classification for Loan') + this.loanId,
+        dialogContext:
+          this.translateService.instant(
+            'labels.dialogContext.Are you sure you want resume the Delinquency Classification for Loan'
+          ) + this.loanId,
         type: 'Mild'
       }
     });
@@ -120,10 +184,12 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
     }
 
     this.loansServices.createDelinquencyActions(this.loanId, payload).subscribe((result: any) => {
-      this.loansServices.getDelinquencyActions(this.loanId).subscribe((loanDelinquencyActions: LoanDelinquencyAction[]) => {
-        this.loanDelinquencyActions = loanDelinquencyActions;
-        this.validateDelinquencyActions();
-      });
+      this.loansServices
+        .getDelinquencyActions(this.loanId)
+        .subscribe((loanDelinquencyActions: LoanDelinquencyAction[]) => {
+          this.loanDelinquencyActions = loanDelinquencyActions;
+          this.validateDelinquencyActions();
+        });
     });
   }
 
@@ -157,5 +223,4 @@ export class LoanDelinquencyTagsTabComponent implements OnInit {
     }
     return 'status-active';
   }
-
 }

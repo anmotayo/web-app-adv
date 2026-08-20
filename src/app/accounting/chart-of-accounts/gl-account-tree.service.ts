@@ -1,5 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { BehaviorSubject } from 'rxjs';
@@ -16,6 +16,7 @@ import { GLAccount } from 'app/shared/models/general.model';
   providedIn: 'root'
 })
 export class GlAccountTreeService {
+  private translateService = inject(TranslateService);
 
   /** GL Account data. */
   glAccountData: any;
@@ -25,10 +26,9 @@ export class GlAccountTreeService {
   /**
    * Gets the chart of accounts tree nodes.
    */
-  get treeData(): GLAccountNode[] { return this.treeDataChange.value; }
-
-  constructor(
-    private translateService: TranslateService) {  }
+  get treeData(): GLAccountNode[] {
+    return this.treeDataChange.value;
+  }
 
   /**
    * Builds the chart of accounts tree and emits the value.
@@ -51,9 +51,17 @@ export class GlAccountTreeService {
     glAccountTree.push(new GLAccountNode('ACCOUNTS'));
     glAccountTree[0].children.push(new GLAccountNode(this.translateService.instant('labels.inputs.accounting.ASSET')));
     glAccountTree[0].children.push(new GLAccountNode(this.translateService.instant('labels.inputs.accounting.EQUITY')));
-    glAccountTree[0].children.push(new GLAccountNode(this.translateService.instant('labels.inputs.accounting.EXPENSE')));
+    glAccountTree[0].children.push(
+      new GLAccountNode(this.translateService.instant('labels.inputs.accounting.EXPENSE'))
+    );
     glAccountTree[0].children.push(new GLAccountNode(this.translateService.instant('labels.inputs.accounting.INCOME')));
-    glAccountTree[0].children.push(new GLAccountNode(this.translateService.instant('labels.inputs.accounting.LIABILITY')));
+    glAccountTree[0].children.push(
+      new GLAccountNode(this.translateService.instant('labels.inputs.accounting.LIABILITY'))
+    );
+
+    if (glAccountData.length === 0) {
+      return glAccountTree;
+    }
 
     // Sort by parent id (so that child nodes can be added properly)
     if (!glAccountData[0].parentId) {
@@ -70,15 +78,20 @@ export class GlAccountTreeService {
 
     // Add gl accounts to any array where index for each is denoted by its id
     for (const glAccount of glAccountData) {
-      glAccounts[glAccount.id] =
-        new GLAccountNode(glAccount.name, glAccount.glCode, glAccount.type.value, glAccount.usage.value, glAccount.manualEntriesAllowed, glAccount.description);
+      glAccounts[glAccount.id] = new GLAccountNode(
+        glAccount.name,
+        glAccount.glCode,
+        glAccount.type.value,
+        glAccount.usage.value,
+        glAccount.manualEntriesAllowed,
+        glAccount.description
+      );
     }
 
     // Construct gl account tree by adding all nodes belonging to headers (with parent id = 0) by their type,
     // and rest as children to respective parent nodes.
     for (const glAccount of glAccountData) {
       if (glAccount.parentId === 0) {
-        console.log(glAccount.type.value);
         if (glAccount.type.value === 'ASSET') {
           glAccountTree[0].children[0].children.push(glAccounts[glAccount.id]);
         } else if (glAccount.type.value === 'EQUITY') {
@@ -99,5 +112,4 @@ export class GlAccountTreeService {
 
     return glAccountTree;
   }
-
 }

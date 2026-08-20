@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Component, OnChanges, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { Validators, UntypedFormGroup, UntypedFormControl } from '@angular/forms';
+import { Component, OnChanges, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Validators, UntypedFormGroup, UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { ReportsService } from 'app/reports/reports.service';
@@ -10,6 +10,10 @@ import { SettingsService } from 'app/settings/settings.service';
 import { ReportParameter } from 'app/reports/common-models/report-parameter.model';
 import { SelectOption } from 'app/reports/common-models/select-option.model';
 import { Dates } from 'app/core/utils/dates';
+import { MatDivider } from '@angular/material/divider';
+import { NgFor, NgSwitch, NgIf, NgSwitchCase } from '@angular/common';
+import { MatStepperNext } from '@angular/material/stepper';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Business Rule Parameters Component.
@@ -17,9 +21,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-business-rule-parameters',
   templateUrl: './business-rule-parameters.component.html',
-  styleUrls: ['./business-rule-parameters.component.scss']
+  styleUrls: ['./business-rule-parameters.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDivider,
+    NgSwitch,
+    NgSwitchCase,
+    MatStepperNext
+  ]
 })
 export class BusinessRuleParametersComponent implements OnInit, OnChanges {
+  private reportsService = inject(ReportsService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
 
   /** Run Report Parameters Data */
   @Input() paramData: any;
@@ -37,15 +51,6 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
 
   /** Template Parameters Event Emitter */
   @Output() templateParameters = new EventEmitter();
-
-  /**
-   * @param {ReportsService} reportsService Reports Service.
-   * @param {SettingsService} settingsService Settings Service.
-   * @param {Dates} dateUtils Date Utils.
-   */
-  constructor(private reportsService: ReportsService,
-              private settingsService: SettingsService,
-              private dateUtils: Dates) { }
 
   ngOnInit(): void {
     this.maxDate = this.settingsService.businessDate;
@@ -74,20 +79,20 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
    * Fetches dropdown options and builds child dependencies.
    */
   createRunReportForm() {
-    this.paramData.forEach(
-      (param: any) => {
-        if (!param.parentParameterName) { // Non-Child Parameter
-          this.ReportForm.addControl(param.name, new UntypedFormControl('', Validators.required));
-          if (param.displayType === 'select') {
-            this.fetchSelectOptions(param, param.name);
-          }
-        } else { // Child Parameter
-          const parent: ReportParameter = this.paramData
-            .find((entry: any) => entry.name === param.parentParameterName);
-          parent.childParameters.push(param);
-          this.updateParentParameters(parent);
+    this.paramData.forEach((param: any) => {
+      if (!param.parentParameterName) {
+        // Non-Child Parameter
+        this.ReportForm.addControl(param.name, new UntypedFormControl('', Validators.required));
+        if (param.displayType === 'select') {
+          this.fetchSelectOptions(param, param.name);
         }
-      });
+      } else {
+        // Child Parameter
+        const parent: ReportParameter = this.paramData.find((entry: any) => entry.name === param.parentParameterName);
+        parent.childParameters.push(param);
+        this.updateParentParameters(parent);
+      }
+    });
     this.setChildControls();
   }
 
@@ -96,18 +101,20 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
    * @param {ReportParameter} parent Parent report parameter
    */
   updateParentParameters(parent: ReportParameter) {
-    const parentNames = this.parentParameters.map(parameter => parameter.name);
-    if (!parentNames.includes(parent.name)) { // Parent's first child.
+    const parentNames = this.parentParameters.map((parameter) => parameter.name);
+    if (!parentNames.includes(parent.name)) {
+      // Parent's first child.
       this.parentParameters.push(parent);
-    } else { // Parent already has a child
+    } else {
+      // Parent already has a child
       const index = parentNames.indexOf(parent.name);
       this.parentParameters[index] = parent;
     }
   }
 
-   /**
-    * Subscribes to changes in parent parameters value, builds child parameter vis-a-vis parent's value.
-    */
+  /**
+   * Subscribes to changes in parent parameters value, builds child parameter vis-a-vis parent's value.
+   */
   setChildControls() {
     this.parentParameters.forEach((param: ReportParameter) => {
       this.ReportForm.get(param.name).valueChanges.subscribe((option: any) => {
@@ -126,16 +133,16 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
     });
   }
 
- /**
-  * Fetches Select Dropdown options for param type "Select".
-  * @param {ReportParameter} param Parameter for which dropdown options are required.
-  * @param {string} inputstring url substring for API call.
-  */
+  /**
+   * Fetches Select Dropdown options for param type "Select".
+   * @param {ReportParameter} param Parameter for which dropdown options are required.
+   * @param {string} inputstring url substring for API call.
+   */
   fetchSelectOptions(param: ReportParameter, inputstring: string) {
     this.reportsService.getSelectOptions(inputstring).subscribe((options: SelectOption[]) => {
       param.selectOptions = options;
       if (param.selectAll === 'Y') {
-        param.selectOptions.push({id: '-1', name: 'All'});
+        param.selectOptions.push({ id: '-1', name: 'All' });
       }
     });
   }
@@ -147,16 +154,18 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
   formatUserResponse(response: any, forHeaders: boolean) {
     const formattedResponse: any = {};
     let newKey: string;
-    for (const [key, value] of Object.entries(response)) {
-      const param: ReportParameter = this.paramData
-        .find((_entry: any) => _entry.name === key);
+    for (const [
+      key,
+      value
+    ] of Object.entries(response)) {
+      const param: ReportParameter = this.paramData.find((_entry: any) => _entry.name === key);
       newKey = forHeaders ? param.inputName : param.variable;
       switch (param.displayType) {
         case 'text':
           formattedResponse[newKey] = value;
           break;
         case 'select':
-          formattedResponse[newKey] = value['id'];
+          formattedResponse[newKey] = (value as { id: string | number })['id'];
           break;
         case 'date':
           const dateFormat = this.settingsService.dateFormat;
@@ -186,5 +195,4 @@ export class BusinessRuleParametersComponent implements OnInit, OnChanges {
       }
     );
   }
-
 }

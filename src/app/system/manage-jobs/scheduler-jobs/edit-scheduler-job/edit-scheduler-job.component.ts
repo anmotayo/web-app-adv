@@ -1,10 +1,12 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormBuilder, Validators } from '@angular/forms';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { SystemService } from 'app/system/system.service';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit scheduler job component.
@@ -12,9 +14,17 @@ import { SystemService } from 'app/system/system.service';
 @Component({
   selector: 'mifosx-edit-scheduler-job',
   templateUrl: './edit-scheduler-job.component.html',
-  styleUrls: ['./edit-scheduler-job.component.scss']
+  styleUrls: ['./edit-scheduler-job.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatCheckbox
+  ]
 })
 export class EditSchedulerJobComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private systemService = inject(SystemService);
+  private router = inject(Router);
+  private formBuilder = inject(UntypedFormBuilder);
 
   /** Job Data. */
   jobData: any;
@@ -28,10 +38,7 @@ export class EditSchedulerJobComponent implements OnInit {
    * @param {Router} router Router for navigation.
    * @param {ActivatedRoute} route Activated Route.
    */
-  constructor(private route: ActivatedRoute,
-              private systemService: SystemService,
-              private router: Router,
-              private formBuilder: UntypedFormBuilder ) {
+  constructor() {
     this.route.data.subscribe((data: { jobSelected: any }) => {
       this.jobData = data.jobSelected;
     });
@@ -49,9 +56,15 @@ export class EditSchedulerJobComponent implements OnInit {
    */
   createJobForm() {
     this.jobForm = this.formBuilder.group({
-      'displayName': [this.jobData.displayName, Validators.required],
-      'cronExpression': [this.jobData.cronExpression, Validators.required],
-      'active': [this.jobData.active]
+      displayName: [
+        this.jobData.displayName,
+        Validators.required
+      ],
+      cronExpression: [
+        this.jobData.cronExpression,
+        Validators.required
+      ],
+      active: [this.jobData.active]
     });
   }
 
@@ -59,10 +72,8 @@ export class EditSchedulerJobComponent implements OnInit {
    * Submits the edit job form.
    */
   submit() {
-    this.systemService.updateScheduler(this.jobData.jobId, this.jobForm.value)
-      .subscribe(() => {
-        this.router.navigate(['../'], { relativeTo: this.route });
+    this.systemService.updateScheduler(this.jobData.jobId, this.jobForm.value).subscribe(() => {
+      this.router.navigate(['../'], { relativeTo: this.route });
     });
   }
-
 }

@@ -1,12 +1,14 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { SharesService } from 'app/shares/shares.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Reject Shares Account Component
@@ -14,9 +16,19 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-reject-shares-account',
   templateUrl: './reject-shares-account.component.html',
-  styleUrls: ['./reject-shares-account.component.scss']
+  styleUrls: ['./reject-shares-account.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class RejectSharesAccountComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private sharesService = inject(SharesService);
+  private dateUtils = inject(Dates);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private settingsService = inject(SettingsService);
 
   /** Minimum date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,12 +47,7 @@ export class RejectSharesAccountComponent implements OnInit {
    * @param {Router} router Router
    * @param {SettingsService} settingsService Settings Service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private sharesService: SharesService,
-              private dateUtils: Dates,
-              private route: ActivatedRoute,
-              private router: Router,
-              private settingsService: SettingsService) {
+  constructor() {
     this.accountId = this.route.parent.snapshot.params['shareAccountId'];
   }
 
@@ -57,8 +64,11 @@ export class RejectSharesAccountComponent implements OnInit {
    */
   createRejectSharesAccountForm() {
     this.rejectSharesAccountForm = this.formBuilder.group({
-      'rejectedDate': ['', Validators.required],
-      'note': ['']
+      rejectedDate: [
+        '',
+        Validators.required
+      ],
+      note: ['']
     });
   }
 
@@ -83,5 +93,4 @@ export class RejectSharesAccountComponent implements OnInit {
       this.router.navigate(['../../'], { relativeTo: this.route });
     });
   }
-
 }

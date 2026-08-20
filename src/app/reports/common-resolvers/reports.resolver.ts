@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { ReportsService } from '../reports.service';
  * Reports data resolver.
  */
 @Injectable()
-export class ReportsResolver implements Resolve<Object> {
-
-  /**
-   * @param {ReportsService} reportsService Reports service.
-   */
-  constructor(private reportsService: ReportsService) {}
+export class ReportsResolver {
+  private reportsService = inject(ReportsService);
 
   /**
    * Returns the reports data.
@@ -26,5 +21,4 @@ export class ReportsResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.reportsService.getReports();
   }
-
 }

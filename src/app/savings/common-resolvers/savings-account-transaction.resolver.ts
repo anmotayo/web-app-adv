@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { SavingsService } from '../savings.service';
  * Savings Account Transaction data resolver.
  */
 @Injectable()
-export class SavingsAccountTransactionResolver implements Resolve<Object> {
-
-  /**
-   * @param {SavingsService} SavingsService Savings service.
-   */
-  constructor(private savingsService: SavingsService) { }
+export class SavingsAccountTransactionResolver {
+  private savingsService = inject(SavingsService);
 
   /**
    * Returns the Savings Account Transaction data.
@@ -29,5 +25,4 @@ export class SavingsAccountTransactionResolver implements Resolve<Object> {
     const transactionId = route.parent.paramMap.get('id');
     return this.savingsService.getSavingsAccountTransaction(savingAccountId, transactionId);
   }
-
 }

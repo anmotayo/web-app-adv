@@ -1,8 +1,8 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
 
 /** Custom Services */
 import { GroupsService } from 'app/groups/groups.service';
@@ -15,6 +15,25 @@ import { FormDialogComponent } from 'app/shared/form-dialog/form-dialog.componen
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
 import { Dates } from 'app/core/utils/dates';
+import { MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
+import { NgFor, NgSwitch, NgSwitchCase } from '@angular/common';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { FindPipe } from '../../../../pipes/find.pipe';
+import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Group Attendance component.
@@ -22,9 +41,35 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-group-attendance',
   templateUrl: './group-attendance.component.html',
-  styleUrls: ['./group-attendance.component.scss']
+  styleUrls: ['./group-attendance.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatHint,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    NgSwitch,
+    NgSwitchCase,
+    MatIconButton,
+    FaIconComponent,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    FindPipe,
+    DateFormatPipe
+  ]
 })
 export class GroupAttendanceComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private groupsService = inject(GroupsService);
+  dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
 
   /** Members data. */
   membersData: any;
@@ -33,7 +78,10 @@ export class GroupAttendanceComponent implements OnInit {
   /** Attendance Type Options */
   attendanceTypeOptions: any;
   /** Columns to be displayed in member's attendance table. */
-  displayedColumns: string[] = ['name', 'attendance'];
+  displayedColumns: string[] = [
+    'name',
+    'attendance'
+  ];
   /** Start Date Form Control */
   meetingDate = new UntypedFormControl();
   /** Meeting Dates Data */
@@ -50,13 +98,8 @@ export class GroupAttendanceComponent implements OnInit {
    * @param {MatDialog} dialog Mat Dialog
    * @param {SettingsService} settingsService SettingsService
    */
-  constructor(private route: ActivatedRoute,
-              private dateUtils: Dates,
-              private router: Router,
-              private groupsService: GroupsService,
-              public dialog: MatDialog,
-              private settingsService: SettingsService) {
-    this.route.data.subscribe(( data: { groupActionData: any }) => {
+  constructor() {
+    this.route.data.subscribe((data: { groupActionData: any }) => {
       this.groupData = data.groupActionData;
       this.membersData = data.groupActionData.clientMembers;
     });
@@ -67,8 +110,9 @@ export class GroupAttendanceComponent implements OnInit {
    */
   ngOnInit() {
     this.dataSource = this.membersData.map((member: any) => ({ clientId: member.id, attendanceType: 1 }));
-    this.meetingDates = this.groupData.collectionMeetingCalendar.recurringDates
-      .filter((date: any) => new Date(date).getTime() < new Date().getTime());
+    this.meetingDates = this.groupData.collectionMeetingCalendar.recurringDates.filter(
+      (date: any) => new Date(date).getTime() < new Date().getTime()
+    );
     this.getAttendanceOptions();
   }
 
@@ -76,7 +120,8 @@ export class GroupAttendanceComponent implements OnInit {
    * Gets attendance type options based on calendar id.
    */
   getAttendanceOptions() {
-    this.groupsService.getMeetingsTemplate(this.groupData.id, this.groupData.collectionMeetingCalendar.id)
+    this.groupsService
+      .getMeetingsTemplate(this.groupData.id, this.groupData.collectionMeetingCalendar.id)
       .subscribe((response: any) => {
         this.attendanceTypeOptions = response.attendanceTypeOptions;
       });
@@ -94,7 +139,7 @@ export class GroupAttendanceComponent implements OnInit {
         value: member.attendanceType,
         options: { label: 'value', value: 'id', data: this.attendanceTypeOptions },
         required: false
-      }),
+      })
     ];
     const data = {
       title: 'Assign Member Attendance',
@@ -126,9 +171,10 @@ export class GroupAttendanceComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.groupsService.assignGroupAttendance(this.groupData.id, this.groupData.collectionMeetingCalendar.id, data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.groupsService
+      .assignGroupAttendance(this.groupData.id, this.groupData.collectionMeetingCalendar.id, data)
+      .subscribe(() => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
   }
-
 }

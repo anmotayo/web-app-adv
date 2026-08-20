@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +12,8 @@ import { OrganizationService } from '../../organization.service';
  * Office data resolver.
  */
 @Injectable()
-export class OfficeResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class OfficeResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the office data.
@@ -27,5 +23,4 @@ export class OfficeResolver implements Resolve<Object> {
     const officeId = route.parent.paramMap.get('officeId');
     return this.organizationService.getOffice(officeId);
   }
-
 }

@@ -2,7 +2,7 @@
 import { NgModule } from '@angular/core';
 
 /** Custom Modules */
-import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { EditorModule } from '@tinymce/tinymce-angular';
 import { SharedModule } from '../shared/shared.module';
 import { DirectivesModule } from '../directives/directives.module';
 import { TemplatesRoutingModule } from './templates-routing.module';
@@ -10,8 +10,7 @@ import { TemplatesRoutingModule } from './templates-routing.module';
 /** Custom Components */
 import { TemplatesComponent } from './templates.component';
 import { ViewTemplateComponent } from './view-template/view-template.component';
-import { EditTemplateComponent } from './edit-template/edit-template.component';
-import { CreateTemplateComponent } from './create-template/create-template.component';
+import { CreateEditComponent } from './create-edit-template/create-edit-template.component';
 
 /**
  * Templates Module
@@ -20,16 +19,13 @@ import { CreateTemplateComponent } from './create-template/create-template.compo
  */
 @NgModule({
   imports: [
-    CKEditorModule,
+    EditorModule,
     SharedModule,
     DirectivesModule,
-    TemplatesRoutingModule
-  ],
-  declarations: [
+    TemplatesRoutingModule,
     TemplatesComponent,
     ViewTemplateComponent,
-    EditTemplateComponent,
-    CreateTemplateComponent,
+    CreateEditComponent
   ]
 })
-export class TemplatesModule { }
+export class TemplatesModule {}

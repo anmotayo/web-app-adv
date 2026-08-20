@@ -1,8 +1,20 @@
 /** Angular Imports */
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTableDataSource, MatTable } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow
+} from '@angular/material/table';
 
 /** Custom Services */
 import { SavingsService } from 'app/savings/savings.service';
@@ -20,6 +32,10 @@ import { InputBase } from 'app/shared/form-dialog/formfield/model/input-base';
 import { DatepickerBase } from 'app/shared/form-dialog/formfield/model/datepicker-base';
 import { Dates } from 'app/core/utils/dates';
 import { TranslateService } from '@ngx-translate/core';
+import { CurrencyPipe } from '@angular/common';
+import { MatTooltip } from '@angular/material/tooltip';
+import { DateFormatPipe } from '../../../pipes/date-format.pipe';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Charges Tab Component
@@ -27,9 +43,32 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'mifosx-charges-tab',
   templateUrl: './charges-tab.component.html',
-  styleUrls: ['./charges-tab.component.scss']
+  styleUrls: ['./charges-tab.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    CurrencyPipe,
+    DateFormatPipe
+  ]
 })
 export class ChargesTabComponent implements OnInit {
+  private savingsService = inject(SavingsService);
+  private route = inject(ActivatedRoute);
+  private dateUtils = inject(Dates);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private settingsService = inject(SettingsService);
+  private translateService = inject(TranslateService);
 
   /** Savings Account Data */
   savingsAccountData: any;
@@ -66,13 +105,7 @@ export class ChargesTabComponent implements OnInit {
    * @param {Dates} dateUtils Date Utils.
    * @param {SettingsService} settingsService Setting service
    */
-  constructor(private savingsService: SavingsService,
-              private route: ActivatedRoute,
-              private dateUtils: Dates,
-              private router: Router,
-              private dialog: MatDialog,
-              private settingsService: SettingsService,
-            private translateService: TranslateService) {
+  constructor() {
     this.route.parent.data.subscribe((data: { savingsAccountData: any }) => {
       this.savingsAccountData = data.savingsAccountData;
       this.chargesData = this.savingsAccountData.charges;
@@ -80,7 +113,7 @@ export class ChargesTabComponent implements OnInit {
   }
 
   ngOnInit() {
-    const activeCharges = this.chargesData ? this.chargesData.filter(charge => charge.isActive) : [];
+    const activeCharges = this.chargesData ? this.chargesData.filter((charge) => charge.isActive) : [];
     this.dataSource = new MatTableDataSource(activeCharges);
   }
 
@@ -90,15 +123,14 @@ export class ChargesTabComponent implements OnInit {
   toggleCharges() {
     this.showInactiveCharges = !this.showInactiveCharges;
     if (!this.showInactiveCharges) {
-      const activeCharges = this.chargesData.filter(charge => charge.isActive);
+      const activeCharges = this.chargesData.filter((charge) => charge.isActive);
       this.dataSource.data = activeCharges;
     } else {
-      const inActiveCharges = this.chargesData.filter(charge => !charge.isActive);
+      const inActiveCharges = this.chargesData.filter((charge) => !charge.isActive);
       this.dataSource.data = inActiveCharges;
     }
     this.chargesTableRef.renderRows();
   }
-
 
   /**
    * Pays the charge.
@@ -137,7 +169,8 @@ export class ChargesTabComponent implements OnInit {
           dateFormat,
           locale
         };
-        this.savingsService.executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'paycharge', dataObject, chargeId)
+        this.savingsService
+          .executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'paycharge', dataObject, chargeId)
           .subscribe(() => {
             this.reload();
           });
@@ -153,7 +186,8 @@ export class ChargesTabComponent implements OnInit {
     const waiveChargeDialogRef = this.dialog.open(WaiveChargeDialogComponent, { data: { id: chargeId } });
     waiveChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'waive', {}, chargeId)
+        this.savingsService
+          .executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'waive', {}, chargeId)
           .subscribe(() => {
             this.reload();
           });
@@ -169,7 +203,8 @@ export class ChargesTabComponent implements OnInit {
     const inactivateChargeDialogRef = this.dialog.open(InactivateChargeDialogComponent, { data: { id: chargeId } });
     inactivateChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.confirm) {
-        this.savingsService.executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'inactivate', {}, chargeId)
+        this.savingsService
+          .executeSavingsAccountChargesCommand(this.savingsAccountData.id, 'inactivate', {}, chargeId)
           .subscribe(() => {
             this.reload();
           });
@@ -206,7 +241,8 @@ export class ChargesTabComponent implements OnInit {
           dateFormat,
           locale
         };
-        this.savingsService.editSavingsAccountCharge(this.savingsAccountData.id, dataObject, charge.id)
+        this.savingsService
+          .editSavingsAccountCharge(this.savingsAccountData.id, dataObject, charge.id)
           .subscribe(() => {
             this.reload();
           });
@@ -224,10 +260,9 @@ export class ChargesTabComponent implements OnInit {
     });
     deleteChargeDialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
-        this.savingsService.deleteSavingsAccountCharge(this.savingsAccountData.id, chargeId)
-          .subscribe(() => {
-            this.reload();
-          });
+        this.savingsService.deleteSavingsAccountCharge(this.savingsAccountData.id, chargeId).subscribe(() => {
+          this.reload();
+        });
       }
     });
   }
@@ -237,7 +272,11 @@ export class ChargesTabComponent implements OnInit {
    * @param {any} charge Charge
    */
   isRecurringCharge(charge: any) {
-    return charge.chargeTimeType.value === 'Monthly Fee' || charge.chargeTimeType.value === 'Annual Fee' || charge.chargeTimeType.value === 'Weekly Fee';
+    return (
+      charge.chargeTimeType.value === 'Monthly Fee' ||
+      charge.chargeTimeType.value === 'Annual Fee' ||
+      charge.chargeTimeType.value === 'Weekly Fee'
+    );
   }
 
   /**
@@ -254,13 +293,14 @@ export class ChargesTabComponent implements OnInit {
    */
   private reload() {
     const url: string = this.router.url;
-    const refreshUrl: string = this.router.url.slice(0, this.router.url.indexOf('savings-accounts') + 'savings-accounts'.length);
-    this.router.navigateByUrl(refreshUrl, {skipLocationChange: true})
-      .then(() => this.router.navigate([url]));
+    const refreshUrl: string = this.router.url.slice(
+      0,
+      this.router.url.indexOf('savings-accounts') + 'savings-accounts'.length
+    );
+    this.router.navigateByUrl(refreshUrl, { skipLocationChange: true }).then(() => this.router.navigate([url]));
   }
 
   viewAllChargeButtons(text: string): string {
     return this.translateService.instant('labels.buttons.' + text);
   }
-
 }

@@ -1,8 +1,12 @@
 /** Angular Imports */
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { style, animate, transition, trigger } from '@angular/animations';
 import { Router } from '@angular/router';
-import { UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatIconButton } from '@angular/material/button';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { MatTooltip } from '@angular/material/tooltip';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Search Tool Component
@@ -21,9 +25,16 @@ import { UntypedFormControl } from '@angular/forms';
         animate(500, style({ opacity: 0 }))
       ])
     ])
+  ],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatIconButton,
+    FaIconComponent,
+    MatTooltip
   ]
 })
 export class SearchToolComponent {
+  private router = inject(Router);
 
   /** Query Form Control */
   query = new UntypedFormControl('');
@@ -57,13 +68,13 @@ export class SearchToolComponent {
     {
       name: 'Loans',
       value: 'loans'
-    },
+    }
   ];
 
   /**
    * @param {Router} router Router
    */
-  constructor(private router: Router) {
+  constructor() {
     this.resource.patchValue('clients,clientIdentifiers,groups,savings,shares,loans');
   }
 
@@ -84,5 +95,4 @@ export class SearchToolComponent {
     };
     this.router.navigate(['/search'], { queryParams: queryParams });
   }
-
 }

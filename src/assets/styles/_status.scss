@@ -1,3 +1,5 @@
+@use 'colours' as *;
+
 .status-active {
   color: $status-active;
 }
@@ -36,6 +38,10 @@
 
 .status-matured {
   color: $status-matured;
+}
+
+.subStatus-contract-termination {
+  color: $subStatus-contract-termination;
 }
 
 .mat-step-header .mat-step-icon-state-done {

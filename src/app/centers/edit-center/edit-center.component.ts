@@ -1,12 +1,19 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormGroup,
+  UntypedFormBuilder,
+  UntypedFormControl,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 
 /** Custom Services */
 import { CentersService } from '../centers.service';
 import { SettingsService } from 'app/settings/settings.service';
 import { Dates } from 'app/core/utils/dates';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Center component.
@@ -14,9 +21,18 @@ import { Dates } from 'app/core/utils/dates';
 @Component({
   selector: 'mifosx-edit-center',
   templateUrl: './edit-center.component.html',
-  styleUrls: ['./edit-center.component.scss']
+  styleUrls: ['./edit-center.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
 export class EditCenterComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private centersService = inject(CentersService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
 
   /** Center Data */
   centerData: any;
@@ -38,12 +54,7 @@ export class EditCenterComponent implements OnInit {
    * @param {GroupsService} groupService GroupsService.
    * @param {Dates} dateUtils Date Utils to format date.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private centersService: CentersService,
-    private settingsService: SettingsService,
-    private dateUtils: Dates) {
+  constructor() {
     this.route.data.subscribe((data: { centerData: any }) => {
       this.centerData = data.centerData;
       this.staffs = this.centerData.staffOptions;
@@ -64,12 +75,24 @@ export class EditCenterComponent implements OnInit {
   createEditCenterForm() {
     const dateFormat = this.settingsService.dateFormat;
     this.editCenterForm = this.formBuilder.group({
-      'name': [this.centerData.name, [Validators.required, Validators.pattern('(^[A-z]).*')]],
-      'staffId': [this.centerData.staffId],
-      'externalId': [this.centerData.externalId]
+      name: [
+        this.centerData.name,
+        [
+          Validators.required,
+          Validators.pattern('(^[A-z]).*')
+        ]
+      ],
+      staffId: [this.centerData.staffId],
+      externalId: [this.centerData.externalId]
     });
     if (this.centerData.status.value === 'Pending') {
-      this.editCenterForm.addControl('activationDate', new UntypedFormControl(this.centerData.activationDate ? this.centerData.activationDate : new Date(), Validators.required));
+      this.editCenterForm.addControl(
+        'activationDate',
+        new UntypedFormControl(
+          this.centerData.activationDate ? this.centerData.activationDate : new Date(),
+          Validators.required
+        )
+      );
     }
   }
 
@@ -97,5 +120,4 @@ export class EditCenterComponent implements OnInit {
       this.router.navigate(['../general'], { relativeTo: this.route });
     });
   }
-
 }

@@ -1,19 +1,19 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { PaymentDetail } from './payment-detail-model';
-
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 @Component({
   selector: 'mifosx-transaction-payment-detail',
   templateUrl: './transaction-payment-detail.component.html',
-  styleUrls: ['./transaction-payment-detail.component.scss']
+  styleUrls: ['./transaction-payment-detail.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS
+  ]
 })
-export class TransactionPaymentDetailComponent implements OnInit {
-
+export class TransactionPaymentDetailComponent {
   @Input() paymentDetailData: PaymentDetail;
 
   constructor() {}
-
-  ngOnInit(): void {}
 
   hasSomeValue(): boolean {
     return (
@@ -26,7 +26,6 @@ export class TransactionPaymentDetailComponent implements OnInit {
   }
 
   isNotNullOrEmpty(value: any): boolean {
-    return (value !== null && value !== '');
+    return value !== null && value !== '';
   }
-
 }

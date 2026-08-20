@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -13,14 +13,9 @@ import { ProductsService } from 'app/products/products.service';
  * Client Actions data resolver.
  */
 @Injectable()
-export class ClientActionsResolver implements Resolve<Object> {
-
-  /**
-   * @param {ClientsService} clientsService Clients service.
-   * @param {ProductsService} productsService Products Service
-   */
-  constructor(private clientsService: ClientsService,
-    private productsService: ProductsService) { }
+export class ClientActionsResolver {
+  private clientsService = inject(ClientsService);
+  private productsService = inject(ProductsService);
 
   /**
    * Returns the clients actions data.
@@ -56,11 +51,8 @@ export class ClientActionsResolver implements Resolve<Object> {
       case 'Accept Transfer':
       case 'Reject Transfer':
         return this.clientsService.getClientTransferProposalDate(clientId);
-      case 'Create Self Service User':
-        return this.clientsService.getClientData(clientId);
       default:
         return undefined;
     }
   }
-
 }

@@ -1,11 +1,13 @@
 /** Angular Imports */
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SettingsService } from 'app/settings/settings.service';
 
 /** Custom Services */
 import { SystemService } from '../../../system.service';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Edit Configuration Component
@@ -13,9 +15,18 @@ import { SystemService } from '../../../system.service';
 @Component({
   selector: 'mifosx-edit-configuration',
   templateUrl: './edit-configuration.component.html',
-  styleUrls: ['./edit-configuration.component.scss']
+  styleUrls: ['./edit-configuration.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    CdkTextareaAutosize
+  ]
 })
 export class EditConfigurationComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private systemService = inject(SystemService);
+  private settingsService = inject(SettingsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   /** Minimum transaction date allowed. */
   minDate = new Date(2000, 0, 1);
@@ -35,11 +46,7 @@ export class EditConfigurationComponent implements OnInit {
    * @param {ActivatedRoute} route Activated Route.
    * @param {Router} router Router for navigation.
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private systemService: SystemService,
-              private settingsService: SettingsService,
-              private route: ActivatedRoute,
-              private router: Router) {
+  constructor() {
     this.route.data.subscribe((data: { configuration: any }) => {
       this.configuration = data.configuration;
     });
@@ -58,11 +65,14 @@ export class EditConfigurationComponent implements OnInit {
    */
   createConfigurationForm() {
     this.configurationForm = this.formBuilder.group({
-      'name': [{ value: this.configuration.name, disabled: true }, Validators.required],
-      'description': [{ value: this.configuration.description, disabled: true }],
-      'value': [this.configuration.value],
-      'stringValue': [this.configuration.stringValue],
-      'dateValue': [this.configuration.dateValue]
+      name: [
+        { value: this.configuration.name, disabled: true },
+        Validators.required
+      ],
+      description: [{ value: this.configuration.description, disabled: true }],
+      value: [this.configuration.value],
+      stringValue: [this.configuration.stringValue],
+      dateValue: [this.configuration.dateValue]
     });
   }
 
@@ -71,7 +81,11 @@ export class EditConfigurationComponent implements OnInit {
    * if successful redirects to view all global configurations.
    */
   submit() {
-    if (this.configurationForm.value.value != null || this.configurationForm.value.stringValue != null || this.configurationForm.value.dateValue != null) {
+    if (
+      this.configurationForm.value.value != null ||
+      this.configurationForm.value.stringValue != null ||
+      this.configurationForm.value.dateValue != null
+    ) {
       const payload = {
         ...this.configurationForm.value
       };
@@ -85,12 +99,9 @@ export class EditConfigurationComponent implements OnInit {
         delete payload.dateValue;
       }
 
-      this.systemService
-        .updateConfiguration(this.configuration.id, payload)
-        .subscribe((response: any) => {
-          this.router.navigate(['../../'], { relativeTo: this.route });
-        });
+      this.systemService.updateConfiguration(this.configuration.id, payload).subscribe((response: any) => {
+        this.router.navigate(['../../'], { relativeTo: this.route });
+      });
     }
   }
-
 }

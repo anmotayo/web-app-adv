@@ -1,6 +1,6 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,20 +12,15 @@ import { SystemService } from '../../system.service';
  * Roles and Permission data resolver.
  */
 @Injectable()
-export class ViewRoleResolver implements Resolve<Object> {
+export class ViewRoleResolver {
+  private systemService = inject(SystemService);
 
-    /**
-     * @param {SystemService} systemService System service.
-     */
-    constructor(private systemService: SystemService) { }
-
-    /**
-     * Returns the roles and permissions data.
-     * @returns {Observable<any>}
-     */
-    resolve(route: ActivatedRouteSnapshot): Observable<any> {
-        const id = route.paramMap.get('id');
-        return this.systemService.getRole(id);
-    }
-
+  /**
+   * Returns the roles and permissions data.
+   * @returns {Observable<any>}
+   */
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    const id = route.paramMap.get('id');
+    return this.systemService.getRole(id);
+  }
 }

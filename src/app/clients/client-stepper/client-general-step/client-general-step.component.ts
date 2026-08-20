@@ -1,11 +1,23 @@
 /** Angular Imports */
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators, UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, Input, Output, EventEmitter, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  Validators,
+  UntypedFormControl,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { ClientsService } from 'app/clients/clients.service';
 import { Dates } from 'app/core/utils/dates';
 
 /** Custom Services */
 import { SettingsService } from 'app/settings/settings.service';
+import { MatDivider } from '@angular/material/divider';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatStepperPrevious, MatStepperNext } from '@angular/material/stepper';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
 /**
  * Create Client Component
@@ -13,9 +25,22 @@ import { SettingsService } from 'app/settings/settings.service';
 @Component({
   selector: 'mifosx-client-general-step',
   templateUrl: './client-general-step.component.html',
-  styleUrls: ['./client-general-step.component.scss']
+  styleUrls: ['./client-general-step.component.scss'],
+  imports: [
+    ...STANDALONE_SHARED_IMPORTS,
+    MatDivider,
+    CdkTextareaAutosize,
+    MatCheckbox,
+    MatStepperPrevious,
+    FaIconComponent,
+    MatStepperNext
+  ]
 })
 export class ClientGeneralStepComponent implements OnInit {
+  private formBuilder = inject(UntypedFormBuilder);
+  private dateUtils = inject(Dates);
+  private settingsService = inject(SettingsService);
+  private clientService = inject(ClientsService);
 
   @Output() legalFormChangeEvent = new EventEmitter<{ legalForm: number }>();
 
@@ -54,10 +79,7 @@ export class ClientGeneralStepComponent implements OnInit {
    * @param {SettingsService} settingsService Setting service
    * @param {ClientsService} clientService Client service
    */
-  constructor(private formBuilder: UntypedFormBuilder,
-              private dateUtils: Dates,
-              private settingsService: SettingsService,
-              private clientService: ClientsService) {
+  constructor() {
     this.setClientForm();
   }
 
@@ -72,21 +94,33 @@ export class ClientGeneralStepComponent implements OnInit {
    */
   setClientForm() {
     this.createClientForm = this.formBuilder.group({
-      'officeId': ['', Validators.required],
-      'staffId': [''],
-      'legalFormId': ['', Validators.required],
-      'isStaff': [false],
-      'active': [false],
-      'addSavings': [false],
-      'accountNo': [''],
-      'externalId': [''],
-      'genderId': [''],
-      'mobileNo': [''],
-      'emailAddress': ['', Validators.email],
-      'dateOfBirth': [''],
-      'clientTypeId': [''],
-      'clientClassificationId': [''],
-      'submittedOnDate': [this.settingsService.businessDate, Validators.required]
+      officeId: [
+        '',
+        Validators.required
+      ],
+      staffId: [''],
+      legalFormId: [
+        '',
+        Validators.required
+      ],
+      isStaff: [false],
+      active: [false],
+      addSavings: [false],
+      accountNo: [''],
+      externalId: [''],
+      genderId: [''],
+      mobileNo: [''],
+      emailAddress: [
+        '',
+        Validators.email
+      ],
+      dateOfBirth: [''],
+      clientTypeId: [''],
+      clientClassificationId: [''],
+      submittedOnDate: [
+        this.settingsService.businessDate,
+        Validators.required
+      ]
     });
   }
 
@@ -114,21 +148,45 @@ export class ClientGeneralStepComponent implements OnInit {
       if (legalFormId === 1) {
         this.createClientForm.removeControl('fullname');
         this.createClientForm.removeControl('clientNonPersonDetails');
-        this.createClientForm.addControl('firstname', new UntypedFormControl('', [Validators.required, Validators.pattern('(^[A-z]).*')]));
+        this.createClientForm.addControl(
+          'firstname',
+          new UntypedFormControl('', [
+            Validators.required,
+            Validators.pattern('(^[A-z]).*')
+          ])
+        );
         this.createClientForm.addControl('middlename', new UntypedFormControl('', Validators.pattern('(^[A-z]).*')));
-        this.createClientForm.addControl('lastname', new UntypedFormControl('', [Validators.required, Validators.pattern('(^[A-z]).*')]));
+        this.createClientForm.addControl(
+          'lastname',
+          new UntypedFormControl('', [
+            Validators.required,
+            Validators.pattern('(^[A-z]).*')
+          ])
+        );
       } else {
         this.createClientForm.removeControl('firstname');
         this.createClientForm.removeControl('middlename');
         this.createClientForm.removeControl('lastname');
-        this.createClientForm.addControl('fullname', new UntypedFormControl('', [Validators.required, Validators.pattern('(^[A-z]).*')]));
-        this.createClientForm.addControl('clientNonPersonDetails', this.formBuilder.group({
-          'constitutionId': ['', Validators.required],
-          'incorpValidityTillDate': [''],
-          'incorpNumber': [''],
-          'mainBusinessLineId': [''],
-          'remarks': ['']
-        }));
+        this.createClientForm.addControl(
+          'fullname',
+          new UntypedFormControl('', [
+            Validators.required,
+            Validators.pattern('(^[A-z]).*')
+          ])
+        );
+        this.createClientForm.addControl(
+          'clientNonPersonDetails',
+          this.formBuilder.group({
+            constitutionId: [
+              '',
+              Validators.required
+            ],
+            incorpValidityTillDate: [''],
+            incorpNumber: [''],
+            mainBusinessLineId: [''],
+            remarks: ['']
+          })
+        );
       }
     });
     this.createClientForm.get('legalFormId').patchValue(1);
@@ -182,12 +240,14 @@ export class ClientGeneralStepComponent implements OnInit {
     if (generalDetails.clientNonPersonDetails && generalDetails.clientNonPersonDetails.incorpValidityTillDate) {
       generalDetails.clientNonPersonDetails = {
         ...generalDetails.clientNonPersonDetails,
-        incorpValidityTillDate: this.dateUtils.formatDate(generalDetails.dateOfBirth, dateFormat),
+        incorpValidityTillDate: this.dateUtils.formatDate(
+          generalDetails.clientNonPersonDetails.incorpValidityTillDate,
+          dateFormat
+        ),
         dateFormat,
         locale
       };
     }
     return generalDetails;
   }
-
 }

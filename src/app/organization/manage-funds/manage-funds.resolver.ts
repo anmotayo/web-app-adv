@@ -1,6 +1,5 @@
 /** Angular Imports */
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
 
 /** rxjs Imports */
 import { Observable } from 'rxjs';
@@ -12,12 +11,8 @@ import { OrganizationService } from '../organization.service';
  * Manage Funds data resolver.
  */
 @Injectable()
-export class ManageFundsResolver implements Resolve<Object> {
-
-  /**
-   * @param {OrganizationService} organizationService Organization service.
-   */
-  constructor(private organizationService: OrganizationService) {}
+export class ManageFundsResolver {
+  private organizationService = inject(OrganizationService);
 
   /**
    * Returns the manage funds data.
@@ -26,5 +21,4 @@ export class ManageFundsResolver implements Resolve<Object> {
   resolve(): Observable<any> {
     return this.organizationService.getFunds();
   }
-
 }
