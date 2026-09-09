@@ -78,7 +78,7 @@ export class SavingProductSettingsStepComponent implements OnInit {
       lockinPeriodFrequency: [
         '',
         [
-          Validators.required,
+          // Validators.required,
           Validators.min(1),
           Validators.pattern('^[1-9]\\d*$')
         ]

@@ -1,0 +1,7 @@
+:host ::ng-deep .mat-stepper-vertical .mat-vertical-content-container-active {
+  grid-template-rows: auto;
+}
+
+:host ::ng-deep .mat-stepper-vertical .mat-vertical-content-container-active > .mat-vertical-stepper-content {
+  overflow: visible;
+}

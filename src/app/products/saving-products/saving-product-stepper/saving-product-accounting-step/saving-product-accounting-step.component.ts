@@ -356,7 +356,7 @@ export class SavingProductAccountingStepComponent implements OnInit {
 
   add(formType: string, formArray: UntypedFormArray) {
     const data = { ...this.getData(formType), pristine: false };
-    const dialogRef = this.dialog.open(FormDialogComponent, { data, width: '20rem' });
+    const dialogRef = this.dialog.open(FormDialogComponent, { data, maxWidth: 'calc(100vw - 32px)' });
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         formArray.push(response.data);
@@ -366,8 +366,9 @@ export class SavingProductAccountingStepComponent implements OnInit {
   }
 
   edit(formType: string, formArray: UntypedFormArray, index: number) {
-    const data = { ...this.getData(formType, formArray.at(index).value), layout: { addButtonText: 'Edit' } };
-    const dialogRef = this.dialog.open(FormDialogComponent, { data });
+    const formData = this.getData(formType, formArray.at(index).value);
+    const data = { ...formData, layout: { ...formData.layout, addButtonText: 'Edit' } };
+    const dialogRef = this.dialog.open(FormDialogComponent, { data, maxWidth: 'calc(100vw - 32px)' });
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         formArray.at(index).patchValue(response.data.value);
@@ -393,6 +394,7 @@ export class SavingProductAccountingStepComponent implements OnInit {
       case 'PaymentFundSource':
         return {
           title: this.translateService.instant('labels.heading.Configure Fund Sources for Payment Channels'),
+          layout: { columnWidth: 480 },
           formfields: this.getPaymentFundSourceFormfields(values)
         };
       case 'FeesIncome':
@@ -413,7 +415,7 @@ export class SavingProductAccountingStepComponent implements OnInit {
       new SelectBase({
         controlName: 'paymentTypeId',
         label: this.translateService.instant('labels.inputs.Payment Type'),
-        value: values ? values.paymentTypeId : this.paymentTypeData[0].id,
+        value: values ? values.paymentTypeId : this.paymentTypeData[0]?.id,
         options: { label: 'name', value: 'id', data: this.paymentTypeData },
         required: true,
         order: 1
@@ -421,7 +423,7 @@ export class SavingProductAccountingStepComponent implements OnInit {
       new SelectBase({
         controlName: 'fundSourceAccountId',
         label: this.translateService.instant('labels.inputs.Fund Source'),
-        value: values ? values.fundSourceAccountId : this.combinedAccountData[0].id,
+        value: values ? values.fundSourceAccountId : this.combinedAccountData[0]?.id,
         options: { label: 'name', value: 'id', data: this.combinedAccountData },
         required: true,
         order: 2
