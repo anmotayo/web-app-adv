@@ -27,7 +27,6 @@
         formControlName="lockinPeriodFrequency"
         min="1"
         step="1"
-        required
       />
       <mat-error *ngIf="savingProductSettingsForm.get('lockinPeriodFrequency').hasError('required')">
         {{ 'labels.inputs.Frequency' | translate }} {{ 'labels.commons.is' | translate }}

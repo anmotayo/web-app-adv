@@ -2,6 +2,37 @@ table {
   width: 100%;
 }
 
+/*
+ * Both wrappers below stack their direct children one-per-line already (each child is
+ * flex-98/flex-100/flex-fill with nothing sharing its line) -- flex-wrap gives them no visual
+ * benefit over plain block stacking. But flex-wrap's cross-axis (height) sizing for a wrapped
+ * line can go stale in Chromium when a line's content grows *after* layout (adding a Fund
+ * Source row, or ticking "Advanced Accounting Rules") without a genuine viewport resize to
+ * force recalculation -- confirmed live: the wrapper's own box stayed shorter than its
+ * scrollHeight while overflow stayed visible, so later siblings (this step's own Previous/Next
+ * buttons) rendered based on the wrapper's stale, too-short height and visually landed on top
+ * of the still-painted (not clipped) tail of its content, e.g. the Fund Source table header.
+ * Switching these two wrappers to block layout makes their height always exactly match their
+ * children's natural height, synchronously, with no flex-line caching involved. Do NOT apply
+ * this to any wrapper whose direct children need to sit side by side (e.g. the 2-column
+ * gl-account-selector fields, or the heading+Add-button rows) -- those still need flex.
+ */
+.layout-row-wrap.custom-gap.responsive-column {
+  display: block;
+
+  > .flex-98 {
+    width: 98%;
+  }
+}
+
+.flex-fill.gap-1percent.responsive-column {
+  display: block;
+}
+
+.mat-elevation-z1 {
+  margin: 1em 0 1.5em;
+}
+
 h3,
 h4 {
   font-weight: 500;
@@ -16,8 +47,8 @@ mat-divider {
   margin: 1em 0 2em;
 }
 
-.mat-elevation-z1 {
-  margin: 1em 0 1.5em;
+.margin-t {
+  margin-top: 1em;
 }
 
 .radio-group-spacing {
