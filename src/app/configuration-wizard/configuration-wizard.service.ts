@@ -178,6 +178,12 @@ export class ConfigurationWizardService {
   showFixedDepositProductsPage = false;
   /*To show popover on fixed deposit products table*/
   showFixedDepositProductsList = false;
+  /*To show popover on dynamic deposit products on products page*/
+  showDynamicDepositProducts = false;
+  /*To show popover on button in dynamic deposit products page*/
+  showDynamicDepositProductsPage = false;
+  /*To show popover on dynamic deposit products table*/
+  showDynamicDepositProductsList = false;
   /*To show popover on recrurring deposit products on products page*/
   showRecurringDepositProducts = false;
   /*To show popover on button in recurring deposit products page*/
@@ -277,6 +283,9 @@ export class ConfigurationWizardService {
     this.showFixedDepositProducts = false;
     this.showFixedDepositProductsPage = false;
     this.showFixedDepositProductsList = false;
+    this.showDynamicDepositProducts = false;
+    this.showDynamicDepositProductsPage = false;
+    this.showDynamicDepositProductsList = false;
     this.showRecurringDepositProducts = false;
     this.showRecurringDepositProductsPage = false;
     this.showRecurringDepositProductsList = false;

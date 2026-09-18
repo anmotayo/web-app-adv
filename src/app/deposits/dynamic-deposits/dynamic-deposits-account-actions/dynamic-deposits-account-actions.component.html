@@ -1,0 +1,27 @@
+@if (actions['Approve']) {
+  <mifosx-approve-dynamic-deposits-account></mifosx-approve-dynamic-deposits-account>
+}
+@if (actions['Reject']) {
+  <mifosx-reject-dynamic-deposits-account></mifosx-reject-dynamic-deposits-account>
+}
+@if (actions['Activate']) {
+  <mifosx-activate-dynamic-deposits-account></mifosx-activate-dynamic-deposits-account>
+}
+@if (actions['Undo Approval'] || actions['Undo Activation']) {
+  <mifosx-undo-approval-dynamic-deposits-account></mifosx-undo-approval-dynamic-deposits-account>
+}
+@if (actions['Withdrawn by Client']) {
+  <mifosx-withdraw-by-client-dynamic-deposits-account></mifosx-withdraw-by-client-dynamic-deposits-account>
+}
+@if (actions['Add Charge']) {
+  <mifosx-add-charge-dynamic-deposits-account></mifosx-add-charge-dynamic-deposits-account>
+}
+@if (actions['Premature Close']) {
+  <mifosx-premature-close-dynamic-deposits-account></mifosx-premature-close-dynamic-deposits-account>
+}
+@if (actions['Close']) {
+  <mifosx-close-dynamic-deposits-account></mifosx-close-dynamic-deposits-account>
+}
+@if (actions['Deposit'] || actions['Withdrawal']) {
+  <mifosx-dynamic-deposits-cash-transaction></mifosx-dynamic-deposits-cash-transaction>
+}

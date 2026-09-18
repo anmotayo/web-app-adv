@@ -216,6 +216,39 @@ export class ProductsService {
   }
 
   /**
+   * @returns {Observable<any>} Dynamic deposit products data
+   */
+  getDynamicDepositProducts(): Observable<any> {
+    return this.http.get('/dynamicdepositproducts');
+  }
+
+  createDynamicDepositProduct(dynamicDepositProduct: string): Observable<any> {
+    return this.http.post('/dynamicdepositproducts', dynamicDepositProduct);
+  }
+
+  getDynamicDepositProductsTemplate(): Observable<any> {
+    return this.http.get('/dynamicdepositproducts/template');
+  }
+
+  /**
+   * @param {string} dynamicDepositProductId Dynamic deposit product ID.
+   * @returns {Observable<any>} Dynamic deposit product.
+   */
+  getDynamicDepositProduct(dynamicDepositProductId: string, template: boolean = false): Observable<any> {
+    const httpParams = new HttpParams().set('template', template.toString());
+    return this.http.get(`/dynamicdepositproducts/${dynamicDepositProductId}`, { params: httpParams });
+  }
+
+  getDynamicDepositProductAndTemplate(dynamicDepositProductId: any) {
+    const httpParams = new HttpParams().set('template', 'true');
+    return this.http.get(`/dynamicdepositproducts/${dynamicDepositProductId}`, { params: httpParams });
+  }
+
+  updateDynamicDepositProduct(dynamicDepositProductId: any, dynamicDepositProduct: any): Observable<any> {
+    return this.http.put(`/dynamicdepositproducts/${dynamicDepositProductId}`, dynamicDepositProduct);
+  }
+
+  /**
    * @returns {Observable<any>} Tax Components data
    */
   getTaxComponents(): Observable<any> {

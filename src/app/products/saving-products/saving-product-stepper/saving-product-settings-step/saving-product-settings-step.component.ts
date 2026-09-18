@@ -31,11 +31,13 @@ export class SavingProductSettingsStepComponent implements OnInit {
   private formBuilder = inject(UntypedFormBuilder);
 
   @Input() savingProductsTemplate: any;
+  @Input() selectedCharges: any[] = [];
 
   savingProductSettingsForm: UntypedFormGroup;
 
   lockinPeriodFrequencyTypeData: any;
   taxGroupData: any;
+  earlyWithdrawalChargeModeOptions: any[] = [];
 
   constructor() {
     this.createSavingProductSettingsForm();
@@ -45,6 +47,7 @@ export class SavingProductSettingsStepComponent implements OnInit {
   ngOnInit() {
     this.lockinPeriodFrequencyTypeData = this.savingProductsTemplate.lockinPeriodFrequencyTypeOptions;
     this.taxGroupData = this.savingProductsTemplate.taxGroupOptions;
+    this.earlyWithdrawalChargeModeOptions = this.savingProductsTemplate.earlyWithdrawalChargeModeOptions || [];
 
     this.savingProductSettingsForm.patchValue({
       minRequiredOpeningBalance: this.savingProductsTemplate.minRequiredOpeningBalance,
@@ -62,6 +65,9 @@ export class SavingProductSettingsStepComponent implements OnInit {
       overdraftLimit: this.savingProductsTemplate.overdraftLimit,
       withHoldTax: this.savingProductsTemplate.withHoldTax,
       taxGroupId: this.savingProductsTemplate.taxGroup && this.savingProductsTemplate.taxGroup.id,
+      earlyWithdrawalPenaltyEnabled: this.savingProductsTemplate.earlyWithdrawalPenaltyEnabled,
+      earlyWithdrawalChargeId: this.savingProductsTemplate.earlyWithdrawalChargeId || '',
+      earlyWithdrawalChargeMode: this.savingProductsTemplate.earlyWithdrawalChargeMode || '',
       isDormancyTrackingActive: this.savingProductsTemplate.isDormancyTrackingActive,
       daysToInactive: this.savingProductsTemplate.daysToInactive,
       daysToDormancy: this.savingProductsTemplate.daysToDormancy,
@@ -90,6 +96,9 @@ export class SavingProductSettingsStepComponent implements OnInit {
       minRequiredBalance: [''],
       allowOverdraft: [false],
       withHoldTax: [false],
+      earlyWithdrawalPenaltyEnabled: [false],
+      earlyWithdrawalChargeId: [''],
+      earlyWithdrawalChargeMode: [''],
       isDormancyTrackingActive: [false]
     });
   }
@@ -115,6 +124,22 @@ export class SavingProductSettingsStepComponent implements OnInit {
       }
     });
 
+    this.savingProductSettingsForm.get('earlyWithdrawalPenaltyEnabled').valueChanges.subscribe((enabled: boolean) => {
+      const earlyWithdrawalChargeId = this.savingProductSettingsForm.get('earlyWithdrawalChargeId');
+      const earlyWithdrawalChargeMode = this.savingProductSettingsForm.get('earlyWithdrawalChargeMode');
+      if (enabled) {
+        earlyWithdrawalChargeId.setValidators(Validators.required);
+        earlyWithdrawalChargeMode.setValidators(Validators.required);
+      } else {
+        earlyWithdrawalChargeId.patchValue('');
+        earlyWithdrawalChargeId.clearValidators();
+        earlyWithdrawalChargeMode.patchValue('');
+        earlyWithdrawalChargeMode.clearValidators();
+      }
+      earlyWithdrawalChargeId.updateValueAndValidity();
+      earlyWithdrawalChargeMode.updateValueAndValidity();
+    });
+
     this.savingProductSettingsForm
       .get('isDormancyTrackingActive')
       .valueChanges.subscribe((isDormancyTrackingActive: any) => {
@@ -130,7 +155,63 @@ export class SavingProductSettingsStepComponent implements OnInit {
       });
   }
 
+  get earlyWithdrawalChargeOptions(): any[] {
+    const penaltyOptionIds = new Set(
+      (this.savingProductsTemplate?.penaltyOptions || []).map((charge: any) => charge.id)
+    );
+    const chargesById = new Map();
+    [
+      ...(this.selectedCharges || []),
+      ...(this.savingProductsTemplate?.charges || []),
+      ...(this.savingProductsTemplate?.penaltyOptions || []),
+      ...(this.savingProductsTemplate?.chargeOptions || [])
+    ].forEach((charge: any) => {
+      if (charge?.id && this.isInterestPenaltyCharge(charge, penaltyOptionIds)) {
+        chargesById.set(charge.id, charge);
+      }
+    });
+    return Array.from(chargesById.values());
+  }
+
   get savingProductSettings() {
-    return this.savingProductSettingsForm.value;
+    const savingProductSettings = { ...this.savingProductSettingsForm.value };
+    if (!savingProductSettings.earlyWithdrawalPenaltyEnabled) {
+      if (this.shouldSendDisabledEarlyWithdrawal()) {
+        savingProductSettings.earlyWithdrawalChargeId = null;
+        savingProductSettings.earlyWithdrawalChargeMode = null;
+      } else {
+        delete savingProductSettings.earlyWithdrawalPenaltyEnabled;
+        delete savingProductSettings.earlyWithdrawalChargeId;
+        delete savingProductSettings.earlyWithdrawalChargeMode;
+      }
+    }
+    return savingProductSettings;
+  }
+
+  private shouldSendDisabledEarlyWithdrawal(): boolean {
+    return (
+      this.hasTemplateParameter('earlyWithdrawalPenaltyEnabled') ||
+      this.hasTemplateParameter('earlyWithdrawalChargeId') ||
+      this.hasTemplateParameter('earlyWithdrawalChargeMode') ||
+      this.savingProductSettingsForm.get('earlyWithdrawalPenaltyEnabled').dirty ||
+      this.savingProductSettingsForm.get('earlyWithdrawalChargeId').dirty ||
+      this.savingProductSettingsForm.get('earlyWithdrawalChargeMode').dirty
+    );
+  }
+
+  private hasTemplateParameter(parameterName: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.savingProductsTemplate || {}, parameterName);
+  }
+
+  private isInterestPenaltyCharge(charge: any, penaltyOptionIds: Set<any>): boolean {
+    const calculationType = charge?.chargeCalculationType || {};
+    const calculationTypeText = `${calculationType.code || ''} ${calculationType.value || ''}`.toLowerCase();
+    return (
+      (charge?.penalty === true || penaltyOptionIds.has(charge?.id)) &&
+      (calculationType.id === 4 ||
+        calculationTypeText.includes('percent.of.interest') ||
+        calculationTypeText.includes('% interest') ||
+        calculationTypeText.includes('percent of interest'))
+    );
   }
 }

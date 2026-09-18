@@ -1,0 +1,568 @@
+<title>Interest Summary Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --bg: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --border: #dde1e7;
+    --border-strong: #c7ccd4;
+    --ink: #1c2230;
+    --muted: #5c6575;
+    --caption: #8a93a3;
+    --accent: #2f5fa8;
+    --accent-ink: #1d4487;
+    --accent-soft-bg: #eaf1fb;
+    --accent-soft-border: #bcd4ef;
+    --status-active-bg: #e4f3ec;
+    --status-active-ink: #1f7a4d;
+    --divider: #e7e9ed;
+    --shadow: 0 1px 2px rgba(20, 25, 35, 0.06), 0 1px 8px rgba(20, 25, 35, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #14171c;
+      --surface: #1b1f26;
+      --surface-2: #20242c;
+      --border: #2b3038;
+      --border-strong: #383e48;
+      --ink: #e7e9ee;
+      --muted: #9aa2b1;
+      --caption: #737b8a;
+      --accent: #6f9cdb;
+      --accent-ink: #bcd4f5;
+      --accent-soft-bg: #1e2b3d;
+      --accent-soft-border: #33507a;
+      --status-active-bg: #17301f;
+      --status-active-ink: #6fcf9b;
+      --divider: #262b33;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 10px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: #14171c;
+    --surface: #1b1f26;
+    --surface-2: #20242c;
+    --border: #2b3038;
+    --border-strong: #383e48;
+    --ink: #e7e9ee;
+    --muted: #9aa2b1;
+    --caption: #737b8a;
+    --accent: #6f9cdb;
+    --accent-ink: #bcd4f5;
+    --accent-soft-bg: #1e2b3d;
+    --accent-soft-border: #33507a;
+    --status-active-bg: #17301f;
+    --status-active-ink: #6fcf9b;
+    --divider: #262b33;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    padding-inline: 20px;
+    padding-block: 24px;
+  }
+  .app {
+    max-width: 1040px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ---- account identity strip ---- */
+  .account-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+  }
+  .account-bar .id-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-right: auto;
+  }
+  .account-bar .client-name {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .account-bar .acct-title {
+    font-size: 19px;
+    font-weight: 500;
+  }
+  .account-bar .acct-title .num {
+    color: var(--muted);
+    font-weight: 400;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    margin-left: 8px;
+  }
+  .chip {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 100px;
+    background: var(--status-active-bg);
+    color: var(--status-active-ink);
+  }
+  .meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .meta .m {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .meta .m .k {
+    font-size: 11px;
+    color: var(--caption);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .meta .m .v {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* ---- tab nav (mirrors mat-tab-nav-bar) ---- */
+  .tabnav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    padding-inline: 4px;
+    overflow-x: auto;
+  }
+  .tab-link {
+    appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+    padding: 12px 16px;
+    position: relative;
+    white-space: nowrap;
+  }
+  .tab-link[aria-selected='true'] {
+    color: var(--accent);
+  }
+  .tab-link[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+  .tab-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  .panel {
+    display: none;
+  }
+  .panel[data-active='true'] {
+    display: block;
+  }
+
+  /* ---- two-column layout, general tab ---- */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .cols {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card h3 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface-2);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .kv {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .kv tr:not(:last-child) td {
+    border-bottom: 1px solid var(--divider);
+  }
+  .kv td {
+    padding: 10px 18px;
+    font-size: 13.5px;
+    vertical-align: baseline;
+  }
+  .kv td.label {
+    color: var(--muted);
+    width: 58%;
+  }
+  .kv td.label .cap {
+    display: block;
+    font-size: 11px;
+    color: var(--caption);
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .kv td.val {
+    text-align: right;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .kv tr.total td {
+    font-weight: 700;
+  }
+  .kv tr.total td.val {
+    font-size: 15px;
+    color: var(--accent-ink);
+  }
+  .kv tr.total td {
+    border-top: 1px solid var(--border-strong);
+    padding-top: 12px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-soft-bg);
+    border-top: 1px solid var(--accent-soft-border);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--accent-ink);
+  }
+  .status-row svg {
+    flex: none;
+  }
+  .status-row b {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .status-row .sub {
+    color: var(--muted);
+    font-size: 11.5px;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--divider);
+    border-top: 1px solid var(--divider);
+  }
+  .stat {
+    background: var(--surface);
+    padding: 12px 16px;
+  }
+  .stat .k {
+    font-size: 10.5px;
+    color: var(--caption);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .stat .v {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- rate history tab ---- */
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.data thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-strong);
+    background: var(--surface-2);
+  }
+  table.data th.num,
+  table.data td.num {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  table.data tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  table.data tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .src-pill {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .src-pill.chart {
+    background: var(--accent-soft-bg);
+    color: var(--accent-ink);
+    border: 1px solid var(--accent-soft-border);
+  }
+  .src-pill.nominal {
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .note {
+    font-size: 12px;
+    color: var(--caption);
+    margin-top: 10px;
+    padding-inline: 2px;
+  }
+  .theme-toggle {
+    align-self: flex-end;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+</style>
+
+<div class="app">
+  <button class="theme-toggle" id="themeToggle" type="button">Toggle theme preview</button>
+
+  <div class="account-bar">
+    <div class="id-block">
+      <span class="client-name">Adaeze Okafor &nbsp;&middot;&nbsp; Client #100482</span>
+      <span class="acct-title">Dynamic Deposit &ndash; 24 Month Growth Plan<span class="num">DD0004821</span></span>
+    </div>
+    <span class="chip">Active</span>
+    <div class="meta">
+      <div class="m"><span class="k">Invested</span><span class="v">₦2,500,000.00</span></div>
+      <div class="m"><span class="k">Maturity</span><span class="v">14 Aug 2027</span></div>
+    </div>
+  </div>
+
+  <div class="tabnav" role="tablist">
+    <button class="tab-link" role="tab" aria-selected="true" data-tab="general">General</button>
+    <button class="tab-link" role="tab" aria-selected="false" data-tab="ratehistory">Rate History</button>
+    <button class="tab-link" role="tab" aria-selected="false" data-tab="transactions" disabled>Transactions</button>
+    <button class="tab-link" role="tab" aria-selected="false" data-tab="charges" disabled>Charges</button>
+  </div>
+
+  <div class="panel" data-panel="general" data-active="true">
+    <div class="cols">
+      <div class="card">
+        <h3>Deposit Details</h3>
+        <table class="kv">
+          <tr>
+            <td class="label">Invested Amount</td>
+            <td class="val">₦2,500,000.00</td>
+          </tr>
+          <tr>
+            <td class="label">Deposit Period</td>
+            <td class="val">24 Months</td>
+          </tr>
+          <tr>
+            <td class="label">Nominal Annual Rate</td>
+            <td class="val">12.50%</td>
+          </tr>
+          <tr>
+            <td class="label">Allow Withdrawal</td>
+            <td class="val">No</td>
+          </tr>
+          <tr>
+            <td class="label">Dynamic Rate</td>
+            <td class="val">Enabled</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Interest Summary</h3>
+        <table class="kv">
+          <tr>
+            <td class="label">Current Effective Annual Rate</td>
+            <td class="val">13.25%</td>
+          </tr>
+          <tr>
+            <td class="label">Interest Earned As At Today</td>
+            <td class="val">₦41,986.30</td>
+          </tr>
+          <tr>
+            <td class="label">Interest Posted (Gross)</td>
+            <td class="val">₦38,750.00</td>
+          </tr>
+          <tr>
+            <td class="label">Interest Withdrawn</td>
+            <td class="val">₦0.00</td>
+          </tr>
+          <tr>
+            <td class="label">Withholding Tax Deducted</td>
+            <td class="val">&minus;₦3,875.00</td>
+          </tr>
+          <tr>
+            <td class="label">
+              Early-Withdrawal Charge Deducted<span class="cap">Deducted from interest, not principal</span>
+            </td>
+            <td class="val">&minus;₦1,937.50</td>
+          </tr>
+          <tr class="total">
+            <td class="label">Net Interest For Period</td>
+            <td class="val">₦32,937.50</td>
+          </tr>
+        </table>
+        <div class="status-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M2 8h9m0 0-3.5-3.5M11 8l-3.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span
+            >Net interest transferred to <b>Savings &ndash; SA0002347</b
+            ><span class="sub">Transfer-interest-to-savings is enabled for this account</span></span
+          >
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <div class="k">Total for Period</div>
+            <div class="v">₦38,750.00</div>
+          </div>
+          <div class="stat">
+            <div class="k">Basis</div>
+            <div class="v">Interest only</div>
+          </div>
+          <div class="stat">
+            <div class="k">Principal</div>
+            <div class="v">Untouched</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">
+      Mirrors the existing Fixed Deposit &ldquo;Interest Details&rdquo; / &ldquo;Performance History&rdquo; key-value
+      pattern &mdash; same card, header, and row conventions as the rest of the General tab. Only the highlighted
+      transfer line and the interest-based-charge caption are new.
+    </p>
+  </div>
+
+  <div class="panel" data-panel="ratehistory">
+    <div class="card">
+      <h3>Rate History</h3>
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Transaction Date</th>
+            <th>Transaction Type</th>
+            <th class="num">Invested Amount After</th>
+            <th class="num">Resolved Rate</th>
+            <th>Source</th>
+            <th>Chart / Slab Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>14 Aug 2025</td>
+            <td>Deposit (Opening)</td>
+            <td class="num">₦2,000,000.00</td>
+            <td class="num">12.00%</td>
+            <td><span class="src-pill chart">Chart</span></td>
+            <td>Growth Chart &middot; ₦0&ndash;2,499,999</td>
+          </tr>
+          <tr>
+            <td>02 Nov 2025</td>
+            <td>Top-Up</td>
+            <td class="num">₦2,500,000.00</td>
+            <td class="num">13.25%</td>
+            <td><span class="src-pill chart">Chart</span></td>
+            <td>Growth Chart &middot; ₦2,500,000+</td>
+          </tr>
+          <tr>
+            <td>15 Feb 2026</td>
+            <td>Nominal Override</td>
+            <td class="num">₦2,500,000.00</td>
+            <td class="num">12.50%</td>
+            <td><span class="src-pill nominal">Nominal</span></td>
+            <td>&mdash;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Reuses the Transactions tab's existing table/column pattern &mdash; no new visual language, just new columns.
+    </p>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-link[data-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      document.querySelectorAll('.tab-link').forEach((b) => b.setAttribute('aria-selected', 'false'));
+      btn.setAttribute('aria-selected', 'true');
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.panel').forEach((p) => (p.dataset.active = String(p.dataset.panel === target)));
+    });
+  });
+  const root = document.documentElement;
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+</script>

@@ -1,0 +1,185 @@
+<div class="dynamic-deposits-account-tables layout-row gap-2percent">
+  <div class="flex-49 layout-column gap-4percent">
+    <div>
+      <h4 class="table-headers">{{ 'labels.heading.Dynamic Deposit Details' | translate }}</h4>
+      <table>
+        <tbody>
+          <tr>
+            <td>{{ 'labels.inputs.External Id' | translate }}</td>
+            <td>
+              @if (dynamicDepositsAccountData.externalId) {
+                <mifosx-external-identifier
+                  externalId="{{ dynamicDepositsAccountData.externalId }}"
+                  completed="true"
+                ></mifosx-external-identifier>
+              } @else {
+                <span>{{ 'labels.inputs.Not Available' | translate }}</span>
+              }
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Activated On' | translate }}</td>
+            <td>
+              {{
+                dynamicDepositsAccountData.activatedOnDate || dynamicDepositsAccountData.timeline?.activatedOnDate
+                  ? (dynamicDepositsAccountData.activatedOnDate || dynamicDepositsAccountData.timeline?.activatedOnDate
+                    | dateFormat)
+                  : ('labels.text.Not Activated' | translate)
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Field Officer' | translate }}</td>
+            <td>
+              {{
+                dynamicDepositsAccountData.fieldOfficerName ||
+                  dynamicDepositsAccountData.fieldOfficerId ||
+                  ('Unassigned' | translateKey: 'inputs')
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Maturity Date' | translate }}</td>
+            <td>
+              {{
+                dynamicDepositsAccountData.maturityDate
+                  ? (dynamicDepositsAccountData.maturityDate | dateFormat)
+                  : ('labels.inputs.Not Available' | translate)
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Deposit Period' | translate }}</td>
+            <td>
+              {{ dynamicDepositsAccountData.depositPeriod }}&nbsp;{{
+                dynamicDepositsAccountData.depositPeriodFrequencyType?.value | translateKey: 'catalogs'
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Allow Withdrawal' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.allowWithdrawal | yesNo }}</td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Dynamic Rate Enabled' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.dynamicRateEnabled | yesNo }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h4 class="table-headers">{{ 'labels.heading.Interest Details' | translate }}</h4>
+      <table>
+        <tbody>
+          <tr>
+            <td>{{ 'labels.inputs.Interest Rate' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.nominalAnnualInterestRate }} %</td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Interest Compounding Period' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.interestCompoundingPeriodType?.value | translateKey: 'catalogs' }}</td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Interest Posting Period' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.interestPostingPeriodType?.value | translateKey: 'catalogs' }}</td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Interest Calculated Using' | translate }}</td>
+            <td>{{ dynamicDepositsAccountData.interestCalculationType?.value | translateKey: 'catalogs' }}</td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.No. of Days in Year' | translate }}</td>
+            <td>
+              {{ dynamicDepositsAccountData.interestCalculationDaysInYearType?.value | translateKey: 'catalogs' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex-49">
+    <div>
+      <h4 class="table-headers">{{ 'labels.heading.Performance History' | translate }}</h4>
+      <table>
+        <tbody>
+          <tr>
+            <td>{{ 'labels.inputs.Principal Amount' | translate }}</td>
+            <td class="r-amount">
+              {{ dynamicDepositsAccountData.depositAmount || 0 | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Maturity Amount' | translate }}</td>
+            <td class="r-amount">
+              {{
+                dynamicDepositsAccountData.maturityAmount || 0 | currency: currency?.code : 'symbol-narrow' : '1.2-2'
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Deposits' | translate }}</td>
+            <td class="r-amount">
+              {{
+                dynamicDepositsAccountData.summary?.totalDeposits || 0
+                  | currency: currency?.code : 'symbol-narrow' : '1.2-2'
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Withdrawals' | translate }}</td>
+            <td class="r-amount">
+              {{
+                dynamicDepositsAccountData.summary?.totalWithdrawals || 0
+                  | currency: currency?.code : 'symbol-narrow' : '1.2-2'
+              }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Interest Earned' | translate }}</td>
+            <td class="r-amount">
+              {{ totalInterestEarned | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Interest Posted' | translate }}</td>
+            <td class="r-amount">
+              {{ totalInterestPosted | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Interest Withdrawn' | translate }}</td>
+            <td class="r-amount">
+              {{ totalInterestWithdrawn | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Withholding Tax' | translate }}</td>
+            <td class="r-amount">
+              {{ totalWithholdingTax | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Interest Based Charge Accrued' | translate }}</td>
+            <td class="r-amount">
+              {{ totalInterestBasedChargeAccrued | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Total Interest Based Charge Forfeited' | translate }}</td>
+            <td class="r-amount">
+              {{ totalInterestBasedChargeForfeited | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+          <tr>
+            <td>{{ 'labels.inputs.Net Interest' | translate }}</td>
+            <td class="r-amount">
+              {{ netInterest | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -119,7 +119,7 @@ export class RecurringDepositProductAccountingStepComponent implements OnInit {
 
   assignAccountingStepData() {
     this.recurringDepositProductAccountingForm.patchValue({
-      accountingRule: this.recurringDepositProductsTemplate.accountingRule.id
+      accountingRule: this.accounting.getAccountingRuleId(this.recurringDepositProductsTemplate.accountingRule)
     });
     if (this.isCashOrAccrualAccounting()) {
       this.recurringDepositProductAccountingForm.patchValue({
@@ -321,7 +321,7 @@ export class RecurringDepositProductAccountingStepComponent implements OnInit {
 
   add(formType: string, formArray: UntypedFormArray) {
     const data = { ...this.getData(formType), pristine: false };
-    const dialogRef = this.dialog.open(FormDialogComponent, { data });
+    const dialogRef = this.dialog.open(FormDialogComponent, { data, width: '20rem' });
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         formArray.push(response.data);

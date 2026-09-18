@@ -1,0 +1,103 @@
+<div class="container">
+  <mat-stepper
+    orientation="vertical"
+    [linear]="false"
+    class="mat-elevation-z8"
+    labelPosition="bottom"
+    #dynamicDepositProductStepper
+  >
+    <ng-template matStepperIcon="number">
+      <fa-icon icon="pencil-alt" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="edit">
+      <fa-icon icon="pencil-alt" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="done">
+      <fa-icon icon="check" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="error">
+      <fa-icon icon="exclamation-triangle" size="lg"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="preview">
+      <fa-icon icon="eye" size="sm"></fa-icon>
+    </ng-template>
+
+    <mat-step [stepControl]="dynamicDepositProductDetailsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.DETAILS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-details-step></mifosx-dynamic-deposit-product-details-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositProductCurrencyForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.CURRENCY' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-currency-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+      ></mifosx-dynamic-deposit-product-currency-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositProductTermsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.TERMS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-terms-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+      ></mifosx-dynamic-deposit-product-terms-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositProductSettingsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.SETTINGS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-settings-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+        [selectedCharges]="dynamicDepositProductChargesStep?.chargesDataSource"
+      ></mifosx-dynamic-deposit-product-settings-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositProductInterestRateChartForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.INTEREST RATE CHART' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-interest-rate-chart-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+      ></mifosx-dynamic-deposit-product-interest-rate-chart-step>
+    </mat-step>
+
+    <mat-step>
+      <ng-template matStepLabel>{{ 'labels.inputs.CHARGES' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-charges-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+        [currencyCode]="dynamicDepositProductCurrencyForm.get('currencyCode')"
+      >
+      </mifosx-dynamic-deposit-product-charges-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositProductAccountingForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.ACCOUNTING' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-product-accounting-step
+        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+        [accountingRuleData]="accountingRuleData"
+        [dynamicDepositProductFormValid]="dynamicDepositProductFormValid"
+      >
+      </mifosx-dynamic-deposit-product-accounting-step>
+    </mat-step>
+
+    @if (dynamicDepositProductFormValid) {
+      <mat-step state="preview" completed>
+        <ng-template matStepLabel>{{ 'labels.inputs.PREVIEW' | translate }}</ng-template>
+        <mifosx-dynamic-deposit-product-preview-step
+          [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
+          [chartSlabsDisplayedColumns]="dynamicDepositProductInterestRateChartStep.chartSlabsDisplayedColumns"
+          [accountingRuleData]="accountingRuleData"
+          [dynamicDepositProduct]="dynamicDepositProduct"
+          (submitEvent)="submit()"
+        >
+        </mifosx-dynamic-deposit-product-preview-step>
+      </mat-step>
+    }
+  </mat-stepper>
+</div>

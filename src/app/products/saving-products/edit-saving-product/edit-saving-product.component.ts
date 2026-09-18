@@ -112,7 +112,7 @@ export class EditSavingProductComponent {
   }
 
   get savingProduct() {
-    return {
+    const savingProduct = {
       ...this.savingProductDetailsStep.savingProductDetails,
       ...this.savingProductCurrencyStep.savingProductCurrency,
       ...this.savingProductTermsStep.savingProductTerms,
@@ -120,16 +120,61 @@ export class EditSavingProductComponent {
       ...this.savingProductChargesStep.savingProductCharges,
       ...this.savingProductAccountingStep.savingProductAccounting
     };
+    return {
+      ...savingProduct,
+      charges: this.ensureEarlyWithdrawalChargeAttached(
+        savingProduct.charges || [],
+        savingProduct.earlyWithdrawalPenaltyEnabled,
+        savingProduct.earlyWithdrawalChargeId
+      )
+    };
+  }
+
+  prepareSavingProductPayload(savingProduct: any): any {
+    const payload = {
+      ...savingProduct,
+      charges: savingProduct.charges.map((charge: any) => ({ id: charge.id })),
+      locale: this.settingsService.language.code // locale required for nominalAnnualInterestRate
+    };
+    if (!payload.earlyWithdrawalPenaltyEnabled && this.hasEarlyWithdrawalPayload(payload)) {
+      payload.earlyWithdrawalChargeId = null;
+      payload.earlyWithdrawalChargeMode = null;
+    }
+    delete payload.advancedAccountingRules;
+    return payload;
+  }
+
+  private ensureEarlyWithdrawalChargeAttached(charges: any[], enabled: boolean, chargeId: any): any[] {
+    if (!enabled || !chargeId || charges.some((charge: any) => this.sameChargeId(charge.id, chargeId))) {
+      return charges;
+    }
+    const earlyWithdrawalCharge = this.findTemplateCharge(chargeId);
+    return earlyWithdrawalCharge ? charges.concat([earlyWithdrawalCharge]) : charges;
+  }
+
+  private findTemplateCharge(chargeId: any): any {
+    return [
+      ...(this.savingProductAndTemplate.charges || []),
+      ...(this.savingProductAndTemplate.chargeOptions || []),
+      ...(this.savingProductAndTemplate.penaltyOptions || [])
+    ].find((charge: any) => this.sameChargeId(charge.id, chargeId));
+  }
+
+  private sameChargeId(first: any, second: any): boolean {
+    return String(first) === String(second);
+  }
+
+  private hasEarlyWithdrawalPayload(payload: any): boolean {
+    return (
+      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalPenaltyEnabled') ||
+      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalChargeId') ||
+      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalChargeMode')
+    );
   }
 
   submit() {
     // TODO: Update once language and date settings are setup
-    const savingProduct = {
-      ...this.savingProduct,
-      charges: this.savingProduct.charges.map((charge: any) => ({ id: charge.id })),
-      locale: this.settingsService.language.code // locale required for nominalAnnualInterestRate
-    };
-    delete savingProduct.advancedAccountingRules;
+    const savingProduct = this.prepareSavingProductPayload(this.savingProduct);
     this.productsService
       .updateSavingProduct(this.savingProductAndTemplate.id, savingProduct)
       .subscribe((response: any) => {
