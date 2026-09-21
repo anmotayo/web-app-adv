@@ -161,15 +161,9 @@
             </td>
           </tr>
           <tr>
-            <td>{{ 'labels.inputs.Total Interest Based Charge Accrued' | translate }}</td>
+            <td>{{ 'labels.inputs.Total Interest Based Charge Posted' | translate }}</td>
             <td class="r-amount">
-              {{ totalInterestBasedChargeAccrued | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
-            </td>
-          </tr>
-          <tr>
-            <td>{{ 'labels.inputs.Total Interest Based Charge Forfeited' | translate }}</td>
-            <td class="r-amount">
-              {{ totalInterestBasedChargeForfeited | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
+              {{ totalInterestBasedChargePosted | currency: currency?.code : 'symbol-narrow' : '1.2-2' }}
             </td>
           </tr>
           <tr>

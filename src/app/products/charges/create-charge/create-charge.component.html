@@ -82,6 +82,41 @@
                   </mat-error>
                 }
               </mat-form-field>
+              @if (showInterestChargeRuleFields()) {
+                <mat-form-field class="flex-48">
+                  <mat-label>{{ 'labels.inputs.Interest Basis Mode' | translate }}</mat-label>
+                  <mat-select formControlName="interestBasisMode">
+                    <mat-option [value]="null">{{ 'labels.catalogs.None' | translate }}</mat-option>
+                    @for (interestBasisMode of interestBasisModeOptions; track interestBasisMode) {
+                      <mat-option [value]="interestBasisMode.id">
+                        {{ interestBasisMode.value }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+              @if (showCustomPeriodReapplyPolicy()) {
+                <mat-form-field class="flex-48">
+                  <mat-label>{{ 'labels.inputs.Custom Period Reapply Policy' | translate }}</mat-label>
+                  <mat-select required formControlName="customPeriodReapplyPolicy">
+                    @for (
+                      customPeriodReapplyPolicy of customPeriodReapplyPolicyOptions;
+                      track customPeriodReapplyPolicy
+                    ) {
+                      <mat-option [value]="customPeriodReapplyPolicy.id">
+                        {{ customPeriodReapplyPolicy.value }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                  @if (chargeForm.controls.customPeriodReapplyPolicy.hasError('required')) {
+                    <mat-error>
+                      {{ 'labels.inputs.Custom Period Reapply Policy' | translate }}
+                      {{ 'labels.commons.is' | translate }}
+                      <strong>{{ 'labels.commons.required' | translate }}</strong>
+                    </mat-error>
+                  }
+                </mat-form-field>
+              }
               @if (chargeForm.controls.chargeAppliesTo.value === 1) {
                 <mat-form-field class="flex-48">
                   <mat-label>{{ 'labels.inputs.Charge Payment Mode' | translate }}</mat-label>

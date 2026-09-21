@@ -93,6 +93,30 @@
           {{ chargeData.chargeCalculationType.value | translateKey: 'catalogs' }}
         </div>
 
+        @if (showInterestChargeRuleFields()) {
+          <div class="flex-50 mat-body-strong">
+            {{ 'labels.inputs.Interest Basis Mode' | translate }}
+          </div>
+        }
+
+        @if (showInterestChargeRuleFields()) {
+          <div class="flex-50">
+            {{ chargeData.interestBasisMode.value }}
+          </div>
+        }
+
+        @if (showInterestChargeRuleFields() && chargeData.customPeriodReapplyPolicy) {
+          <div class="flex-50 mat-body-strong">
+            {{ 'labels.inputs.Custom Period Reapply Policy' | translate }}
+          </div>
+        }
+
+        @if (showInterestChargeRuleFields() && chargeData.customPeriodReapplyPolicy) {
+          <div class="flex-50">
+            {{ chargeData.customPeriodReapplyPolicy.value }}
+          </div>
+        }
+
         <div class="flex-50 mat-body-strong">
           {{ 'labels.inputs.Charge Payment Mode' | translate }}
         </div>

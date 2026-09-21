@@ -93,42 +93,6 @@
       {{ 'labels.inputs.Dynamic Rate Enabled' | translate }}
     </mat-checkbox>
 
-    <mat-checkbox class="flex-48 margin-v" labelPosition="before" formControlName="earlyWithdrawalPenaltyEnabled">
-      {{ 'labels.inputs.Enable Early Withdrawal Interest Penalty' | translate }}
-    </mat-checkbox>
-
-    @if (dynamicDepositProductSettingsForm.value.earlyWithdrawalPenaltyEnabled) {
-      <mat-form-field class="flex-48">
-        <mat-label>{{ 'labels.inputs.Early Withdrawal Charge' | translate }}</mat-label>
-        <mat-select formControlName="earlyWithdrawalChargeId" required>
-          @for (charge of earlyWithdrawalChargeOptions; track charge) {
-            <mat-option [value]="charge.id">
-              {{ charge.name }} - {{ 'labels.inputs.Deducted from interest' | translate }}
-            </mat-option>
-          }
-        </mat-select>
-        <mat-error>
-          {{ 'labels.inputs.Early Withdrawal Charge' | translate }} {{ 'labels.commons.is' | translate }}
-          <strong>{{ 'labels.commons.required' | translate }}</strong>
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="flex-48">
-        <mat-label>{{ 'labels.inputs.Early Withdrawal Charge Mode' | translate }}</mat-label>
-        <mat-select formControlName="earlyWithdrawalChargeMode" required>
-          @for (mode of earlyWithdrawalChargeModeOptions; track mode) {
-            <mat-option [value]="mode.id">
-              {{ mode.value }}
-            </mat-option>
-          }
-        </mat-select>
-        <mat-error>
-          {{ 'labels.inputs.Early Withdrawal Charge Mode' | translate }} {{ 'labels.commons.is' | translate }}
-          <strong>{{ 'labels.commons.required' | translate }}</strong>
-        </mat-error>
-      </mat-form-field>
-    }
-
     <mat-divider class="flex-98"></mat-divider>
 
     <mat-checkbox

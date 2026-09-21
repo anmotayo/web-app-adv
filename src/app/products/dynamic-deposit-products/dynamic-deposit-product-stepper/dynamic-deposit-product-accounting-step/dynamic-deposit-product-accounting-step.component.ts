@@ -333,12 +333,19 @@ export class DynamicDepositProductAccountingStepComponent implements OnInit {
     return this.dynamicDepositProductAccountingForm.get('penaltyToIncomeAccountMappings') as UntypedFormArray;
   }
 
+  setDynamicDepositProductAccountingFormDirty() {
+    if (this.dynamicDepositProductAccountingForm.pristine) {
+      this.dynamicDepositProductAccountingForm.markAsDirty();
+    }
+  }
+
   add(formType: string, formArray: UntypedFormArray) {
     const data = { ...this.getData(formType), pristine: false };
     const dialogRef = this.dialog.open(FormDialogComponent, { data, width: '20rem' });
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         formArray.push(response.data);
+        this.setDynamicDepositProductAccountingFormDirty();
       }
     });
   }
@@ -349,6 +356,7 @@ export class DynamicDepositProductAccountingStepComponent implements OnInit {
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.data) {
         formArray.at(index).patchValue(response.data.value);
+        this.setDynamicDepositProductAccountingFormDirty();
       }
     });
   }
@@ -360,6 +368,7 @@ export class DynamicDepositProductAccountingStepComponent implements OnInit {
     dialogRef.afterClosed().subscribe((response: any) => {
       if (response.delete) {
         formArray.removeAt(index);
+        this.setDynamicDepositProductAccountingFormDirty();
       }
     });
   }

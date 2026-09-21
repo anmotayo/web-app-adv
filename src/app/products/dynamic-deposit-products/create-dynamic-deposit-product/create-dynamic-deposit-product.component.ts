@@ -128,42 +128,13 @@ export class CreateDynamicDepositProductComponent {
   }
 
   prepareDynamicDepositProductPayload(dynamicDepositProduct: any): any {
-    const charges = this.ensureEarlyWithdrawalChargeAttached(
-      dynamicDepositProduct.charges || [],
-      dynamicDepositProduct.earlyWithdrawalPenaltyEnabled,
-      dynamicDepositProduct.earlyWithdrawalChargeId
-    );
     const payload = {
       ...dynamicDepositProduct,
-      charges: charges.map((charge: any) => ({ id: charge.id })),
+      charges: (dynamicDepositProduct.charges || []).map((charge: any) => ({ id: charge.id })),
       locale: this.settingsService.language.code
     };
-    if (!payload.earlyWithdrawalPenaltyEnabled) {
-      payload.earlyWithdrawalChargeId = null;
-      payload.earlyWithdrawalChargeMode = null;
-    }
     delete payload.advancedAccountingRules;
     return payload;
-  }
-
-  private ensureEarlyWithdrawalChargeAttached(charges: any[], enabled: boolean, chargeId: any): any[] {
-    if (!enabled || !chargeId || charges.some((charge: any) => this.sameChargeId(charge.id, chargeId))) {
-      return charges;
-    }
-    const earlyWithdrawalCharge = this.findTemplateCharge(chargeId);
-    return earlyWithdrawalCharge ? charges.concat([earlyWithdrawalCharge]) : charges;
-  }
-
-  private findTemplateCharge(chargeId: any): any {
-    return [
-      ...(this.dynamicDepositProductsTemplate.charges || []),
-      ...(this.dynamicDepositProductsTemplate.chargeOptions || []),
-      ...(this.dynamicDepositProductsTemplate.penaltyOptions || [])
-    ].find((charge: any) => this.sameChargeId(charge.id, chargeId));
-  }
-
-  private sameChargeId(first: any, second: any): boolean {
-    return String(first) === String(second);
   }
 
   submit() {

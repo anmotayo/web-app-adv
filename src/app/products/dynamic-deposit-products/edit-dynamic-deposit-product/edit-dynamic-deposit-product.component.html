@@ -50,10 +50,7 @@
     <mat-step [stepControl]="dynamicDepositProductSettingsForm">
       <ng-template matStepLabel>{{ 'labels.inputs.SETTINGS' | translate }}</ng-template>
 
-      <mifosx-dynamic-deposit-product-settings-step
-        [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate"
-        [selectedCharges]="dynamicDepositProductChargesStep?.chargesDataSource"
-      >
+      <mifosx-dynamic-deposit-product-settings-step [dynamicDepositProductsTemplate]="dynamicDepositProductsTemplate">
       </mifosx-dynamic-deposit-product-settings-step>
     </mat-step>
 

@@ -135,42 +135,51 @@ export class EditDynamicDepositProductComponent {
   }
 
   prepareDynamicDepositProductPayload(dynamicDepositProduct: any): any {
-    const charges = this.ensureEarlyWithdrawalChargeAttached(
-      dynamicDepositProduct.charges || [],
-      dynamicDepositProduct.earlyWithdrawalPenaltyEnabled,
-      dynamicDepositProduct.earlyWithdrawalChargeId
-    );
-    const payload = {
+    const selectedChargeIds = this.toIdSet(dynamicDepositProduct.charges || []);
+    const shouldSendAdvancedMappings =
+      dynamicDepositProduct.advancedAccountingRules || this.hasExistingAdvancedAccountingMappings();
+    const payload: any = {
       ...dynamicDepositProduct,
-      charges: charges.map((charge: any) => ({ id: charge.id })),
+      charges: (dynamicDepositProduct.charges || []).map((charge: any) => ({ id: this.getChargeId(charge) })),
       locale: this.settingsService.language.code
     };
-    if (!payload.earlyWithdrawalPenaltyEnabled) {
-      payload.earlyWithdrawalChargeId = null;
-      payload.earlyWithdrawalChargeMode = null;
+    if (shouldSendAdvancedMappings) {
+      payload.paymentChannelToFundSourceMappings = dynamicDepositProduct.paymentChannelToFundSourceMappings || [];
+      payload.feeToIncomeAccountMappings = this.filterChargeAccountMappings(
+        dynamicDepositProduct.feeToIncomeAccountMappings,
+        selectedChargeIds
+      );
+      payload.penaltyToIncomeAccountMappings = this.filterChargeAccountMappings(
+        dynamicDepositProduct.penaltyToIncomeAccountMappings,
+        selectedChargeIds
+      );
     }
     delete payload.advancedAccountingRules;
     return payload;
   }
 
-  private ensureEarlyWithdrawalChargeAttached(charges: any[], enabled: boolean, chargeId: any): any[] {
-    if (!enabled || !chargeId || charges.some((charge: any) => this.sameChargeId(charge.id, chargeId))) {
-      return charges;
-    }
-    const earlyWithdrawalCharge = this.findTemplateCharge(chargeId);
-    return earlyWithdrawalCharge ? charges.concat([earlyWithdrawalCharge]) : charges;
+  private filterChargeAccountMappings(mappings: any[] = [], selectedChargeIds: Set<string>): any[] {
+    return (mappings || []).filter((mapping: any) => selectedChargeIds.has(String(mapping.chargeId)));
   }
 
-  private findTemplateCharge(chargeId: any): any {
-    return [
-      ...(this.dynamicDepositProductsTemplate.charges || []),
-      ...(this.dynamicDepositProductsTemplate.chargeOptions || []),
-      ...(this.dynamicDepositProductsTemplate.penaltyOptions || [])
-    ].find((charge: any) => this.sameChargeId(charge.id, chargeId));
+  private toIdSet(charges: any[]): Set<string> {
+    return new Set(charges.map((charge: any) => String(this.getChargeId(charge))));
   }
 
-  private sameChargeId(first: any, second: any): boolean {
-    return String(first) === String(second);
+  private getChargeId(charge: any): any {
+    return charge?.id ?? charge?.chargeId ?? charge;
+  }
+
+  private hasExistingAdvancedAccountingMappings(): boolean {
+    return (
+      this.hasItems(this.dynamicDepositProductsTemplate?.paymentChannelToFundSourceMappings) ||
+      this.hasItems(this.dynamicDepositProductsTemplate?.feeToIncomeAccountMappings) ||
+      this.hasItems(this.dynamicDepositProductsTemplate?.penaltyToIncomeAccountMappings)
+    );
+  }
+
+  private hasItems(data: any): boolean {
+    return Array.isArray(data) && data.length > 0;
   }
 
   submit() {

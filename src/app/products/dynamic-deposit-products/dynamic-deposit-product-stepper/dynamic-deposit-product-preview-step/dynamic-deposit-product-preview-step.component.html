@@ -127,26 +127,6 @@
     <span class="flex-60">{{ dynamicDepositProduct.dynamicRateEnabled | yesNo }}</span>
   </div>
 
-  <div class="layout-row flex-100">
-    <span class="flex-40">{{ 'labels.inputs.Enable Early Withdrawal Interest Penalty' | translate }}:</span>
-    <span class="flex-60">{{ dynamicDepositProduct.earlyWithdrawalPenaltyEnabled | yesNo }}</span>
-  </div>
-
-  @if (dynamicDepositProduct.earlyWithdrawalPenaltyEnabled) {
-    <div class="layout-row flex-100">
-      <span class="flex-40">{{ 'labels.inputs.Early Withdrawal Charge' | translate }}:</span>
-      <span class="flex-60">
-        {{ earlyWithdrawalChargeName(dynamicDepositProduct.earlyWithdrawalChargeId) }}
-        ({{ 'labels.inputs.Deducted from interest' | translate }})
-      </span>
-    </div>
-
-    <div class="layout-row flex-100">
-      <span class="flex-40">{{ 'labels.inputs.Early Withdrawal Charge Mode' | translate }}:</span>
-      <span class="flex-60">{{ earlyWithdrawalChargeModeLabel(dynamicDepositProduct.earlyWithdrawalChargeMode) }}</span>
-    </div>
-  }
-
   @if (dynamicDepositProduct.minBalanceForInterestCalculation) {
     <div class="layout-row flex-100">
       <span class="flex-40">{{ 'labels.inputs.Balance Required for Interest Calculation' | translate }}:</span>

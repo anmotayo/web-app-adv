@@ -17,11 +17,36 @@ export interface Charge {
   chargeAppliesTo: OptionData;
   chargeCalculationType: OptionData;
   chargePaymentMode: OptionData;
+  interestBasisMode?: OptionData;
+  customPeriodReapplyPolicy?: OptionData;
+  interestBasisModeOptions?: OptionData[];
+  customPeriodReapplyPolicyOptions?: OptionData[];
   feeInterval?: number;
   feeFrequency?: OptionData;
   feeOnMonthDay?: number[];
   paymentTypeOptions?: PaymentTypeOption;
 }
+
+export const WITHDRAWAL_FEE_CHARGE_TIME_TYPE_ID = 5;
+export const SAVINGS_CHARGE_APPLIES_TO_TYPE_ID = 2;
+export const PERCENT_OF_INTEREST_CHARGE_CALCULATION_TYPE_ID = 4;
+export const CUSTOM_PERIOD_INTEREST_BASIS_MODE_ID = 2;
+export const DEFAULT_INTEREST_BASIS_MODE_OPTIONS: OptionData[] = [
+  { id: 1, code: 'advancly.interestBasisMode.cumulative', value: 'Cumulative' },
+  { id: 2, code: 'advancly.interestBasisMode.customPeriod', value: 'Custom Period' }
+];
+export const DEFAULT_CUSTOM_PERIOD_REAPPLY_POLICY_OPTIONS: OptionData[] = [
+  {
+    id: 1,
+    code: 'advancly.customPeriodReapplyPolicy.oncePerSelectedPeriod',
+    value: 'Once Per Selected Period'
+  },
+  {
+    id: 2,
+    code: 'advancly.customPeriodReapplyPolicy.untilSelectedPeriodInterestExhausted',
+    value: 'Until Selected Period Interest Exhausted'
+  }
+];
 
 export enum ChargeAppliesToCode {
   ChargeAppliesToClient = 'chargeAppliesTo.client',

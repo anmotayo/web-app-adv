@@ -106,7 +106,7 @@ export class CreateSavingProductComponent {
   }
 
   get savingProduct() {
-    const savingProduct = {
+    return {
       ...this.savingProductDetailsStep.savingProductDetails,
       ...this.savingProductCurrencyStep.savingProductCurrency,
       ...this.savingProductTermsStep.savingProductTerms,
@@ -114,56 +114,16 @@ export class CreateSavingProductComponent {
       ...this.savingProductChargesStep.savingProductCharges,
       ...this.savingProductAccountingStep.savingProductAccounting
     };
-    return {
-      ...savingProduct,
-      charges: this.ensureEarlyWithdrawalChargeAttached(
-        savingProduct.charges || [],
-        savingProduct.earlyWithdrawalPenaltyEnabled,
-        savingProduct.earlyWithdrawalChargeId
-      )
-    };
   }
 
   prepareSavingProductPayload(savingProduct: any): any {
     const payload = {
       ...savingProduct,
-      charges: savingProduct.charges.map((charge: any) => ({ id: charge.id })),
+      charges: (savingProduct.charges || []).map((charge: any) => ({ id: charge.id })),
       locale: this.settingsService.language.code // locale required for nominalAnnualInterestRate
     };
-    if (!payload.earlyWithdrawalPenaltyEnabled && this.hasEarlyWithdrawalPayload(payload)) {
-      payload.earlyWithdrawalChargeId = null;
-      payload.earlyWithdrawalChargeMode = null;
-    }
     delete payload.advancedAccountingRules;
     return payload;
-  }
-
-  private ensureEarlyWithdrawalChargeAttached(charges: any[], enabled: boolean, chargeId: any): any[] {
-    if (!enabled || !chargeId || charges.some((charge: any) => this.sameChargeId(charge.id, chargeId))) {
-      return charges;
-    }
-    const earlyWithdrawalCharge = this.findTemplateCharge(chargeId);
-    return earlyWithdrawalCharge ? charges.concat([earlyWithdrawalCharge]) : charges;
-  }
-
-  private findTemplateCharge(chargeId: any): any {
-    return [
-      ...(this.savingProductsTemplate.charges || []),
-      ...(this.savingProductsTemplate.chargeOptions || []),
-      ...(this.savingProductsTemplate.penaltyOptions || [])
-    ].find((charge: any) => this.sameChargeId(charge.id, chargeId));
-  }
-
-  private sameChargeId(first: any, second: any): boolean {
-    return String(first) === String(second);
-  }
-
-  private hasEarlyWithdrawalPayload(payload: any): boolean {
-    return (
-      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalPenaltyEnabled') ||
-      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalChargeId') ||
-      Object.prototype.hasOwnProperty.call(payload, 'earlyWithdrawalChargeMode')
-    );
   }
 
   submit() {

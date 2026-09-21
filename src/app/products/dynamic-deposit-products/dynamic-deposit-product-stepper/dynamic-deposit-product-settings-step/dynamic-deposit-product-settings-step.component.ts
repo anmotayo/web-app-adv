@@ -31,7 +31,6 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
   private formBuilder = inject(UntypedFormBuilder);
 
   @Input() dynamicDepositProductsTemplate: any;
-  @Input() selectedCharges: any[] = [];
 
   dynamicDepositProductSettingsForm: UntypedFormGroup;
 
@@ -39,7 +38,6 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
   periodFrequencyTypeData: any;
   taxGroupData: any;
   withHoldTaxPostingTypeData: any;
-  earlyWithdrawalChargeModeOptions: any[] = [];
 
   constructor() {
     this.createDynamicDepositProductSettingsForm();
@@ -51,7 +49,6 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
     this.periodFrequencyTypeData = (this.dynamicDepositProductsTemplate.depositTermTypeOptions || []).slice(0, -1);
     this.taxGroupData = this.dynamicDepositProductsTemplate.taxGroupOptions;
     this.withHoldTaxPostingTypeData = this.dynamicDepositProductsTemplate.withHoldTaxPostingTypeOptions;
-    this.earlyWithdrawalChargeModeOptions = this.dynamicDepositProductsTemplate.earlyWithdrawalChargeModeOptions || [];
 
     if (!(this.dynamicDepositProductsTemplate === undefined) && this.dynamicDepositProductsTemplate.id) {
       this.dynamicDepositProductSettingsForm.patchValue({
@@ -70,9 +67,6 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
         minBalanceForInterestCalculation: this.dynamicDepositProductsTemplate.minBalanceForInterestCalculation,
         allowWithdrawal: this.dynamicDepositProductsTemplate.allowWithdrawal,
         dynamicRateEnabled: this.dynamicDepositProductsTemplate.dynamicRateEnabled,
-        earlyWithdrawalPenaltyEnabled: this.dynamicDepositProductsTemplate.earlyWithdrawalPenaltyEnabled,
-        earlyWithdrawalChargeId: this.dynamicDepositProductsTemplate.earlyWithdrawalChargeId,
-        earlyWithdrawalChargeMode: this.dynamicDepositProductsTemplate.earlyWithdrawalChargeMode || '',
         withHoldTax: this.dynamicDepositProductsTemplate.withHoldTax
       });
     }
@@ -104,32 +98,11 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
       minBalanceForInterestCalculation: [''],
       allowWithdrawal: [true],
       dynamicRateEnabled: [false],
-      earlyWithdrawalPenaltyEnabled: [false],
-      earlyWithdrawalChargeId: [''],
-      earlyWithdrawalChargeMode: [''],
       withHoldTax: [false]
     });
   }
 
   setConditionalControls() {
-    this.dynamicDepositProductSettingsForm
-      .get('earlyWithdrawalPenaltyEnabled')
-      .valueChanges.subscribe((enabled: boolean) => {
-        const earlyWithdrawalChargeId = this.dynamicDepositProductSettingsForm.get('earlyWithdrawalChargeId');
-        const earlyWithdrawalChargeMode = this.dynamicDepositProductSettingsForm.get('earlyWithdrawalChargeMode');
-        if (enabled) {
-          earlyWithdrawalChargeId.setValidators(Validators.required);
-          earlyWithdrawalChargeMode.setValidators(Validators.required);
-        } else {
-          earlyWithdrawalChargeId.patchValue('');
-          earlyWithdrawalChargeId.clearValidators();
-          earlyWithdrawalChargeMode.patchValue('');
-          earlyWithdrawalChargeMode.clearValidators();
-        }
-        earlyWithdrawalChargeId.updateValueAndValidity();
-        earlyWithdrawalChargeMode.updateValueAndValidity();
-      });
-
     this.dynamicDepositProductSettingsForm.get('withHoldTax').valueChanges.subscribe((withHoldTax: any) => {
       if (withHoldTax) {
         this.dynamicDepositProductSettingsForm.addControl(
@@ -157,42 +130,8 @@ export class DynamicDepositProductSettingsStepComponent implements OnInit {
     });
   }
 
-  get earlyWithdrawalChargeOptions(): any[] {
-    const penaltyOptionIds = new Set(
-      (this.dynamicDepositProductsTemplate?.penaltyOptions || []).map((charge: any) => charge.id)
-    );
-    const chargesById = new Map();
-    [
-      ...(this.selectedCharges || []),
-      ...(this.dynamicDepositProductsTemplate?.charges || []),
-      ...(this.dynamicDepositProductsTemplate?.penaltyOptions || []),
-      ...(this.dynamicDepositProductsTemplate?.chargeOptions || [])
-    ].forEach((charge: any) => {
-      if (charge?.id && this.isInterestPenaltyCharge(charge, penaltyOptionIds)) {
-        chargesById.set(charge.id, charge);
-      }
-    });
-    return Array.from(chargesById.values());
-  }
-
-  private isInterestPenaltyCharge(charge: any, penaltyOptionIds: Set<any>): boolean {
-    const calculationType = charge?.chargeCalculationType || {};
-    const calculationTypeText = `${calculationType.code || ''} ${calculationType.value || ''}`.toLowerCase();
-    return (
-      (charge?.penalty === true || penaltyOptionIds.has(charge?.id)) &&
-      (calculationType.id === 4 ||
-        calculationTypeText.includes('percent.of.interest') ||
-        calculationTypeText.includes('% interest') ||
-        calculationTypeText.includes('percent of interest'))
-    );
-  }
-
   get dynamicDepositProductSettings() {
     const dynamicDepositProductSettings = this.dynamicDepositProductSettingsForm.value;
-    if (!dynamicDepositProductSettings.earlyWithdrawalPenaltyEnabled) {
-      dynamicDepositProductSettings.earlyWithdrawalChargeId = null;
-      dynamicDepositProductSettings.earlyWithdrawalChargeMode = null;
-    }
     for (const key in dynamicDepositProductSettings) {
       if (dynamicDepositProductSettings[key] === '') {
         delete dynamicDepositProductSettings[key];

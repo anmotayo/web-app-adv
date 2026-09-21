@@ -149,27 +149,4 @@ export class SavingProductPreviewStepComponent implements OnInit, OnChanges {
   isAccrualAccounting(): boolean {
     return this.accounting.isAccrualAccounting(this.accountingRule);
   }
-
-  earlyWithdrawalChargeName(chargeId: any): string {
-    const charge = this.findCharge(chargeId);
-    return charge ? charge.name : '';
-  }
-
-  earlyWithdrawalChargeModeLabel(mode: any): string {
-    if (mode === null || mode === undefined || mode === '') {
-      return '';
-    }
-    const modeOption = (this.savingProductsTemplate?.earlyWithdrawalChargeModeOptions || []).find(
-      (option: any) => String(option.id) === String(mode)
-    );
-    return modeOption ? modeOption.value : '';
-  }
-
-  private findCharge(chargeId: any): any {
-    return [
-      ...(this.savingProduct.charges || []),
-      ...(this.savingProductsTemplate.chargeOptions || []),
-      ...(this.savingProductsTemplate.penaltyOptions || [])
-    ].find((charge: any) => String(charge.id) === String(chargeId));
-  }
 }

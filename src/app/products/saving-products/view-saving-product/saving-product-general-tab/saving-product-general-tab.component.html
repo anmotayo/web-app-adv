@@ -107,30 +107,6 @@
       <span class="flex-60">{{ savingProduct.withdrawalFeeForTransfers | yesNo }}</span>
     </div>
 
-    @if (savingProduct.earlyWithdrawalPenaltyEnabled !== undefined) {
-      <div class="flex-fill layout-row">
-        <span class="flex-40">{{ 'labels.inputs.Enable Early Withdrawal Interest Penalty' | translate }}:</span>
-        <span class="flex-60">{{ savingProduct.earlyWithdrawalPenaltyEnabled | yesNo }}</span>
-      </div>
-    }
-
-    @if (savingProduct.earlyWithdrawalPenaltyEnabled) {
-      <div class="flex-fill layout-row">
-        <span class="flex-40">{{ 'labels.inputs.Early Withdrawal Charge' | translate }}:</span>
-        <span class="flex-60">
-          {{ earlyWithdrawalChargeName(savingProduct.earlyWithdrawalChargeId) }}
-          ({{ 'labels.inputs.Deducted from interest' | translate }})
-        </span>
-      </div>
-
-      @if (savingProduct.earlyWithdrawalChargeMode) {
-        <div class="flex-fill layout-row">
-          <span class="flex-40">{{ 'labels.inputs.Early Withdrawal Charge Mode' | translate }}:</span>
-          <span class="flex-60">{{ earlyWithdrawalChargeModeLabel(savingProduct.earlyWithdrawalChargeMode) }}</span>
-        </div>
-      }
-    }
-
     @if (savingProduct.minBalanceForInterestCalculation) {
       <div class="flex-fill layout-row">
         <span class="flex-40">{{ 'labels.inputs.Balance Required for Interest Calculation' | translate }}:</span>

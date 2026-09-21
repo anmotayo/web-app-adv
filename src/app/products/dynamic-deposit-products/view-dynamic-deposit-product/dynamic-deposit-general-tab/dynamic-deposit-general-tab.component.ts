@@ -104,23 +104,6 @@ export class DynamicDepositGeneralTabComponent {
     });
   }
 
-  earlyWithdrawalChargeName(chargeId: any): string {
-    const charge = this.findCharge(chargeId);
-    return charge ? charge.name : '';
-  }
-
-  earlyWithdrawalChargeModeLabel(mode: any): string {
-    if (mode === null || mode === undefined || mode === '') {
-      return '';
-    }
-    const modeOption = (
-      this.dynamicDepositProductsTemplate?.earlyWithdrawalChargeModeOptions ||
-      this.dynamicDepositProductData?.earlyWithdrawalChargeModeOptions ||
-      []
-    ).find((option: any) => String(option.id) === String(mode));
-    return modeOption ? modeOption.value : '';
-  }
-
   isInterestBasedCharge(charge: any): boolean {
     const calculationType = charge?.chargeCalculationType || {};
     const calculationTypeText = `${calculationType.code || ''} ${calculationType.value || ''}`.toLowerCase();
@@ -130,13 +113,5 @@ export class DynamicDepositGeneralTabComponent {
       calculationTypeText.includes('% interest') ||
       calculationTypeText.includes('percent of interest')
     );
-  }
-
-  private findCharge(chargeId: any): any {
-    return [
-      ...(this.dynamicDepositProductData.charges || []),
-      ...(this.dynamicDepositProductsTemplate.chargeOptions || []),
-      ...(this.dynamicDepositProductsTemplate.penaltyOptions || [])
-    ].find((charge: any) => String(charge.id) === String(chargeId));
   }
 }
