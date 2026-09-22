@@ -130,10 +130,11 @@ export class TransactionsTabComponent implements OnInit {
    */
   isDebit(transactionType: any) {
     return (
-      transactionType.withdrawal === true ||
-      transactionType.feeDeduction === true ||
-      transactionType.overdraftInterest === true ||
-      transactionType.withholdTax === true
+      transactionType?.withdrawal === true ||
+      transactionType?.feeDeduction === true ||
+      transactionType?.overdraftInterest === true ||
+      transactionType?.withholdTax === true ||
+      transactionType?.interestCharge === true
     );
   }
 

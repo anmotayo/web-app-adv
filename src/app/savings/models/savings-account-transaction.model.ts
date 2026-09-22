@@ -44,6 +44,7 @@ export interface SavingsAccountTransactionType {
   amountHold: boolean;
   amountRelease: boolean;
   accrual: boolean;
+  interestCharge: boolean;
 }
 
 export interface Transfer {

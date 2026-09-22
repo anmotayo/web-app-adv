@@ -376,7 +376,7 @@
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Name' | translate }}</th>
           <td mat-cell *matCellDef="let charge">
-            {{ charge.name + ', ' + charge.currency.displaySymbol }}
+            {{ chargeNameWithCurrency(charge) }}
           </td>
         </ng-container>
         <ng-container matColumnDef="chargeCalculationType">
@@ -389,7 +389,7 @@
           <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Amount' | translate }}</th>
           <td mat-cell *matCellDef="let charge">
             {{ charge.amount }}
-            @if (isInterestBasedCharge(charge)) {
+            @if (isInterestCharge(charge)) {
               <span>({{ 'labels.inputs.Deducted from interest' | translate }})</span>
             }
           </td>

@@ -48,4 +48,16 @@ export class GeneralTabComponent {
       this.entityType = 'Center';
     }
   }
+
+  get totalPenaltyCharge(): number {
+    return this.amount(this.savingsAccountData?.summary?.totalPenaltyCharge);
+  }
+
+  get totalInterestCharge(): number {
+    return this.amount(this.savingsAccountData?.summary?.totalInterestCharge);
+  }
+
+  private amount(value: any): number {
+    return Number(value) || 0;
+  }
 }

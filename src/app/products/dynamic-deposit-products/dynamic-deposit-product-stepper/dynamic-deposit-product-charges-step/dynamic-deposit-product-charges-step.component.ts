@@ -67,9 +67,9 @@ export class DynamicDepositProductChargesStepComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.chargeData = this.dynamicDepositProductsTemplate.chargeOptions;
+    this.chargeData = this.dynamicDepositProductsTemplate.chargeOptions || [];
     if (!(this.dynamicDepositProductsTemplate === undefined) && this.dynamicDepositProductsTemplate.id) {
-      this.chargesDataSource = this.dynamicDepositProductsTemplate.charges;
+      this.chargesDataSource = this.resolveSelectedCharges(this.dynamicDepositProductsTemplate.charges || []);
     } else {
       this.chargesDataSource = [];
     }
@@ -102,5 +102,39 @@ export class DynamicDepositProductChargesStepComponent implements OnInit {
     return {
       charges: this.chargesDataSource
     };
+  }
+
+  chargeNameWithCurrency(charge: any): string {
+    const resolvedCharge = this.resolveCharge(charge);
+    const currency = resolvedCharge?.currency || {};
+    const currencyDisplay = currency.displaySymbol || currency.code || this.currencyCode?.value;
+    return [
+      resolvedCharge?.name,
+      currencyDisplay
+    ]
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  private resolveSelectedCharges(charges: any[]): any[] {
+    return charges.map((charge: any) => this.resolveCharge(charge));
+  }
+
+  private resolveCharge(charge: any): any {
+    const chargeId = this.getChargeId(charge);
+    const matchingCharge = (this.chargeData || []).find(
+      (chargeOption: any) => String(chargeOption.id) === String(chargeId)
+    );
+    return {
+      ...(matchingCharge || {}),
+      ...(charge || {}),
+      currency: charge?.currency || matchingCharge?.currency,
+      chargeCalculationType: charge?.chargeCalculationType || matchingCharge?.chargeCalculationType,
+      chargeTimeType: charge?.chargeTimeType || matchingCharge?.chargeTimeType
+    };
+  }
+
+  private getChargeId(charge: any): any {
+    return charge?.id ?? charge?.chargeId ?? charge;
   }
 }

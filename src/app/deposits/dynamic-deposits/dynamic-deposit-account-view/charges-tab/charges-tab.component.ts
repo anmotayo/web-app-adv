@@ -282,7 +282,7 @@ export class ChargesTabComponent implements OnInit {
    * Interest-based Dynamic Deposit charges are settled from posted interest, not by manual charge payment.
    * @param {any} charge Charge
    */
-  isInterestBasedCharge(charge: any) {
+  isInterestCharge(charge: any) {
     const calculationType = charge?.chargeCalculationType || {};
     const code = String(calculationType.code || '').toLowerCase();
     const value = String(calculationType.value || '').toLowerCase();

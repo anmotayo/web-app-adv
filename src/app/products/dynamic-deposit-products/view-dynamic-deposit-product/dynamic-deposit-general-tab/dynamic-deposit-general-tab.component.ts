@@ -104,7 +104,7 @@ export class DynamicDepositGeneralTabComponent {
     });
   }
 
-  isInterestBasedCharge(charge: any): boolean {
+  isInterestCharge(charge: any): boolean {
     const calculationType = charge?.chargeCalculationType || {};
     const calculationTypeText = `${calculationType.code || ''} ${calculationType.value || ''}`.toLowerCase();
     return (

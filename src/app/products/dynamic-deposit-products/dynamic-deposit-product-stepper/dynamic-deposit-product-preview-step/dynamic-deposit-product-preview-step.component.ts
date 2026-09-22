@@ -176,7 +176,7 @@ export class DynamicDepositProductPreviewStepComponent implements OnInit, OnChan
     return this.accounting.isAccrualAccountingRuleId(this.dynamicDepositProduct?.accountingRule);
   }
 
-  isInterestBasedCharge(charge: any): boolean {
+  isInterestCharge(charge: any): boolean {
     const calculationType = charge?.chargeCalculationType || {};
     const calculationTypeText = `${calculationType.code || ''} ${calculationType.value || ''}`.toLowerCase();
     return (
@@ -185,5 +185,30 @@ export class DynamicDepositProductPreviewStepComponent implements OnInit, OnChan
       calculationTypeText.includes('% interest') ||
       calculationTypeText.includes('percent of interest')
     );
+  }
+
+  chargeNameWithCurrency(charge: any): string {
+    const resolvedCharge = this.resolveCharge(charge);
+    const currency = resolvedCharge?.currency || {};
+    const currencyDisplay = currency.displaySymbol || currency.code || this.dynamicDepositProduct?.currencyCode;
+    return [
+      resolvedCharge?.name,
+      currencyDisplay
+    ]
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  private resolveCharge(charge: any): any {
+    const chargeId = charge?.id ?? charge?.chargeId ?? charge;
+    const chargeOptions = this.dynamicDepositProductsTemplate?.chargeOptions || [];
+    const matchingCharge = chargeOptions.find((chargeOption: any) => String(chargeOption.id) === String(chargeId));
+    return {
+      ...(matchingCharge || {}),
+      ...(charge || {}),
+      currency: charge?.currency || matchingCharge?.currency,
+      chargeCalculationType: charge?.chargeCalculationType || matchingCharge?.chargeCalculationType,
+      chargeTimeType: charge?.chargeTimeType || matchingCharge?.chargeTimeType
+    };
   }
 }

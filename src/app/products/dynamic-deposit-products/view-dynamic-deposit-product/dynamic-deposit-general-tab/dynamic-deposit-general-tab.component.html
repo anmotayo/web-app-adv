@@ -386,7 +386,7 @@
                 <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Amount' | translate }}</th>
                 <td mat-cell *matCellDef="let charge">
                   {{ charge.amount | formatNumber }}
-                  @if (isInterestBasedCharge(charge)) {
+                  @if (isInterestCharge(charge)) {
                     <span>({{ 'labels.inputs.Deducted from interest' | translate }})</span>
                   }
                 </td>

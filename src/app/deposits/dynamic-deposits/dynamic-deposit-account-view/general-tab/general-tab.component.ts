@@ -82,21 +82,21 @@ export class GeneralTabComponent {
     );
   }
 
-  get totalInterestBasedChargePosted(): number {
+  get totalInterestCharge(): number {
     return this.amount(
-      this.interestSummary?.interestBasedCharges ??
-        this.interestSummary?.interestBasedChargePostedDerived ??
-        this.dynamicDepositsAccountData?.interestBasedChargePostedDerived ??
-        this.dynamicDepositsAccountData?.summary?.interestBasedChargePostedDerived ??
-        this.interestSummary?.interestBasedChargePosted ??
-        this.interestSummary?.interestBasedChargesPosted ??
-        this.dynamicDepositsAccountData?.summary?.interestBasedChargePosted ??
-        this.dynamicDepositsAccountData?.summary?.interestBasedChargesPosted
+      this.interestSummary?.totalInterestChargeDerived ??
+        this.interestSummary?.totalInterestCharge ??
+        this.dynamicDepositsAccountData?.totalInterestChargeDerived ??
+        this.dynamicDepositsAccountData?.summary?.totalInterestCharge
     );
   }
 
+  get totalPenaltyCharge(): number {
+    return this.amount(this.dynamicDepositsAccountData?.summary?.totalPenaltyCharge);
+  }
+
   get netInterest(): number {
-    return this.totalInterestEarned - this.totalInterestBasedChargePosted - this.totalWithholdingTax;
+    return this.totalInterestEarned - this.totalInterestCharge - this.totalWithholdingTax;
   }
 
   private amount(value: any): number {
