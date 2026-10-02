@@ -84,9 +84,8 @@ export class GeneralTabComponent {
 
   get totalInterestCharge(): number {
     return this.amount(
-      this.interestSummary?.totalInterestChargeDerived ??
+      this.interestSummary?.interestCharges ??
         this.interestSummary?.totalInterestCharge ??
-        this.dynamicDepositsAccountData?.totalInterestChargeDerived ??
         this.dynamicDepositsAccountData?.summary?.totalInterestCharge
     );
   }
