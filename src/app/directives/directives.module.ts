@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 /** Custom Directives */
 import { HasPermissionDirective } from './has-permission/has-permission.directive';
 import { FormatAmountDirective } from './format-amount.directive';
+import { PendingActionDirective } from './pending-action.directive';
 
 /**
  *  Directives Module
@@ -15,7 +16,7 @@ import { FormatAmountDirective } from './format-amount.directive';
   imports: [
     CommonModule
   ],
-  declarations: [HasPermissionDirective, FormatAmountDirective],
-  exports: [HasPermissionDirective, FormatAmountDirective]
+  declarations: [HasPermissionDirective, FormatAmountDirective, PendingActionDirective],
+  exports: [HasPermissionDirective, FormatAmountDirective, PendingActionDirective]
 })
 export class DirectivesModule { }
