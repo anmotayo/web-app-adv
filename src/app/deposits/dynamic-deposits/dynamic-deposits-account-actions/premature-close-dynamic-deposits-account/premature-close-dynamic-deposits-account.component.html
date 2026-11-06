@@ -23,6 +23,52 @@
             }
           </mat-form-field>
 
+          @if (preview?.forfeitureApplicable) {
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Early Withdrawal Charge Percentage' | translate }}</mat-label>
+              <input
+                type="number"
+                matInput
+                min="0"
+                max="100"
+                [placeholder]="preview.forfeiturePercentage"
+                formControlName="earlyWithdrawalChargePercentage"
+              />
+              <mat-hint>{{ preview.forfeitureChargeName }}</mat-hint>
+              @if (
+                prematureCloseAccountForm.controls.earlyWithdrawalChargePercentage.hasError('min') ||
+                prematureCloseAccountForm.controls.earlyWithdrawalChargePercentage.hasError('max')
+              ) {
+                <mat-error>{{ 'labels.inputs.Early Withdrawal Charge Percentage' | translate }} (0 - 100)</mat-error>
+              }
+            </mat-form-field>
+          }
+
+          @if (preview) {
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Deposit Amount' | translate }}</mat-label>
+              <input type="number" matInput [value]="preview.depositAmount" readonly />
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Interest Earned' | translate }}</mat-label>
+              <input type="number" matInput [value]="preview.interestPosted" readonly />
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Withholding Tax' | translate }}</mat-label>
+              <input type="number" matInput [value]="preview.withholdTax" readonly />
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Forfeiture Amount' | translate }}</mat-label>
+              <input type="number" matInput [value]="preview.forfeitureAmount" readonly />
+              @if (!preview.forfeitureApplicable) {
+                <mat-hint>{{ 'labels.inputs.No early withdrawal forfeiture applies' | translate }}</mat-hint>
+              }
+            </mat-form-field>
+          }
+
           @if (prematureCloseAccountForm.controls.maturityAmount) {
             <mat-form-field>
               <mat-label>{{ 'labels.inputs.Maturity Amount' | translate }}</mat-label>
@@ -88,7 +134,7 @@
         <button type="button" mat-raised-button [routerLink]="['../../']">
           {{ 'labels.buttons.Cancel' | translate }}
         </button>
-        <button mat-raised-button color="warn" [disabled]="!prematureCloseAccountForm.valid">
+        <button mat-raised-button color="warn" [disabled]="!preview || !prematureCloseAccountForm.valid">
           {{ 'labels.buttons.Confirm' | translate }}
         </button>
       </mat-card-actions>

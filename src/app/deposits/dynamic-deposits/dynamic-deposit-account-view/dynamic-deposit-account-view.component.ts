@@ -34,6 +34,8 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { MatTabNav, MatTabLink, MatTabNavPanel } from '@angular/material/tabs';
 import { StatusLookupPipe } from '../../../pipes/status-lookup.pipe';
 import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+import { SettingsService } from 'app/settings/settings.service';
+import { Dates } from 'app/core/utils/dates';
 
 /**
  * Dynamic Deposits Account View Component
@@ -71,6 +73,8 @@ export class DynamicDepositAccountViewComponent implements OnInit {
   private router = inject(Router);
   private dynamicDepositsService = inject(DynamicDepositsService);
   private savingsService = inject(SavingsService);
+  private settingsService = inject(SettingsService);
+  private dateUtils = inject(Dates);
   dialog = inject(MatDialog);
 
   /** Dynamic Deposits Account Data */
@@ -118,11 +122,10 @@ export class DynamicDepositAccountViewComponent implements OnInit {
    */
   setConditionalButtons() {
     const status = this.dynamicDepositsAccountData.status?.value;
-    this.buttonConfig = new DynamicDepositsButtonsConfiguration(status);
+    this.buttonConfig = new DynamicDepositsButtonsConfiguration(status, this.isMatured());
     const withdrawalsAllowed = this.dynamicDepositsAccountData.allowWithdrawal !== false;
     if (!withdrawalsAllowed) {
       this.buttonConfig.removeButton('Withdrawal');
-      this.buttonConfig.removeButton('Premature Close');
     }
     if (this.dynamicDepositsAccountData.clientId && status === 'Active' && withdrawalsAllowed) {
       this.buttonConfig.addOption({
@@ -140,6 +143,19 @@ export class DynamicDepositAccountViewComponent implements OnInit {
         });
       }
     }
+  }
+
+  /**
+   * Whether the account has reached its maturity date (compared by day, in business-date terms).
+   * A Dynamic Deposit never moves to a `Matured` status, so this is what decides Close vs Premature Close.
+   */
+  private isMatured(): boolean {
+    const maturityDate = this.dynamicDepositsAccountData.maturityDate;
+    if (!maturityDate) {
+      return false;
+    }
+    const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    return startOfDay(this.dateUtils.parseDate(maturityDate)) <= startOfDay(this.settingsService.businessDate);
   }
 
   /**

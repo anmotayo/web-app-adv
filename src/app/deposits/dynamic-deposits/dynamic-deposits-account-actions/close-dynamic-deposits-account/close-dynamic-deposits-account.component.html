@@ -45,6 +45,27 @@
             }
           </mat-form-field>
 
+          @if (reinvestAmount !== null) {
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Amount to Reinvest' | translate }}</mat-label>
+              <input type="number" matInput [value]="reinvestAmount" readonly />
+            </mat-form-field>
+          }
+
+          @if (reinvestsPrincipalOnly) {
+            <mat-form-field>
+              <mat-label>{{ 'labels.inputs.Interest Less Tax' | translate }}</mat-label>
+              <input type="number" matInput [value]="interestLessTax" readonly />
+              <mat-hint>
+                @if (linkedAccountNo) {
+                  {{ 'labels.inputs.Sent to the linked savings account' | translate }} {{ linkedAccountNo }}
+                } @else {
+                  {{ 'labels.inputs.Paid out to the customer' | translate }}
+                }
+              </mat-hint>
+            </mat-form-field>
+          }
+
           @if (closeOnMaturityAccountForm.contains('toSavingsAccountId')) {
             <mat-form-field>
               <mat-label>{{ 'labels.inputs.Transfer to Savings' | translate }}</mat-label>

@@ -16,8 +16,16 @@ import { Dates } from 'app/core/utils/dates';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 
+/** Closure type ids, as the backend's `DepositAccountOnClosureType` defines them. */
+const TRANSFER_TO_SAVINGS = 200;
+const REINVEST_PRINCIPAL_AND_INTEREST = 300;
+const REINVEST_PRINCIPAL_ONLY = 400;
+
 /**
  * Close On Maturity Dynamic Deposits Account Component
+ *
+ * The closure options come from the account's closure template: withdraw, transfer to a savings account, or reinvest -
+ * the principal and interest, or the principal only (which leaves the interest in this account).
  */
 @Component({
   selector: 'mifosx-close-dynamic-deposits-account',
@@ -48,8 +56,18 @@ export class CloseDynamicDepositsAccountComponent implements OnInit {
   onAccountClosureOptions: any;
   /** Dynamic Deposits Account Id */
   accountId: any;
-  /** Maturity Amount */
+  /** Maturity Amount: what principal and interest come to at closure. */
   maturityAmount: any;
+  /** The amount invested: what reinvesting the principal only carries over. */
+  depositAmount: any;
+  /** The amount the chosen reinvestment opens the new deposit with, or null when the action is not a reinvestment. */
+  reinvestAmount: number | null = null;
+  /** True when the chosen action reinvests the principal only: the interest, less tax, is sent on or paid out. */
+  reinvestsPrincipalOnly = false;
+  /** The interest, less tax, that goes to the linked savings account (or is paid out) when only the principal is reinvested. */
+  interestLessTax: number | null = null;
+  /** The account number of the linked savings account the interest goes to; empty when there is none and it is paid out. */
+  linkedAccountNo: string;
 
   /**
    * Fetches close action data from `resolve`
@@ -65,6 +83,13 @@ export class CloseDynamicDepositsAccountComponent implements OnInit {
       this.savingsAccountsData = data.dynamicDepositsAccountActionData.savingsAccounts;
       this.onAccountClosureOptions = data.dynamicDepositsAccountActionData.onAccountClosureOptions;
       this.maturityAmount = data.dynamicDepositsAccountActionData.maturityAmount;
+      this.depositAmount = data.dynamicDepositsAccountActionData.depositAmount;
+      this.linkedAccountNo = data.dynamicDepositsAccountActionData.linkedAccountNo;
+      // The backend only accepts a closure on or after the maturity date.
+      const maturityDate = data.dynamicDepositsAccountActionData.maturityDate;
+      if (maturityDate) {
+        this.minDate = this.dateUtils.parseDate(maturityDate);
+      }
     });
     this.accountId = this.route.parent.snapshot.params['dynamicDepositAccountId'];
   }
@@ -101,7 +126,7 @@ export class CloseDynamicDepositsAccountComponent implements OnInit {
    */
   addTransferDetails() {
     this.closeOnMaturityAccountForm.get('onAccountClosureId').valueChanges.subscribe((id: any) => {
-      if (id === 200) {
+      if (id === TRANSFER_TO_SAVINGS) {
         this.closeOnMaturityAccountForm.addControl(
           'toSavingsAccountId',
           new UntypedFormControl('', Validators.required)
@@ -111,6 +136,16 @@ export class CloseDynamicDepositsAccountComponent implements OnInit {
         this.closeOnMaturityAccountForm.removeControl('toSavingsAccountId');
         this.closeOnMaturityAccountForm.removeControl('transferDescription');
       }
+      this.reinvestsPrincipalOnly = id === REINVEST_PRINCIPAL_ONLY;
+      this.reinvestAmount =
+        id === REINVEST_PRINCIPAL_AND_INTEREST
+          ? this.maturityAmount
+          : id === REINVEST_PRINCIPAL_ONLY
+            ? Math.min(this.depositAmount, this.maturityAmount)
+            : null;
+      this.interestLessTax = this.reinvestsPrincipalOnly
+        ? Math.max(this.maturityAmount - this.reinvestAmount, 0)
+        : null;
     });
   }
 
@@ -131,8 +166,17 @@ export class CloseDynamicDepositsAccountComponent implements OnInit {
       dateFormat,
       locale
     };
-    this.dynamicDepositsService.executeDynamicDepositsAccountCommand(this.accountId, 'close', data).subscribe(() => {
-      this.router.navigate(['../../'], { relativeTo: this.route });
-    });
+    this.dynamicDepositsService
+      .executeDynamicDepositsAccountCommand(this.accountId, 'close', data)
+      .subscribe((result: any) => {
+        const reinvestedDepositId = result?.changes?.reinvestedDepositId;
+        if (reinvestedDepositId) {
+          // Reinvested: go to the deposit that was opened, not the one just closed.
+          const accountsPath = this.router.url.split('/dynamic-deposits-accounts/')[0];
+          this.router.navigateByUrl(`${accountsPath}/dynamic-deposits-accounts/${reinvestedDepositId}`);
+        } else {
+          this.router.navigate(['../../'], { relativeTo: this.route });
+        }
+      });
   }
 }
