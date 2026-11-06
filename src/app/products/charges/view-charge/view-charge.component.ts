@@ -13,6 +13,7 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { GlAccountDisplayComponent } from '../../../shared/accounting/gl-account-display/gl-account-display.component';
 import { YesnoPipe } from '../../../pipes/yesno.pipe';
 import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+import { WITHDRAWAL_FEE_CHARGE_TIME_TYPE_ID } from '../models/charge.model';
 
 /**
  * View Charge Component.
@@ -58,6 +59,20 @@ export class ViewChargeComponent {
         this.maxCap = true;
       }
     });
+  }
+
+  showInterestChargeRuleFields(): boolean {
+    return this.isWithdrawalFeeChargeTime() && !!this.chargeData.interestBasisMode;
+  }
+
+  private isWithdrawalFeeChargeTime(): boolean {
+    const chargeTimeType = this.chargeData?.chargeTimeType;
+
+    return (
+      chargeTimeType?.id === WITHDRAWAL_FEE_CHARGE_TIME_TYPE_ID ||
+      chargeTimeType?.code === 'chargeTimeType.withdrawalFee' ||
+      chargeTimeType?.value === 'Withdrawal Fee'
+    );
   }
 
   /**

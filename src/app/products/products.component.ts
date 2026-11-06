@@ -52,12 +52,16 @@ export class ProductsComponent implements AfterViewInit {
   @ViewChild('fixedDepositProducts') fixedDepositProducts: ElementRef<any>;
   /* Template for popover on fixed deposit products */
   @ViewChild('templateFixedDepositProducts') templateFixedDepositProducts: TemplateRef<any>;
+  /* Reference of dynamic deposit products */
+  @ViewChild('dynamicDepositProducts') dynamicDepositProducts: ElementRef<any>;
+  /* Template for popover on dynamic deposit products */
+  @ViewChild('templateDynamicDepositProducts') templateDynamicDepositProducts: TemplateRef<any>;
   /* Reference of recurring deposit products */
   @ViewChild('recurringDepositProducts') recurringDepositProducts: ElementRef<any>;
   /* Template for popover on recurring deposit products */
   @ViewChild('templateRecurringDepositProducts') templateRecurringDepositProducts: TemplateRef<any>;
-  // Initialize an array of 11 boolean values, all set to false
-  arrowBooleans: boolean[] = new Array(11).fill(false);
+  // Initialize an array of 12 boolean values, all set to false
+  arrowBooleans: boolean[] = new Array(12).fill(false);
 
   /**
    * To show popover.
@@ -86,6 +90,16 @@ export class ProductsComponent implements AfterViewInit {
     if (this.configurationWizardService.showFixedDepositProducts === true) {
       setTimeout(() => {
         this.showPopover(this.templateFixedDepositProducts, this.fixedDepositProducts.nativeElement, 'bottom', true);
+      });
+    }
+    if (this.configurationWizardService.showDynamicDepositProducts === true) {
+      setTimeout(() => {
+        this.showPopover(
+          this.templateDynamicDepositProducts,
+          this.dynamicDepositProducts.nativeElement,
+          'bottom',
+          true
+        );
       });
     }
     if (this.configurationWizardService.showRecurringDepositProducts === true) {
@@ -205,6 +219,24 @@ export class ProductsComponent implements AfterViewInit {
     this.configurationWizardService.showFixedDepositProducts = false;
     this.configurationWizardService.showShareProductsList = true;
     this.router.navigate(['/products/share-products']);
+  }
+
+  /**
+   * Next Step (Dynamic Deposit Products Page) Configuration Wizard.
+   */
+  nextStepDynamicDepositProducts() {
+    this.configurationWizardService.showDynamicDepositProducts = false;
+    this.configurationWizardService.showDynamicDepositProductsPage = true;
+    this.router.navigate(['/products/dynamic-deposit-products']);
+  }
+
+  /**
+   * Previous Step (Fixed Deposit Products Page) Configuration Wizard.
+   */
+  previousStepDynamicDepositProducts() {
+    this.configurationWizardService.showDynamicDepositProducts = false;
+    this.configurationWizardService.showFixedDepositProductsList = true;
+    this.router.navigate(['/products/fixed-deposit-products']);
   }
 
   /**

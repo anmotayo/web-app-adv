@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({ name: 'accountsFilter' })
 export class AccountsFilterPipe implements PipeTransform {
-  transform(accounts: any, type: any, status: any, checkSavings: any): any {
+  transform(accounts: any, type: any, status?: any, checkSavings?: any): any {
     if (accounts) {
       if (type === 'loan') {
         if (status === 'closed') {
@@ -30,15 +30,19 @@ export class AccountsFilterPipe implements PipeTransform {
       if (type === 'saving') {
         if (checkSavings === 'isFixed') {
           accounts = accounts.filter((account: any) => {
-            return account.depositType.value === 'Fixed Deposit';
+            return this.isDepositType(account, 200, 'depositAccountType.fixedDeposit', 'Fixed Deposit');
           });
         } else if (checkSavings === 'isRecurring') {
           accounts = accounts.filter((account: any) => {
-            return account.depositType.value === 'Recurring Deposit';
+            return this.isDepositType(account, 300, 'depositAccountType.recurringDeposit', 'Recurring Deposit');
+          });
+        } else if (checkSavings === 'isDynamic') {
+          accounts = accounts.filter((account: any) => {
+            return this.isDepositType(account, 500, 'depositAccountType.dynamicDeposit', 'Dynamic Deposit');
           });
         } else if (checkSavings === 'isSavings') {
           accounts = accounts.filter((account: any) => {
-            return account.depositType.value === 'Savings';
+            return this.isDepositType(account, 100, 'depositAccountType.savingsDeposit', 'Savings');
           });
         }
         if (status === 'closed') {
@@ -94,5 +98,10 @@ export class AccountsFilterPipe implements PipeTransform {
       }
       return accounts;
     }
+  }
+
+  private isDepositType(account: any, id: number, code: string, value: string): boolean {
+    const depositType = account?.depositType;
+    return depositType?.id === id || depositType?.code === code || depositType?.value === value;
   }
 }

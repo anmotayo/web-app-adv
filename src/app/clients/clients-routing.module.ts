@@ -253,6 +253,11 @@ const routes: Routes = [
                 import('../deposits/fixed-deposits/fixed-deposits.module').then((m) => m.FixedDepositsModule)
             },
             {
+              path: 'dynamic-deposits-accounts',
+              loadChildren: () =>
+                import('../deposits/dynamic-deposits/dynamic-deposits.module').then((m) => m.DynamicDepositsModule)
+            },
+            {
               path: 'savings-accounts',
               loadChildren: () => import('../savings/savings.module').then((m) => m.SavingsModule)
             },

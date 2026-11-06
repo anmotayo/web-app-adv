@@ -122,14 +122,19 @@ export class EditSavingProductComponent {
     };
   }
 
-  submit() {
-    // TODO: Update once language and date settings are setup
-    const savingProduct = {
-      ...this.savingProduct,
-      charges: this.savingProduct.charges.map((charge: any) => ({ id: charge.id })),
+  prepareSavingProductPayload(savingProduct: any): any {
+    const payload = {
+      ...savingProduct,
+      charges: (savingProduct.charges || []).map((charge: any) => ({ id: charge.id })),
       locale: this.settingsService.language.code // locale required for nominalAnnualInterestRate
     };
-    delete savingProduct.advancedAccountingRules;
+    delete payload.advancedAccountingRules;
+    return payload;
+  }
+
+  submit() {
+    // TODO: Update once language and date settings are setup
+    const savingProduct = this.prepareSavingProductPayload(this.savingProduct);
     this.productsService
       .updateSavingProduct(this.savingProductAndTemplate.id, savingProduct)
       .subscribe((response: any) => {

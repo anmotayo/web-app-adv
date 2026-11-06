@@ -131,6 +131,6 @@ export class SavingProductSettingsStepComponent implements OnInit {
   }
 
   get savingProductSettings() {
-    return this.savingProductSettingsForm.value;
+    return { ...this.savingProductSettingsForm.value };
   }
 }

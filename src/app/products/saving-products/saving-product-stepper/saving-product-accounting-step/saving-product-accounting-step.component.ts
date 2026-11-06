@@ -14,6 +14,7 @@ import { DeleteDialogComponent } from 'app/shared/delete-dialog/delete-dialog.co
 
 import { FormfieldBase } from 'app/shared/form-dialog/formfield/model/formfield-base';
 import { SelectBase } from 'app/shared/form-dialog/formfield/model/select-base';
+import { Accounting } from 'app/core/utils/accounting';
 import { TranslateService } from '@ngx-translate/core';
 import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
 import { MatDivider } from '@angular/material/divider';
@@ -68,6 +69,7 @@ import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
 export class SavingProductAccountingStepComponent implements OnInit {
   private formBuilder = inject(UntypedFormBuilder);
   private dialog = inject(MatDialog);
+  private accounting = inject(Accounting);
   private translateService = inject(TranslateService);
 
   @Input() savingProductsTemplate: any;
@@ -131,7 +133,7 @@ export class SavingProductAccountingStepComponent implements OnInit {
     });
 
     this.savingProductAccountingForm.patchValue({
-      accountingRule: this.savingProductsTemplate.accountingRule.id
+      accountingRule: this.accounting.getAccountingRuleId(this.savingProductsTemplate.accountingRule)
     });
 
     if (this.isCashOrAccrualAccounting()) {
@@ -479,13 +481,10 @@ export class SavingProductAccountingStepComponent implements OnInit {
   }
 
   isCashOrAccrualAccounting(): boolean {
-    return (
-      this.savingProductAccountingForm.value.accountingRule === 2 ||
-      this.savingProductAccountingForm.value.accountingRule === 3
-    );
+    return this.accounting.isCashOrAccrualAccountingRuleId(this.savingProductAccountingForm.value.accountingRule);
   }
 
   isAccrualAccounting(): boolean {
-    return this.savingProductAccountingForm.value.accountingRule === 3;
+    return this.accounting.isAccrualAccountingRuleId(this.savingProductAccountingForm.value.accountingRule);
   }
 }

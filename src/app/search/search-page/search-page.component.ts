@@ -154,6 +154,14 @@ export class SearchPageComponent {
             entity.entityId,
             'transactions'
           ]);
+        } else if (entity.subEntityType === 'depositAccountType.dynamicDeposit') {
+          this.router.navigate([
+            'clients',
+            entity.parentId,
+            'dynamic-deposits-accounts',
+            entity.entityId,
+            'transactions'
+          ]);
         }
         break;
       case 'LOAN':

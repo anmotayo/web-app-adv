@@ -12,6 +12,14 @@ import { ValidateOnFocusDirective } from '../../../directives/validate-on-focus.
 import { GlAccountSelectorComponent } from '../../../shared/accounting/gl-account-selector/gl-account-selector.component';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
+import {
+  CUSTOM_PERIOD_INTEREST_BASIS_MODE_ID,
+  DEFAULT_CUSTOM_PERIOD_REAPPLY_POLICY_OPTIONS,
+  DEFAULT_INTEREST_BASIS_MODE_OPTIONS,
+  PERCENT_OF_INTEREST_CHARGE_CALCULATION_TYPE_ID,
+  SAVINGS_CHARGE_APPLIES_TO_TYPE_ID,
+  WITHDRAWAL_FEE_CHARGE_TIME_TYPE_ID
+} from '../models/charge.model';
 
 /**
  * Edit Charge component.
@@ -119,7 +127,9 @@ export class EditChargeComponent implements OnInit {
       chargeCalculationType: [
         this.chargeData.chargeCalculationType.id,
         Validators.required
-      ]
+      ],
+      interestBasisMode: [this.chargeData.interestBasisMode?.id || null],
+      customPeriodReapplyPolicy: [this.chargeData.customPeriodReapplyPolicy?.id || null]
     });
     switch (this.chargeData.chargeAppliesTo.value) {
       case 'Loan': {
@@ -174,6 +184,123 @@ export class EditChargeComponent implements OnInit {
     } else {
       this.chargeForm.addControl('taxGroupId', this.formBuilder.control({ value: '' }));
     }
+    this.chargeForm.get('chargeTimeType').valueChanges.subscribe(() => {
+      this.syncInterestChargeRuleControls();
+    });
+    this.chargeForm.get('chargeCalculationType').valueChanges.subscribe(() => {
+      this.syncInterestChargeRuleControls();
+    });
+    this.chargeForm.get('active').valueChanges.subscribe(() => {
+      this.syncInterestChargeRuleControls();
+    });
+    this.chargeForm.get('penalty').valueChanges.subscribe(() => {
+      this.syncInterestChargeRuleControls();
+    });
+    this.chargeForm.get('interestBasisMode').valueChanges.subscribe(() => {
+      this.syncInterestChargeRuleControls();
+    });
+    this.syncInterestChargeRuleControls();
+  }
+
+  showInterestChargeRuleFields(): boolean {
+    return this.isInterestChargeRuleShape();
+  }
+
+  showCustomPeriodReapplyPolicy(): boolean {
+    return this.showInterestChargeRuleFields() && this.isCustomPeriodInterestBasisMode();
+  }
+
+  get interestBasisModeOptions(): any[] {
+    const interestBasisModeOptions = this.chargeData?.interestBasisModeOptions;
+    return interestBasisModeOptions?.length ? interestBasisModeOptions : DEFAULT_INTEREST_BASIS_MODE_OPTIONS;
+  }
+
+  get customPeriodReapplyPolicyOptions(): any[] {
+    const customPeriodReapplyPolicyOptions = this.chargeData?.customPeriodReapplyPolicyOptions;
+    return customPeriodReapplyPolicyOptions?.length
+      ? customPeriodReapplyPolicyOptions
+      : DEFAULT_CUSTOM_PERIOD_REAPPLY_POLICY_OPTIONS;
+  }
+
+  private isWithdrawalFeeChargeTime(): boolean {
+    const chargeTimeType = this.chargeForm?.controls.chargeTimeType.value;
+    const selectedChargeTime = (this.chargeTimeTypeOptions || []).find((option: any) => option.id === chargeTimeType);
+
+    return (
+      chargeTimeType === WITHDRAWAL_FEE_CHARGE_TIME_TYPE_ID ||
+      selectedChargeTime?.code === 'chargeTimeType.withdrawalFee' ||
+      selectedChargeTime?.value === 'Withdrawal Fee'
+    );
+  }
+
+  private isSavingsCharge(): boolean {
+    return this.chargeForm?.controls.chargeAppliesTo.value === SAVINGS_CHARGE_APPLIES_TO_TYPE_ID;
+  }
+
+  private isPercentOfInterestCalculation(): boolean {
+    return this.chargeForm?.controls.chargeCalculationType.value === PERCENT_OF_INTEREST_CHARGE_CALCULATION_TYPE_ID;
+  }
+
+  private isInterestChargeRuleShape(): boolean {
+    return (
+      this.isSavingsCharge() &&
+      this.isWithdrawalFeeChargeTime() &&
+      this.isPercentOfInterestCalculation() &&
+      this.chargeForm?.controls.active.value &&
+      this.chargeForm?.controls.penalty.value
+    );
+  }
+
+  private isCustomPeriodInterestBasisMode(): boolean {
+    const interestBasisMode = this.chargeForm?.controls.interestBasisMode.value;
+    const selectedInterestBasisMode = this.interestBasisModeOptions.find(
+      (option: any) => option.id === interestBasisMode
+    );
+
+    return (
+      interestBasisMode === CUSTOM_PERIOD_INTEREST_BASIS_MODE_ID ||
+      selectedInterestBasisMode?.code === 'advancly.interestBasisMode.customPeriod' ||
+      selectedInterestBasisMode?.value === 'Custom Period'
+    );
+  }
+
+  private syncInterestChargeRuleControls(): void {
+    const interestBasisMode = this.chargeForm.get('interestBasisMode');
+    const customPeriodReapplyPolicy = this.chargeForm.get('customPeriodReapplyPolicy');
+
+    if (!this.showInterestChargeRuleFields()) {
+      interestBasisMode.reset(null, { emitEvent: false });
+      customPeriodReapplyPolicy.reset(null, { emitEvent: false });
+      customPeriodReapplyPolicy.clearValidators();
+    } else if (this.isCustomPeriodInterestBasisMode()) {
+      customPeriodReapplyPolicy.setValidators(Validators.required);
+    } else {
+      customPeriodReapplyPolicy.reset(null, { emitEvent: false });
+      customPeriodReapplyPolicy.clearValidators();
+    }
+
+    interestBasisMode.updateValueAndValidity({ emitEvent: false });
+    customPeriodReapplyPolicy.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private normalizeInterestChargeRulePayload(charges: any): void {
+    const hadInterestChargeRule = !!this.chargeData.interestBasisMode;
+    const hasInterestChargeRule = this.showInterestChargeRuleFields() && !!charges.interestBasisMode;
+
+    if (!hasInterestChargeRule) {
+      if (hadInterestChargeRule) {
+        charges.interestBasisMode = null;
+        charges.customPeriodReapplyPolicy = null;
+      } else {
+        delete charges.interestBasisMode;
+        delete charges.customPeriodReapplyPolicy;
+      }
+      return;
+    }
+
+    if (!this.isCustomPeriodInterestBasisMode()) {
+      charges.customPeriodReapplyPolicy = null;
+    }
   }
 
   /**
@@ -205,6 +332,7 @@ export class EditChargeComponent implements OnInit {
     if (!charges.maxCap) {
       delete charges.maxCap;
     }
+    this.normalizeInterestChargeRulePayload(charges);
     this.productsService.updateCharge(this.chargeData.id.toString(), charges).subscribe((response: any) => {
       this.router.navigate(['../'], { relativeTo: this.route });
     });

@@ -154,6 +154,8 @@ export class GeneralTabComponent {
   showClosedRecurringAccounts = false;
   /** Show Closed Fixed Deposits Accounts */
   showClosedFixedAccounts = false;
+  /** Show Closed Dynamic Deposits Accounts */
+  showClosedDynamicAccounts = false;
 
   /** Client Id */
   clientid: any;
@@ -211,6 +213,13 @@ export class GeneralTabComponent {
    */
   toggleFixedAccountsOverview() {
     this.showClosedFixedAccounts = !this.showClosedFixedAccounts;
+  }
+
+  /**
+   * Toggles Dynamic Deposit Accounts Overview
+   */
+  toggleDynamicAccountsOverview() {
+    this.showClosedDynamicAccounts = !this.showClosedDynamicAccounts;
   }
 
   /**

@@ -69,7 +69,7 @@
           [ngClass]="savingsTransactionColor(transaction)"
           (click)="showTransactions(transaction)"
         >
-          {{ isDebit(transaction.transactionType) ? transaction.amount : 'N/A' }}
+          {{ isDebit(transaction) ? transaction.amount : 'N/A' }}
         </td>
       </ng-container>
 

@@ -542,6 +542,121 @@
     </table>
   }
 
+  <!-- Dynamic Deposit Table -->
+  <div class="heading-content">
+    <div class="layout-column flex-50">
+      <div class="heading-name">
+        <h3>{{ 'labels.heading.Dynamic Deposit Accounts' | translate }}</h3>
+      </div>
+    </div>
+    <div class="layout-column flex-50">
+      <div class="layout-row align-flex-end">
+        <button mat-raised-button class="f-right" color="primary" (click)="toggleDynamicAccountsOverview()">
+          {{ viewAccountsLabel(showClosedDynamicAccounts) | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (!showClosedDynamicAccounts) {
+    <table mat-table [dataSource]="savingAccounts | accountsFilter: 'saving' : 'open' : 'isDynamic'">
+      <ng-container matColumnDef="Account No">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Account No' | translate }}</th>
+        <td mat-cell *matCellDef="let element">
+          <i class="fa fa-stop" [ngClass]="element.status.code | statusLookup"></i>
+          <mifosx-account-number accountNo="{{ element.accountNo }}"></mifosx-account-number>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="Saving Account">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Dynamic Deposit Product' | translate }}</th>
+        <td mat-cell *matCellDef="let element">
+          <mifosx-long-text textValue="{{ element.productName }}" chars="35"></mifosx-long-text>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="Last Active">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Last Active' | translate }}</th>
+        <td mat-cell *matCellDef="let element">{{ element.lastActiveTransactionDate | dateFormat }}</td>
+      </ng-container>
+      <ng-container matColumnDef="Balance">
+        <th mat-header-cell class="r-amount" *matHeaderCellDef>{{ 'labels.inputs.Balance' | translate }}</th>
+        <td mat-cell class="r-amount" *matCellDef="let element">{{ element.accountBalance | formatNumber }}</td>
+      </ng-container>
+      <ng-container matColumnDef="Actions">
+        <th mat-header-cell class="center" *matHeaderCellDef>{{ 'labels.inputs.Actions' | translate }}</th>
+        <td mat-cell class="center" *matCellDef="let element">
+          @if (element.status.submittedAndPendingApproval) {
+            <button
+              class="account-action-button"
+              mat-raised-button
+              color="primary"
+              (click)="routeEdit($event)"
+              [routerLink]="['../', 'dynamic-deposits-accounts', element.id, 'actions', 'Approve']"
+            >
+              <i class="fa fa-check"></i>
+            </button>
+          }
+          @if (!element.status.submittedAndPendingApproval && !element.status.active) {
+            <button
+              class="account-action-button"
+              mat-raised-button
+              color="primary"
+              (click)="routeEdit($event)"
+              [routerLink]="['../', 'dynamic-deposits-accounts', element.id, 'actions', 'Undo Approval']"
+            >
+              <i class="fa fa-undo"></i>
+            </button>
+            <button
+              class="account-action-button"
+              mat-raised-button
+              color="primary"
+              (click)="routeEdit($event)"
+              [routerLink]="['../', 'dynamic-deposits-accounts', element.id, 'actions', 'Activate']"
+            >
+              <i class="fa fa-check-circle"></i>
+            </button>
+          }
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="openSavingsColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: openSavingsColumns"
+        [routerLink]="['../', 'dynamic-deposits-accounts', row.id, 'general']"
+        class="select-row"
+      ></tr>
+    </table>
+  }
+
+  <!-- Closed Dynamic Deposit Accounts -->
+  @if (showClosedDynamicAccounts) {
+    <table mat-table [dataSource]="savingAccounts | accountsFilter: 'saving' : 'closed' : 'isDynamic'">
+      <ng-container matColumnDef="Account No">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Account No' | translate }}</th>
+        <td mat-cell *matCellDef="let element">
+          <i class="fa fa-stop" [ngClass]="element.status.code | statusLookup"></i>
+          <mifosx-account-number accountNo="{{ element.accountNo }}"></mifosx-account-number>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="Saving Account">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Dynamic Deposit Product' | translate }}</th>
+        <td mat-cell *matCellDef="let element">
+          <mifosx-long-text textValue="{{ element.productName }}" chars="35"></mifosx-long-text>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="Closed Date">
+        <th mat-header-cell *matHeaderCellDef>{{ 'labels.inputs.Closed Date' | translate }}</th>
+        <td mat-cell *matCellDef="let element">{{ element.timeline.closedOnDate | dateFormat }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="closedSavingsColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: closedSavingsColumns"
+        [routerLink]="['../', 'dynamic-deposits-accounts', row.id, 'general']"
+        class="select-row"
+      ></tr>
+    </table>
+  }
+
   <!-- Recurring Deposit Table -->
   <div class="heading-content">
     <div class="layout-column flex-50">

@@ -1,0 +1,93 @@
+<div class="container">
+  <mat-stepper
+    orientation="vertical"
+    [linear]="false"
+    class="mat-elevation-z8"
+    labelPosition="bottom"
+    #dynamicDepositAccountStepper
+  >
+    <ng-template matStepperIcon="number">
+      <fa-icon icon="pencil-alt" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="edit">
+      <fa-icon icon="pencil-alt" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="done">
+      <fa-icon icon="check" size="sm"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="error">
+      <fa-icon icon="exclamation-triangle" size="lg"></fa-icon>
+    </ng-template>
+
+    <ng-template matStepperIcon="preview">
+      <fa-icon icon="eye" size="sm"></fa-icon>
+    </ng-template>
+
+    <mat-step [stepControl]="dynamicDepositAccountDetailsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.DETAILS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-account-details-step
+        [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+        (dynamicDepositsAccountProductTemplate)="setTemplate($event)"
+      >
+      </mifosx-dynamic-deposit-account-details-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositAccountTermsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.TERMS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-account-terms-step
+        [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+        [dynamicDepositsAccountProductTemplate]="dynamicDepositsAccountProductTemplate"
+      >
+      </mifosx-dynamic-deposit-account-terms-step>
+    </mat-step>
+
+    <mat-step [stepControl]="dynamicDepositAccountSettingsForm">
+      <ng-template matStepLabel>{{ 'labels.inputs.SETTINGS' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-account-settings-step
+        [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+        [dynamicDepositsAccountProductTemplate]="dynamicDepositsAccountProductTemplate"
+      >
+      </mifosx-dynamic-deposit-account-settings-step>
+    </mat-step>
+
+    <mat-step>
+      <ng-template matStepLabel>{{ 'labels.inputs.INTEREST RATE CHART' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-account-interest-rate-chart-step
+        [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+        [dynamicDepositsAccountProductTemplate]="dynamicDepositsAccountProductTemplate"
+      >
+      </mifosx-dynamic-deposit-account-interest-rate-chart-step>
+    </mat-step>
+
+    <mat-step>
+      <ng-template matStepLabel>{{ 'labels.inputs.CHARGES' | translate }}</ng-template>
+
+      <mifosx-dynamic-deposit-account-charges-step
+        [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+        [dynamicDepositsAccountProductTemplate]="dynamicDepositsAccountProductTemplate"
+        [dynamicDepositAccountFormValid]="dynamicDepositAccountFormValidAndNotPristine"
+      >
+      </mifosx-dynamic-deposit-account-charges-step>
+    </mat-step>
+
+    @if (dynamicDepositAccountFormValidAndNotPristine) {
+      <mat-step state="preview" completed>
+        <ng-template matStepLabel>{{ 'labels.inputs.PREVIEW' | translate }}</ng-template>
+        <mifosx-dynamic-deposit-account-preview-step
+          [dynamicDepositsAccountTemplate]="dynamicDepositsAccountAndTemplate"
+          [dynamicDepositsAccountProductTemplate]="dynamicDepositsAccountProductTemplate"
+          [dynamicDepositAccountData]="dynamicDepositAccount"
+          (submitEvent)="submit()"
+        >
+        </mifosx-dynamic-deposit-account-preview-step>
+      </mat-step>
+    }
+  </mat-stepper>
+</div>

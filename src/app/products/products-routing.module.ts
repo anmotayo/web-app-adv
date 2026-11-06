@@ -27,6 +27,8 @@ import { ViewChargeComponent } from './charges/view-charge/view-charge.component
 import { CreateChargeComponent } from './charges/create-charge/create-charge.component';
 import { FixedDepositProductsComponent } from './fixed-deposit-products/fixed-deposit-products.component';
 import { CreateFixedDepositProductComponent } from './fixed-deposit-products/create-fixed-deposit-product/create-fixed-deposit-product.component';
+import { DynamicDepositProductsComponent } from './dynamic-deposit-products/dynamic-deposit-products.component';
+import { CreateDynamicDepositProductComponent } from './dynamic-deposit-products/create-dynamic-deposit-product/create-dynamic-deposit-product.component';
 import { ProductsMixComponent } from './products-mix/products-mix.component';
 import { FloatingRatesComponent } from './floating-rates/floating-rates.component';
 import { CreateFloatingRateComponent } from './floating-rates/create-floating-rate/create-floating-rate.component';
@@ -43,6 +45,7 @@ import { ShareProductsDividendsComponent } from './share-products/dividends-shar
 import { CreateRecurringDepositProductComponent } from './recurring-deposit-products/create-recurring-deposit-product/create-recurring-deposit-product.component';
 import { CreateDividendComponent } from './share-products/create-dividend/create-dividend.component';
 import { ViewFixedDepositProductComponent } from './fixed-deposit-products/view-fixed-deposit-product/view-fixed-deposit-product.component';
+import { ViewDynamicDepositProductComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/view-dynamic-deposit-product.component';
 import { ViewDividendComponent } from './share-products/view-dividend/view-dividend.component';
 import { CreateTaxGroupComponent } from './manage-tax-groups/create-tax-group/create-tax-group.component';
 import { EditTaxGroupComponent } from './manage-tax-groups/edit-tax-group/edit-tax-group.component';
@@ -72,6 +75,8 @@ import { ChargeResolver } from './charges/charge.resolver';
 import { ChargesTemplateResolver } from './charges/charges-template.resolver';
 import { FixedDepositProductsResolver } from './fixed-deposit-products/fixed-deposit-products.resolver';
 import { FixedDepositProductsTemplateResolver } from './fixed-deposit-products/fixed-deposit-products-template.resolver';
+import { DynamicDepositProductsResolver } from './dynamic-deposit-products/dynamic-deposit-products.resolver';
+import { DynamicDepositProductsTemplateResolver } from './dynamic-deposit-products/dynamic-deposit-products-template.resolver';
 import { ProductsMixResolver } from './products-mix/products-mix.resolver';
 import { FloatingRatesResolver } from './floating-rates/floating-rates.resolver';
 import { FloatingRateResolver } from './floating-rates/floating-rate.resolver';
@@ -88,6 +93,7 @@ import { EditRecurringDepositProductComponent } from './recurring-deposit-produc
 import { RecurringDepositProductAndTemplateResolver } from './recurring-deposit-products/edit-recurring-deposit-product/recurring-deposit-product-and-template.resolver';
 import { ViewDividendDataResolver } from './share-products/view-dividend/view-dividend-data.resolver';
 import { FixedDepositProductResolver } from './fixed-deposit-products/fixed-deposit-product.resolver';
+import { DynamicDepositProductResolver } from './dynamic-deposit-products/dynamic-deposit-product.resolver';
 import { ManageTaxGroupTemplateResolver } from './manage-tax-groups/create-tax-group/manage-tax-group-template.resolver';
 import { EditTaxGroupResolver } from './manage-tax-groups/edit-tax-group/edit-tax-group.resolver';
 import { ProductsMixTemplateResolver } from './products-mix/products-mix-template.resolver';
@@ -95,6 +101,8 @@ import { EditProductMixComponent } from './products-mix/edit-product-mix/edit-pr
 import { ChargesTemplateAndResolver } from './charges/charges-template-and-resolver';
 import { EditFixedDepositProductComponent } from './fixed-deposit-products/edit-fixed-deposit-product/edit-fixed-deposit-product.component';
 import { FixedDepositProductAndTemplateResolver } from './fixed-deposit-products/edit-fixed-deposit-product/fixed-deposit-product-and-template.resolver';
+import { EditDynamicDepositProductComponent } from './dynamic-deposit-products/edit-dynamic-deposit-product/edit-dynamic-deposit-product.component';
+import { DynamicDepositProductAndTemplateResolver } from './dynamic-deposit-products/edit-dynamic-deposit-product/dynamic-deposit-product-and-template.resolver';
 import { CollateralResolver } from './collaterals/collateral.resolver';
 import { CollateralsResolver } from './collaterals/collaterals.resolver';
 import { CollateralTemplateResolver } from './collaterals/collaterals-template.resolver';
@@ -119,6 +127,8 @@ import { SavingProductGeneralTabComponent } from './saving-products/view-saving-
 import { SavingProductDatatableTabComponent } from './saving-products/view-saving-product/saving-product-datatable-tab/saving-product-datatable-tab.component';
 import { FixedDepositGeneralTabComponent } from './fixed-deposit-products/view-fixed-deposit-product/fixed-deposit-general-tab/fixed-deposit-general-tab.component';
 import { FixedDepositDatatableTabComponent } from './fixed-deposit-products/view-fixed-deposit-product/fixed-deposit-datatable-tab/fixed-deposit-datatable-tab.component';
+import { DynamicDepositGeneralTabComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/dynamic-deposit-general-tab/dynamic-deposit-general-tab.component';
+import { DynamicDepositDatatableTabComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/dynamic-deposit-datatable-tab/dynamic-deposit-datatable-tab.component';
 import { RecurringDepositGeneralTabComponent } from './recurring-deposit-products/view-recurring-deposit-product/recurring-deposit-general-tab/recurring-deposit-general-tab.component';
 import { RecurringDepositDatatableTabComponent } from './recurring-deposit-products/view-recurring-deposit-product/recurring-deposit-datatable-tab/recurring-deposit-datatable-tab.component';
 import { ShareProductGeneralTabComponent } from './share-products/view-share-product/share-product-general-tab/share-product-general-tab.component';
@@ -708,6 +718,74 @@ const routes: Routes = [
           ]
         },
         {
+          path: 'dynamic-deposit-products',
+          data: { title: 'Dynamic Deposit Products', breadcrumb: 'Dynamic Deposit Products' },
+          children: [
+            {
+              path: 'create',
+              component: CreateDynamicDepositProductComponent,
+              data: { title: 'Create Dynamic Deposit Product', breadcrumb: 'Create' },
+              resolve: {
+                dynamicDepositProductsTemplate: DynamicDepositProductsTemplateResolver
+              }
+            },
+            {
+              path: '',
+              component: DynamicDepositProductsComponent,
+              resolve: {
+                dynamicDepositProducts: DynamicDepositProductsResolver
+              }
+            },
+            {
+              path: ':productId',
+              data: {
+                title: 'View Dynamic Deposit Product',
+                breadcrumb: 'productId',
+                routeParamBreadcrumb: 'productId'
+              },
+              component: ViewDynamicDepositProductComponent,
+              resolve: {
+                dynamicDepositDatatables: SavingProductDatatablesResolver
+              },
+              children: [
+                {
+                  path: '',
+                  redirectTo: 'general',
+                  pathMatch: 'full'
+                },
+                {
+                  path: 'general',
+                  component: DynamicDepositGeneralTabComponent,
+                  resolve: {
+                    dynamicDepositProduct: DynamicDepositProductResolver
+                  }
+                },
+                {
+                  path: 'datatables',
+                  children: [
+                    {
+                      path: ':datatableName',
+                      component: DynamicDepositDatatableTabComponent,
+                      data: { title: 'Data Table View', routeParamBreadcrumb: 'datatableName' },
+                      resolve: {
+                        dynamicDepositDatatable: SavingProductDatatableResolver
+                      }
+                    }
+                  ]
+                },
+                {
+                  path: 'edit',
+                  data: { title: 'Edit Dynamic Deposit Product', breadcrumb: 'edit', routeParamBreadcrumb: false },
+                  component: EditDynamicDepositProductComponent,
+                  resolve: {
+                    dynamicDepositProductAndTemplate: DynamicDepositProductAndTemplateResolver
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
           path: 'products-mix',
           data: { title: 'Products Mix', breadcrumb: 'Products Mix' },
           children: [
@@ -919,6 +997,10 @@ const routes: Routes = [
     ChargesTemplateResolver,
     FixedDepositProductsResolver,
     FixedDepositProductsTemplateResolver,
+    DynamicDepositProductsResolver,
+    DynamicDepositProductsTemplateResolver,
+    DynamicDepositProductResolver,
+    DynamicDepositProductAndTemplateResolver,
     ProductsMixResolver,
     ViewProductMixResolver,
     ManageTaxComponentsResolver,

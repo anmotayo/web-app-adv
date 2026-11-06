@@ -61,6 +61,16 @@ import { FixedDepositProductInterestRateChartStepComponent } from './fixed-depos
 import { FixedDepositProductChargesStepComponent } from './fixed-deposit-products/fixed-deposit-product-stepper/fixed-deposit-product-charges-step/fixed-deposit-product-charges-step.component';
 import { FixedDepositProductAccountingStepComponent } from './fixed-deposit-products/fixed-deposit-product-stepper/fixed-deposit-product-accounting-step/fixed-deposit-product-accounting-step.component';
 import { FixedDepositProductPreviewStepComponent } from './fixed-deposit-products/fixed-deposit-product-stepper/fixed-deposit-product-preview-step/fixed-deposit-product-preview-step.component';
+import { DynamicDepositProductsComponent } from './dynamic-deposit-products/dynamic-deposit-products.component';
+import { CreateDynamicDepositProductComponent } from './dynamic-deposit-products/create-dynamic-deposit-product/create-dynamic-deposit-product.component';
+import { DynamicDepositProductDetailsStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-details-step/dynamic-deposit-product-details-step.component';
+import { DynamicDepositProductCurrencyStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-currency-step/dynamic-deposit-product-currency-step.component';
+import { DynamicDepositProductTermsStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-terms-step/dynamic-deposit-product-terms-step.component';
+import { DynamicDepositProductSettingsStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-settings-step/dynamic-deposit-product-settings-step.component';
+import { DynamicDepositProductInterestRateChartStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-interest-rate-chart-step/dynamic-deposit-product-interest-rate-chart-step.component';
+import { DynamicDepositProductChargesStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-charges-step/dynamic-deposit-product-charges-step.component';
+import { DynamicDepositProductAccountingStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-accounting-step/dynamic-deposit-product-accounting-step.component';
+import { DynamicDepositProductPreviewStepComponent } from './dynamic-deposit-products/dynamic-deposit-product-stepper/dynamic-deposit-product-preview-step/dynamic-deposit-product-preview-step.component';
 import { DepositProductIncentiveFormDialogComponent } from './deposit-product-incentive-form-dialog/deposit-product-incentive-form-dialog.component';
 import { ManageTaxGroupsComponent } from './manage-tax-groups/manage-tax-groups.component';
 import { ViewTaxComponentComponent } from './manage-tax-components/view-tax-component/view-tax-component.component';
@@ -88,12 +98,14 @@ import { EditRecurringDepositProductComponent } from './recurring-deposit-produc
 import { CreateDividendComponent } from './share-products/create-dividend/create-dividend.component';
 import { ViewDividendComponent } from './share-products/view-dividend/view-dividend.component';
 import { ViewFixedDepositProductComponent } from './fixed-deposit-products/view-fixed-deposit-product/view-fixed-deposit-product.component';
+import { ViewDynamicDepositProductComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/view-dynamic-deposit-product.component';
 import { CreateTaxGroupComponent } from './manage-tax-groups/create-tax-group/create-tax-group.component';
 import { EditTaxGroupComponent } from './manage-tax-groups/edit-tax-group/edit-tax-group.component';
 import { CreateProductMixComponent } from './products-mix/create-product-mix/create-product-mix.component';
 import { EditProductMixComponent } from './products-mix/edit-product-mix/edit-product-mix.component';
 import { CreateChargeComponent } from './charges/create-charge/create-charge.component';
 import { EditFixedDepositProductComponent } from './fixed-deposit-products/edit-fixed-deposit-product/edit-fixed-deposit-product.component';
+import { EditDynamicDepositProductComponent } from './dynamic-deposit-products/edit-dynamic-deposit-product/edit-dynamic-deposit-product.component';
 import { CollateralsComponent } from './collaterals/collaterals.component';
 import { CreateCollateralComponent } from './collaterals/create-collateral/create-collateral.component';
 import { EditCollateralComponent } from './collaterals/edit-collateral/edit-collateral.component';
@@ -113,6 +125,8 @@ import { SavingProductGeneralTabComponent } from './saving-products/view-saving-
 import { SavingProductDatatableTabComponent } from './saving-products/view-saving-product/saving-product-datatable-tab/saving-product-datatable-tab.component';
 import { FixedDepositGeneralTabComponent } from './fixed-deposit-products/view-fixed-deposit-product/fixed-deposit-general-tab/fixed-deposit-general-tab.component';
 import { FixedDepositDatatableTabComponent } from './fixed-deposit-products/view-fixed-deposit-product/fixed-deposit-datatable-tab/fixed-deposit-datatable-tab.component';
+import { DynamicDepositGeneralTabComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/dynamic-deposit-general-tab/dynamic-deposit-general-tab.component';
+import { DynamicDepositDatatableTabComponent } from './dynamic-deposit-products/view-dynamic-deposit-product/dynamic-deposit-datatable-tab/dynamic-deposit-datatable-tab.component';
 import { RecurringDepositDatatableTabComponent } from './recurring-deposit-products/view-recurring-deposit-product/recurring-deposit-datatable-tab/recurring-deposit-datatable-tab.component';
 import { RecurringDepositGeneralTabComponent } from './recurring-deposit-products/view-recurring-deposit-product/recurring-deposit-general-tab/recurring-deposit-general-tab.component';
 import { ShareProductGeneralTabComponent } from './share-products/view-share-product/share-product-general-tab/share-product-general-tab.component';
@@ -152,6 +166,7 @@ import { AdvancedAccountingMappingRuleComponent } from './loan-products/loan-pro
     ChargesComponent,
     ViewChargeComponent,
     FixedDepositProductsComponent,
+    DynamicDepositProductsComponent,
     ManageTaxComponentsComponent,
     ProductsMixComponent,
     FloatingRatesComponent,
@@ -195,6 +210,15 @@ import { AdvancedAccountingMappingRuleComponent } from './loan-products/loan-pro
     FixedDepositProductChargesStepComponent,
     FixedDepositProductAccountingStepComponent,
     FixedDepositProductPreviewStepComponent,
+    CreateDynamicDepositProductComponent,
+    DynamicDepositProductDetailsStepComponent,
+    DynamicDepositProductCurrencyStepComponent,
+    DynamicDepositProductTermsStepComponent,
+    DynamicDepositProductSettingsStepComponent,
+    DynamicDepositProductInterestRateChartStepComponent,
+    DynamicDepositProductChargesStepComponent,
+    DynamicDepositProductAccountingStepComponent,
+    DynamicDepositProductPreviewStepComponent,
     ManageTaxGroupsComponent,
     ViewTaxComponentComponent,
     CreateTaxComponentComponent,
@@ -217,6 +241,7 @@ import { AdvancedAccountingMappingRuleComponent } from './loan-products/loan-pro
     CreateDividendComponent,
     ViewDividendComponent,
     ViewFixedDepositProductComponent,
+    ViewDynamicDepositProductComponent,
     CreateTaxGroupComponent,
     EditTaxGroupComponent,
     CreateProductMixComponent,
@@ -224,6 +249,7 @@ import { AdvancedAccountingMappingRuleComponent } from './loan-products/loan-pro
     ManageTaxGroupsComponent,
     CreateChargeComponent,
     EditFixedDepositProductComponent,
+    EditDynamicDepositProductComponent,
     CollateralsComponent,
     CreateCollateralComponent,
     EditCollateralComponent,
@@ -243,6 +269,8 @@ import { AdvancedAccountingMappingRuleComponent } from './loan-products/loan-pro
     SavingProductDatatableTabComponent,
     FixedDepositGeneralTabComponent,
     FixedDepositDatatableTabComponent,
+    DynamicDepositGeneralTabComponent,
+    DynamicDepositDatatableTabComponent,
     RecurringDepositDatatableTabComponent,
     RecurringDepositGeneralTabComponent,
     ShareProductGeneralTabComponent,

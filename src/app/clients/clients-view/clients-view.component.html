@@ -241,6 +241,13 @@
         >
           {{ 'labels.buttons.New Fixed Deposits Account' | translate }}
         </button>
+        <button
+          mat-menu-item
+          *mifosxHasPermission="'CREATE_DYNAMICDEPOSITACCOUNT'"
+          [routerLink]="['dynamic-deposits-accounts', 'create']"
+        >
+          {{ 'labels.buttons.New Dynamic Deposit Account' | translate }}
+        </button>
       </mat-menu>
 
       <mat-menu #Actions="matMenu">

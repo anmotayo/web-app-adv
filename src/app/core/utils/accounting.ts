@@ -50,30 +50,50 @@ export class Accounting {
   }
 
   public isNoneAccounting(accountingRule: OptionData): boolean {
-    return accountingRule.id === 1;
+    return this.getAccountingRuleId(accountingRule) === 1;
   }
 
-  public isNoneAccountingRuleId(accountingRuleId: number): boolean {
-    return accountingRuleId === 1;
+  public isNoneAccountingRuleId(accountingRule: any): boolean {
+    return this.getAccountingRuleId(accountingRule) === 1;
   }
 
   public isCashOrAccrualAccounting(accountingRule: OptionData): boolean {
-    return accountingRule.id === 2 || accountingRule.id === 3;
+    const accountingRuleId = this.getAccountingRuleId(accountingRule);
+    return accountingRuleId === 2 || accountingRuleId === 3;
   }
 
-  public isCashOrAccrualAccountingRuleId(accountingRuleId: number): boolean {
+  public isCashOrAccrualAccountingRuleId(accountingRuleId: any): boolean {
+    accountingRuleId = this.getAccountingRuleId(accountingRuleId);
     return accountingRuleId === 2 || accountingRuleId === 3;
   }
 
   public isAccrualAccounting(accountingRule: OptionData): boolean {
-    return accountingRule.id === 3;
+    return this.getAccountingRuleId(accountingRule) === 3;
   }
 
-  public isAccrualAccountingRuleId(accountingRuleId: number): boolean {
-    return accountingRuleId === 3;
+  public isAccrualAccountingRuleId(accountingRuleId: any): boolean {
+    return this.getAccountingRuleId(accountingRuleId) === 3;
   }
 
-  public getAccountingRuleFrom(accountingRuleId: number): OptionData {
+  public getAccountingRuleId(accountingRule: any, fallbackAccountingRuleId: number = 1): number {
+    const accountingRuleId = this.getNumericAccountingRuleId(accountingRule);
+    if (accountingRuleId) {
+      return accountingRuleId;
+    }
+
+    if (accountingRule && typeof accountingRule === 'object') {
+      const objectAccountingRuleId = this.getNumericAccountingRuleId(accountingRule.id);
+      if (objectAccountingRuleId) {
+        return objectAccountingRuleId;
+      }
+      return this.getAccountingRuleIdFromText(accountingRule.value || accountingRule.code, fallbackAccountingRuleId);
+    }
+
+    return this.getAccountingRuleIdFromText(accountingRule, fallbackAccountingRuleId);
+  }
+
+  public getAccountingRuleFrom(accountingRule: any): OptionData {
+    const accountingRuleId = this.getAccountingRuleId(accountingRule);
     if (accountingRuleId === 1) {
       return { code: 'NONE', id: accountingRuleId, value: 'None' };
     } else if (accountingRuleId === 2) {
@@ -84,6 +104,33 @@ export class Accounting {
       return { code: 'ACCRUAL_UPFRONT', id: accountingRuleId, value: 'Accural (upfront)' };
     }
     return { code: 'INVALID', id: accountingRuleId, value: 'Invalid' };
+  }
+
+  private getNumericAccountingRuleId(accountingRule: any): number | null {
+    const accountingRuleId = Number(accountingRule);
+    return Number.isFinite(accountingRuleId) && accountingRuleId > 0 ? accountingRuleId : null;
+  }
+
+  private getAccountingRuleIdFromText(accountingRule: any, fallbackAccountingRuleId: number): number {
+    if (typeof accountingRule !== 'string') {
+      return fallbackAccountingRuleId;
+    }
+
+    const normalizedAccountingRule = accountingRule.toUpperCase();
+    if (normalizedAccountingRule.includes('ACCRUAL') && normalizedAccountingRule.includes('UPFRONT')) {
+      return 4;
+    }
+    if (normalizedAccountingRule.includes('ACCRUAL') && normalizedAccountingRule.includes('PERIODIC')) {
+      return 3;
+    }
+    if (normalizedAccountingRule.includes('CASH')) {
+      return 2;
+    }
+    if (normalizedAccountingRule.includes('NONE')) {
+      return 1;
+    }
+
+    return fallbackAccountingRuleId;
   }
 
   public glAccountLookUp(glAccountId: number, glAccounts: GLAccount[]): AccountingMapping {

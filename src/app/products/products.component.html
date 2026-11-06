@@ -295,6 +295,45 @@
             </mat-list-item>
           </div>
 
+          <div #dynamicDepositProducts>
+            <mat-list-item
+              [routerLink]="['dynamic-deposit-products']"
+              *mifosxHasPermission="'READ_DYNAMICDEPOSITPRODUCT'"
+            >
+              <div class="menu-list-item-content">
+                <div class="menu-left-section" [routerLink]="['dynamic-deposit-products']">
+                  <mat-icon matListIcon>
+                    <fa-icon icon="briefcase" size="sm"></fa-icon>
+                  </mat-icon>
+                  <div matLine>
+                    {{ 'labels.heading.Dynamic Deposit Products' | translate }}
+                    @if (arrowBooleans[11]) {
+                      <p matLine [routerLink]="['dynamic-deposit-products']" class="menu-explanation">
+                        {{ 'labels.text.Add, modify or inactivate a Dynamic Deposit product' | translate }}
+                      </p>
+                    }
+                  </div>
+                </div>
+                <div class="menu-right-section">
+                  @if (!arrowBooleans[11]) {
+                    <fa-icon
+                      (click)="arrowBooleansToggle(11); $event.stopPropagation()"
+                      icon="arrow-down"
+                      size="md"
+                    ></fa-icon>
+                  }
+                  @if (arrowBooleans[11]) {
+                    <fa-icon
+                      (click)="arrowBooleansToggle(11); $event.stopPropagation()"
+                      icon="arrow-up"
+                      size="md"
+                    ></fa-icon>
+                  }
+                </div>
+              </div>
+            </mat-list-item>
+          </div>
+
           <div #recurringDepositProducts>
             <mat-list-item
               [routerLink]="['recurring-deposit-products']"
@@ -482,6 +521,22 @@
       {{ 'labels.buttons.Back' | translate }}
     </button>
     <button mat-raised-button color="primary" (click)="popover.close(); nextStepFixedDepositProducts()">
+      {{ 'labels.buttons.Next' | translate }}
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #templateDynamicDepositProducts let-popover="popover">
+  <h2>{{ 'labels.heading.Dynamic Deposit Products' | translate }}</h2>
+  <p class="mw400">{{ 'labels.text.Dynamic Deposit Products defines the rules, default settings' | translate }}</p>
+  <div class="layout-row align-end gap-2px responsive-column">
+    <button mat-raised-button color="warn" (click)="popover.close(); configurationWizardService.closeConfigWizard()">
+      {{ 'labels.buttons.Close' | translate }}
+    </button>
+    <button mat-raised-button color="primary" (click)="popover.close(); previousStepDynamicDepositProducts()">
+      {{ 'labels.buttons.Back' | translate }}
+    </button>
+    <button mat-raised-button color="primary" (click)="popover.close(); nextStepDynamicDepositProducts()">
       {{ 'labels.buttons.Next' | translate }}
     </button>
   </div>
