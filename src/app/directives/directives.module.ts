@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 /** Custom Directives */
 import { HasPermissionDirective } from './has-permission/has-permission.directive';
 import { FormatAmountDirective } from './format-amount.directive';
+import { PendingActionDirective } from './pending-action.directive';
 import { ValidateOnFocusDirective } from './validate-on-focus.directive';
 
 /**
@@ -17,11 +18,13 @@ import { ValidateOnFocusDirective } from './validate-on-focus.directive';
     CommonModule,
     HasPermissionDirective,
     FormatAmountDirective,
+    PendingActionDirective,
     ValidateOnFocusDirective
   ],
   exports: [
     HasPermissionDirective,
     FormatAmountDirective,
+    PendingActionDirective,
     ValidateOnFocusDirective
   ]
 })

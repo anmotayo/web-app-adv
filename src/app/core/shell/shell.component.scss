@@ -28,6 +28,10 @@ $color: #e2e4ec;
   overflow-x: hidden;
 }
 
+.loading {
+  height: 16px;
+}
+
 @keyframes move {
   0% {
     left: 0;
