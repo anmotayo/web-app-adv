@@ -60,7 +60,14 @@ export class DateFormatPipe implements PipeTransform, OnDestroy {
     let dateVal;
     if (Array.isArray(value)) {
       // Backend sometimes returns [yyyy, MM, dd]
-      dateVal = moment(value.join('-'), 'YYYY-MM-DD');
+      const [
+        year,
+        month,
+        day
+      ] = value;
+      dateVal = moment({ year, month: month - 1, date: day });
+    } else if (typeof value === 'number' && value < 1e12) {
+      dateVal = moment.unix(value);
     } else {
       dateVal = moment(value);
     }

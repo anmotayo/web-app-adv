@@ -1,11 +1,11 @@
 <div class="container">
   <div class="container m-b-20 align-end gap-2px">
     @if (!viewAccountTransferData.reversed) {
-      <span>
-        <button mat-raised-button color="warn" *mifosxHasPermission="'ADJUST_ACCOUNTTRANSFER'">
-          <fa-icon icon="undo" class="m-r-10"></fa-icon>{{ 'labels.buttons.Undo' | translate }}
-        </button>
-      </span>
+    <span>
+      <button mat-raised-button color="warn" *mifosxHasPermission="'ADJUST_ACCOUNTTRANSFER'">
+        <fa-icon icon="undo" class="m-r-10"></fa-icon>{{ 'labels.buttons.Undo' | translate }}
+      </button>
+    </span>
     }
   </div>
 
@@ -35,7 +35,7 @@
             </div>
 
             <div class="account-transfer-item">
-              <span class="account-transfer-label">{{ 'labels.inputs.Destination' | translate }}:</span>
+              <span class="account-transfer-label">{{ 'labels.inputs.Description' | translate }}:</span>
               <span class="account-transfer-value">{{ viewAccountTransferData.transferDescription }}</span>
             </div>
           </div>
