@@ -21,8 +21,12 @@ interface Permission {
   grouping?: string;
 }
 
+interface DisplayedPermission extends Permission {
+  formIndex: number;
+}
+
 interface PermissionGroup {
-  permissions: Permission[];
+  permissions: DisplayedPermission[];
 }
 
 interface PermissionData {
@@ -130,21 +134,22 @@ export class ConfigureMakerCheckerTasksComponent implements OnInit, AfterViewIni
   setMakerCheckerTask(): void {
     this.tempPermissionUIData = {};
 
-    for (const permission of this.permissionsData) {
+    this.permissionsData.forEach((permission, formIndex) => {
       if (permission.grouping !== this.currentGrouping) {
         this.currentGrouping = permission.grouping || '';
         this.groupings.push(this.currentGrouping);
         this.tempPermissionUIData[this.currentGrouping] = { permissions: [] };
       }
 
-      const temp: Permission = {
+      const temp: DisplayedPermission = {
         code: permission.code,
         id: permission.id,
-        selected: permission.selected
+        selected: permission.selected,
+        formIndex
       };
 
       this.tempPermissionUIData[this.currentGrouping].permissions.push(temp);
-    }
+    });
   }
 
   showPermissions(grouping: string): void {

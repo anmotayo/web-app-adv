@@ -39,14 +39,14 @@ export class SavingsButtonsConfiguration {
               {
                 name: 'Block Deposit',
                 icon: 'lock',
-                taskPermissionName: 'BLOCKDEPOSIT_SAVINGSACCOUNT'
+                taskPermissionName: 'BLOCKCREDIT_SAVINGSACCOUNT'
               }
             );
           } else {
             this.buttonsArray.push({
               name: 'Unblock Deposit',
               icon: 'lock-open',
-              taskPermissionName: 'UNBLOCKDEPOSIT_SAVINGSACCOUNT'
+              taskPermissionName: 'UNBLOCKCREDIT_SAVINGSACCOUNT'
             });
           }
           if (!substatus.blockDebit) {
@@ -59,14 +59,14 @@ export class SavingsButtonsConfiguration {
               {
                 name: 'Block Withdrawal',
                 icon: 'lock',
-                taskPermissionName: 'BLOCKWITHDRAWAL_SAVINGSACCOUNT'
+                taskPermissionName: 'BLOCKDEBIT_SAVINGSACCOUNT'
               }
             );
           } else {
             this.buttonsArray.push({
               name: 'Unblock Withdrawal',
               icon: 'lock-open',
-              taskPermissionName: 'UNBLOCKWITHDRAWAL_SAVINGSACCOUNT'
+              taskPermissionName: 'UNBLOCKDEBIT_SAVINGSACCOUNT'
             });
           }
           this.buttonsArray = this.buttonsArray.concat([
