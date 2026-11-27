@@ -35,9 +35,9 @@
         <div class="list-permission layout-column flex-70">
           <form [formGroup]="formGroup" (submit)="submit()">
             <div formArrayName="roster">
-              @for (permission of permissions.permissions; track permission; let i = $index) {
+              @for (permission of permissions.permissions; track permission.code) {
                 <div class="display-permissions">
-                  <div [formGroupName]="i">
+                  <div [formGroupName]="permission.formIndex">
                     <mat-checkbox name="cp" id="{{ permission.code }}" formControlName="selected">
                       {{ permissionName(permission.code) }}
                     </mat-checkbox>
